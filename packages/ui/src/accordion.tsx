@@ -1,0 +1,71 @@
+'use client';
+
+import { useId, useState, type ReactNode } from 'react';
+import { cn } from './lib/cn';
+
+export type AccordionItem = {
+  id: string;
+  title: string;
+  content: ReactNode;
+};
+
+export type AccordionProps = {
+  items: AccordionItem[];
+  className?: string;
+  allowMultiple?: boolean;
+};
+
+export function Accordion({ items, className, allowMultiple = false }: AccordionProps) {
+  const baseId = useId();
+  const [openIds, setOpenIds] = useState<string[]>([]);
+
+  const toggle = (id: string) => {
+    setOpenIds((current) => {
+      const isOpen = current.includes(id);
+      if (allowMultiple) {
+        return isOpen ? current.filter((item) => item !== id) : [...current, id];
+      }
+      return isOpen ? [] : [id];
+    });
+  };
+
+  return (
+    <div className={cn('flex w-full flex-col gap-2', className)}>
+      {items.map((item) => {
+        const open = openIds.includes(item.id);
+        const panelId = `${baseId}-panel-${item.id}`;
+        const buttonId = `${baseId}-button-${item.id}`;
+
+        return (
+          <div key={item.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+            <h3>
+              <button
+                type="button"
+                id={buttonId}
+                aria-expanded={open}
+                aria-controls={panelId}
+                className={cn(
+                  'flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left',
+                  'text-base font-semibold text-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'focus-visible:ring-inset',
+                )}
+                onClick={() => toggle(item.id)}
+              >
+                <span>{item.title}</span>
+                <span aria-hidden className="text-muted-foreground">
+                  {open ? '−' : '+'}
+                </span>
+              </button>
+            </h3>
+            {open ? (
+              <div id={panelId} role="region" aria-labelledby={buttonId} className="px-4 pb-4">
+                <div className="text-sm text-muted-foreground">{item.content}</div>
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
