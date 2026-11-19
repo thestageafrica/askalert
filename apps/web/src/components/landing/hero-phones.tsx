@@ -51,7 +51,7 @@ function RequestMini() {
       <p className="text-xs font-extrabold text-surface">AskAlert</p>
       <div className="mt-2 rounded-xl border border-surface/10 bg-navy-900 p-2.5">
         <p className="text-[10px] font-bold">2-bedroom shortlet</p>
-        <p className="mt-0.5 text-[9px] text-surface/60">Lekki Phase 1 · Fri–Sun</p>
+        <p className="mt-0.5 text-[9px] text-surface/60">Lagos · Fri–Sun</p>
         <p className="mt-2 text-sm font-extrabold text-orange-400">₦150,000</p>
       </div>
       <div className="mt-2 rounded-xl bg-orange-500/10 p-2.5">
@@ -76,7 +76,7 @@ function QuotesMini() {
         {[
           { name: 'Oceanview', price: '₦145k' },
           { name: 'Palm Court', price: '₦132k' },
-          { name: 'Lekki Nest', price: '₦128.5k', best: true },
+          { name: 'Lagos Nest', price: '₦128.5k', best: true },
         ].map((offer) => (
           <div
             key={offer.name}
@@ -113,7 +113,7 @@ export function HeroPhones() {
       </MiniPhone>
 
       <span className="absolute bottom-8 left-0 z-20 max-w-[220px] animate-[bob_5s_ease-in-out_infinite] rounded-2xl border border-surface/15 bg-navy-950/90 px-3 py-2.5 text-xs font-bold text-surface shadow-xl sm:bottom-16">
-        Verified vendors · Lekki
+        Verified vendors · Lagos
       </span>
       <span className="absolute right-0 top-8 z-20 max-w-[230px] animate-[bob_5s_ease-in-out_infinite] rounded-2xl border border-surface/15 bg-navy-950/90 px-3 py-2.5 text-xs font-bold text-surface shadow-xl [animation-delay:-2.5s] sm:top-16">
         Hold 40% until you confirm

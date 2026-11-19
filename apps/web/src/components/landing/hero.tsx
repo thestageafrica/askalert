@@ -4,7 +4,7 @@ import { HeroPhones } from './hero-phones';
 
 const glanceItems = [
   { label: 'Free', rest: 'to ask' },
-  { label: 'Live', rest: 'in Lekki' },
+  { label: 'Live', rest: 'in Lagos' },
   { label: 'Verified', rest: 'vendors only' },
   { label: 'You choose', rest: 'how much to hold' },
   { label: 'Private', rest: 'until you book' },
@@ -31,7 +31,7 @@ export function Hero() {
               statusDot
               className="mb-6 border-surface/15 bg-navy-900/60 text-surface shadow-lg shadow-navy-950/30"
             >
-              Lekki · Verified vendors · Protected payments
+              Lagos · Verified vendors · Protected payments
             </Chip>
 
             <h1

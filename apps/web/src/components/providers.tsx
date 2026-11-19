@@ -2,6 +2,7 @@
 
 import { ThemeProvider, ToastProvider, type Theme } from '@askalert/ui';
 import type { ReactNode } from 'react';
+import { InstallPromptProvider } from './pwa/install-prompt';
 
 export function Providers({
   children,
@@ -12,7 +13,9 @@ export function Providers({
 }) {
   return (
     <ThemeProvider defaultTheme={defaultTheme}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <InstallPromptProvider>{children}</InstallPromptProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

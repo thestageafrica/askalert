@@ -5,8 +5,10 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "plugins": [{ "name": "next" }]
+    "plugins": [{ "name": "next" }],
+    "types": ["@serwist/next/typings"],
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "public/sw.js", "public/swe-worker*"]
 }

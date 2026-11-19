@@ -22,4 +22,4 @@ export function getWhatsAppUrl(message?: string): string {
 export const SITE_NAME = 'AskAlert';
 export const SITE_TAGLINE = 'Ask. Alert. Delivered.';
 export const SITE_DESCRIPTION =
-  'Tell AskAlert what you need in Lekki. We ask verified vendors, compare offers, and bring you the best ones.';
+  'Tell AskAlert what you need in Lagos. We ask verified vendors, compare offers, and bring you the best ones.';

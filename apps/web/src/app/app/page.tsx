@@ -1,11 +1,28 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Button, Card, Container, Section } from '@askalert/ui';
+import { Suspense } from 'react';
+import { Button, Card, Container, Section, Skeleton } from '@askalert/ui';
+import { AppShell } from './app-shell';
 
 export const metadata: Metadata = {
   title: 'Open AskAlert in your browser',
   description: 'Use AskAlert in your browser while the apps are on the way.',
 };
+
+function AppShellFallback() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-label="Loading AskAlert">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-4 w-full max-w-md" />
+      <Skeleton className="h-4 w-3/4 max-w-sm" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-28 w-full" />
+      </div>
+      <Skeleton className="h-11 w-40 rounded-full" />
+    </div>
+  );
+}
 
 export default function BrowserAppPage() {
   return (
@@ -15,7 +32,10 @@ export default function BrowserAppPage() {
           title="Browser app"
           description="The full AskAlert flow will live here. For now, start on WhatsApp or return home."
         >
-          <Card className="flex flex-col gap-4 sm:flex-row">
+          <Suspense fallback={<AppShellFallback />}>
+            <AppShell />
+          </Suspense>
+          <Card className="mt-6 flex flex-col gap-4 sm:flex-row">
             <Button href="/">Back to home</Button>
             <Link
               href="/design-system"

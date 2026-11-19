@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Providers } from '../components/providers';
@@ -12,14 +12,31 @@ const plusJakarta = Plus_Jakarta_Sans({
   fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
 });
 
+const APP_NAME = 'AskAlert';
+const APP_DESCRIPTION =
+  'Tell AskAlert what you need in Lagos. We ask verified vendors, compare offers, and bring you the best ones.';
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  applicationName: APP_NAME,
   title: {
     default: 'AskAlert | Ask. Alert. Delivered.',
     template: '%s | AskAlert',
   },
-  description:
-    'Tell AskAlert what you need in Lekki. We ask verified vendors, compare offers, and bring you the best ones.',
+  description: APP_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0F1545',
+  colorScheme: 'light',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

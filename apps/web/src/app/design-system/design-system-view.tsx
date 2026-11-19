@@ -94,7 +94,7 @@ function InteractiveDemo() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Input label="What do you need?" placeholder="Plumber in Lekki" hint="Keep it short." />
+        <Input label="What do you need?" placeholder="Plumber in Lagos" hint="Keep it short." />
         <Select
           label="Category"
           options={[
@@ -205,7 +205,7 @@ export function DesignSystemView() {
 
         <Section title="Chips and badges">
           <div className="flex flex-wrap gap-3">
-            <Chip>Lekki</Chip>
+            <Chip>Lagos</Chip>
             <Chip statusDot>Vendor online</Chip>
             <Badge variant="verified" />
             <Badge variant="protected" />

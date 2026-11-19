@@ -16,7 +16,7 @@ export function Categories() {
       id="categories"
       eyebrow="Browse"
       title="Categories"
-      description="Start with what is live in Lekki. More categories are on the way."
+      description="Start with what is live in Lagos. More categories are on the way."
       className="scroll-mt-24"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

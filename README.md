@@ -4,7 +4,7 @@
 
 AskAlert is an agentic marketplace where an AI agent finds vendors or buyers, negotiates, and recommends the best options.
 
-Launch market: Lekki, Lagos, Nigeria.
+Launch market: Lagos, Nigeria.
 
 ## What’s here
 

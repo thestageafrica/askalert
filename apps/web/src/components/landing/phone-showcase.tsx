@@ -91,13 +91,13 @@ function RequestScreen() {
           <p className="text-sm font-extrabold text-surface">AskAlert</p>
         </div>
         <span className="rounded-full bg-orange-500/20 px-2 py-1 text-[10px] font-bold text-orange-400">
-          Lekki
+          Lagos
         </span>
       </div>
 
       <div className="rounded-2xl border border-surface/10 bg-navy-900 p-3 shadow-lg">
         <p className="text-[11px] font-bold text-surface">2-bedroom shortlet</p>
-        <p className="mt-1 text-[10px] text-surface/65">Lekki Phase 1 · Fri–Sun</p>
+        <p className="mt-1 text-[10px] text-surface/65">Lagos · Fri–Sun</p>
         <p className="mt-3 text-sm font-extrabold text-orange-400">Budget ₦150,000</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {['Wi‑Fi', 'Self check-in', 'Parking'].map((tag) => (
@@ -138,7 +138,7 @@ function QuotesScreen() {
   const offers = [
     { name: 'Oceanview Stay', price: '₦145,000', note: 'Sea view · Verified', best: false },
     { name: 'Palm Court', price: '₦132,000', note: 'Pool access', best: false },
-    { name: 'Lekki Nest', price: '₦128,500', note: 'Best match', best: true },
+    { name: 'Lagos Nest', price: '₦128,500', note: 'Best match', best: true },
   ];
 
   return (
@@ -146,7 +146,7 @@ function QuotesScreen() {
       <div className="mb-3">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-700">Compare</p>
         <p className="text-sm font-extrabold text-navy-900">3 offers in</p>
-        <p className="text-[10px] text-navy-700/70">Lekki Phase 1 · this weekend</p>
+        <p className="text-[10px] text-navy-700/70">Lagos · this weekend</p>
       </div>
 
       <div className="space-y-2">
@@ -202,7 +202,7 @@ function CheckoutScreen() {
       </div>
 
       <div className="rounded-2xl border border-surface/10 bg-navy-900 p-3">
-        <p className="text-[11px] font-bold text-surface">Lekki Nest</p>
+        <p className="text-[11px] font-bold text-surface">Lagos Nest</p>
         <p className="mt-1 text-[10px] text-surface/65">Fri–Sun · 2 guests</p>
         <div className="mt-3 flex items-end justify-between">
           <span className="text-[10px] text-surface/60">You pay</span>

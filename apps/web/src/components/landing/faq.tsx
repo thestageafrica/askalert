@@ -28,7 +28,7 @@ const items = [
   {
     id: 'areas',
     title: 'Which areas do you cover?',
-    content: 'We are launching in Lekki, Lagos. More areas will follow as we grow carefully.',
+    content: 'We are launching in Lagos. More areas will follow as we grow carefully.',
   },
   {
     id: 'self',

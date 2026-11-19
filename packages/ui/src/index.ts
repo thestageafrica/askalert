@@ -50,3 +50,6 @@ export type { ContainerProps } from './container';
 
 export { Section } from './section';
 export type { SectionProps } from './section';
+
+export { Skeleton } from './skeleton';
+export type { SkeletonProps } from './skeleton';
