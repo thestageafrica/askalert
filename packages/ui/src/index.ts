@@ -4,7 +4,13 @@ export { ThemeProvider, useTheme } from './theme-provider';
 export type { Theme } from './theme-provider';
 
 export { Button } from './button';
-export type { ButtonProps, ButtonSize, ButtonVariant } from './button';
+export type {
+  ButtonAsButtonProps,
+  ButtonAsLinkProps,
+  ButtonProps,
+  ButtonSize,
+  ButtonVariant,
+} from './button';
 
 export { Chip } from './chip';
 export type { ChipProps } from './chip';

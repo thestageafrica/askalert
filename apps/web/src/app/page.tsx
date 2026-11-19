@@ -1,42 +1,116 @@
-import Link from 'next/link';
-import { listCategories } from '@askalert/category-engine';
-import { createMoney, formatNaira } from '@askalert/payments';
-import { Button, Container, Logo, Section } from '@askalert/ui';
+import type { Metadata } from 'next';
+import { Container } from '@askalert/ui';
+import { Categories } from '../components/landing/categories';
+import { Faq } from '../components/landing/faq';
+import { Hero } from '../components/landing/hero';
+import { HowItWorks } from '../components/landing/how-it-works';
+import { PhoneShowcase } from '../components/landing/phone-showcase';
+import { ProtectSlider } from '../components/landing/protect-slider';
+import { SiteFooter } from '../components/landing/site-footer';
+import { SiteHeader } from '../components/landing/site-header';
+import { Trust } from '../components/landing/trust';
+import { Vendors } from '../components/landing/vendors';
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TAGLINE,
+  getSiteUrl,
+} from '../lib/site';
+
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  title: {
+    absolute: `${SITE_NAME} | ${SITE_TAGLINE}`,
+  },
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    type: 'website',
+    url: siteUrl,
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    locale: 'en_NG',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
+};
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: siteUrl,
+  description: SITE_DESCRIPTION,
+  areaServed: {
+    '@type': 'Place',
+    name: 'Lekki, Lagos, Nigeria',
+  },
+  slogan: SITE_TAGLINE,
+};
 
 export default function HomePage() {
-  const categories = listCategories();
-  const samplePrice = formatNaira(createMoney(250000));
-
   return (
-    <main>
-      <Container>
-        <Section
-          title="AskAlert"
-          description="An AI agent finds vendors or buyers, negotiates, and recommends the best options in Lekki."
-        >
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <Logo />
-            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Ask. Alert. Delivered.
-            </p>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <div id="top" className="min-h-screen bg-background text-foreground">
+        <SiteHeader />
+        <main>
+          <Hero />
+
+          <div className="bg-background">
+            <Container width="xl">
+              <Categories />
+            </Container>
           </div>
-          <p className="mb-4 text-foreground">Sample price: {samplePrice}</p>
-          <ul className="mb-6 list-disc pl-5 text-muted-foreground">
-            {categories.map((category) => (
-              <li key={category.id}>{category.name}</li>
-            ))}
-          </ul>
-          <div className="flex flex-wrap gap-3">
-            <Button>Get started</Button>
-            <Link
-              href="/design-system"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-navy-900/20 bg-surface/10 px-5 text-sm font-semibold text-foreground backdrop-blur-sm dark:border-surface/35"
-            >
-              View design system
-            </Link>
+
+          <div className="bg-surface-subtle dark:bg-navy-950/50">
+            <Container width="xl">
+              <HowItWorks />
+            </Container>
           </div>
-        </Section>
-      </Container>
-    </main>
+
+          <div className="bg-background">
+            <Container width="xl">
+              <PhoneShowcase />
+            </Container>
+          </div>
+
+          <div className="bg-surface-subtle dark:bg-navy-950/50">
+            <Container width="xl">
+              <ProtectSlider />
+            </Container>
+          </div>
+
+          <div className="bg-background">
+            <Container width="xl">
+              <Trust />
+            </Container>
+          </div>
+
+          <div className="bg-surface-subtle dark:bg-navy-950/50">
+            <Container width="xl">
+              <Vendors />
+            </Container>
+          </div>
+
+          <div className="bg-background">
+            <Container width="xl">
+              <Faq />
+            </Container>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    </>
   );
 }

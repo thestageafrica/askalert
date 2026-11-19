@@ -13,8 +13,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'AskAlert',
-  description: 'Ask. Alert. Delivered. Agentic marketplace for Lekki, Lagos.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: {
+    default: 'AskAlert | Ask. Alert. Delivered.',
+    template: '%s | AskAlert',
+  },
+  description:
+    'Tell AskAlert what you need in Lekki. We ask verified vendors, compare offers, and bring you the best ones.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
