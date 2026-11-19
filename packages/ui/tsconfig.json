@@ -1,0 +1,10 @@
+{
+  "extends": "@askalert/config/tsconfig.library.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "dist", "node_modules"]
+}

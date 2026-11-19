@@ -1,0 +1,27 @@
+{
+  "name": "@askalert/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.library.json": "./tsconfig.library.json",
+    "./tsconfig.next.json": "./tsconfig.next.json",
+    "./eslint.base.mjs": "./eslint.base.mjs",
+    "./prettier.config.mjs": "./prettier.config.mjs"
+  },
+  "files": [
+    "tsconfig*.json",
+    "eslint.base.mjs",
+    "prettier.config.mjs"
+  ],
+  "scripts": {
+    "lint": "node -e \"process.exit(0)\"",
+    "typecheck": "node -e \"process.exit(0)\"",
+    "test": "vitest run",
+    "build": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "vitest": "^3.1.4"
+  }
+}

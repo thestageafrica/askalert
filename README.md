@@ -18,3 +18,22 @@ This monorepo will hold:
 - `packages/config` — shared config
 
 Phase 1 focuses on project setup and first designs with mock data. Backend comes later.
+
+## Setup
+
+```bash
+pnpm install
+pnpm dev
+```
+
+- Web app: http://localhost:3000
+- Admin app: http://localhost:3001
+
+Quality checks:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
