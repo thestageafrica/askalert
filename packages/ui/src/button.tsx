@@ -28,26 +28,24 @@ export type ButtonAsLinkProps = SharedProps &
 export type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
 
 const sizeClasses: Record<ButtonSize, string> = {
-  md: 'min-h-11 px-6 text-sm tracking-tight',
-  lg: 'min-h-[3.25rem] px-8 text-[0.95rem] tracking-tight sm:min-h-14 sm:px-9 sm:text-base',
+  md: 'h-11 px-5 text-sm leading-none',
+  lg: 'h-12 px-7 text-base leading-none sm:h-14 sm:px-8',
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: cn(
-    'bg-linear-to-r from-orange-500 via-orange-500 to-orange-400 text-navy-900',
-    'shadow-[var(--shadow-orange-glow)]',
-    'hover:-translate-y-0.5 hover:shadow-[var(--shadow-orange-glow-strong)] hover:brightness-[1.04]',
+    'border border-orange-400/40 bg-gradient-to-r from-orange-500 to-orange-400 text-navy-900',
+    'shadow-[0_10px_28px_var(--glow-orange)]',
+    'hover:-translate-y-0.5 hover:shadow-[0_14px_36px_var(--glow-orange-strong)] hover:brightness-[1.03]',
     'active:translate-y-0 active:brightness-95',
   ),
   secondary: cn(
-    'border border-navy-900/15 bg-surface/70 text-navy-900 backdrop-blur-md',
-    'shadow-sm shadow-navy-950/5',
-    'hover:-translate-y-0.5 hover:bg-surface hover:border-navy-900/25',
-    'dark:border-surface/30 dark:bg-surface/10 dark:text-surface',
-    'dark:hover:bg-surface/16 dark:hover:border-surface/45',
+    'border border-navy-900/15 bg-surface text-navy-900',
+    'hover:-translate-y-0.5 hover:bg-surface-subtle',
+    'dark:border-surface/35 dark:bg-surface/10 dark:text-surface dark:hover:bg-surface/15',
   ),
   ghost: cn(
-    'bg-transparent text-foreground',
+    'border border-transparent bg-transparent text-foreground',
     'hover:bg-surface-subtle dark:hover:bg-navy-700/70',
   ),
 };
@@ -64,8 +62,9 @@ function buttonClassName({
   disabled?: boolean;
 }) {
   return cn(
-    'inline-flex items-center justify-center gap-2 rounded-full font-bold transition duration-200',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+    'inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap',
+    'transition duration-200 ease-out',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
     'focus-visible:ring-offset-background',
     disabled ? 'pointer-events-none cursor-not-allowed opacity-60' : null,
     sizeClasses[size],
@@ -91,11 +90,11 @@ export function Button(props: ButtonProps) {
     <>
       {loading ? (
         <span
-          className="inline-block size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+          className="inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent"
           aria-hidden
         />
       ) : null}
-      <span>{children}</span>
+      {children}
     </>
   );
 

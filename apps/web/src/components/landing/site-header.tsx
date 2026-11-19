@@ -43,7 +43,7 @@ export function SiteHeader() {
             target="_blank"
             rel="noopener noreferrer"
             size="md"
-            className="hidden sm:inline-flex"
+            className="hidden px-5 sm:inline-flex"
           >
             Ask on WhatsApp
           </Button>
