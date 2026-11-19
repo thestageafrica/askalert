@@ -23,7 +23,8 @@
   --card-muted: var(--surface-subtle);
   --muted-foreground: var(--navy-700);
   --ring: var(--orange-500);
-  --glow-orange: color-mix(in srgb, var(--orange-500) 35%, transparent);
+  --glow-orange: color-mix(in srgb, var(--orange-500) 42%, transparent);
+  --glow-orange-strong: color-mix(in srgb, var(--orange-500) 55%, transparent);
 
   color-scheme: light;
 }
@@ -35,7 +36,8 @@
   --card-muted: var(--navy-700);
   --muted-foreground: color-mix(in srgb, var(--surface) 72%, var(--navy-700));
   --border: color-mix(in srgb, var(--navy-700) 80%, var(--surface));
-  --glow-orange: color-mix(in srgb, var(--orange-500) 45%, transparent);
+  --glow-orange: color-mix(in srgb, var(--orange-500) 50%, transparent);
+  --glow-orange-strong: color-mix(in srgb, var(--orange-500) 65%, transparent);
 
   color-scheme: dark;
 }
@@ -61,8 +63,9 @@
   --color-ring: var(--ring);
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --radius-pill: 9999px;
-  --radius-card: 1rem;
-  --shadow-orange-glow: 0 10px 30px var(--glow-orange);
+  --radius-card: 1.25rem;
+  --shadow-orange-glow: 0 12px 36px var(--glow-orange);
+  --shadow-orange-glow-strong: 0 16px 48px var(--glow-orange-strong);
 }
 
 @layer base {
@@ -70,16 +73,16 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    line-height: 1.6;
+    line-height: 1.65;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   :focus-visible {

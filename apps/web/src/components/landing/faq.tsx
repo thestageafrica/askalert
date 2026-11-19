@@ -42,6 +42,7 @@ export function Faq() {
   return (
     <Section
       id="faq"
+      eyebrow="Questions"
       title="FAQ"
       description="Short answers. Plain English."
       className="scroll-mt-24"

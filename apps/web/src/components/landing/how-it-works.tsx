@@ -22,6 +22,7 @@ export function HowItWorks() {
   return (
     <Section
       id="how-it-works"
+      eyebrow="Simple flow"
       title="How it works"
       description="Three clear steps. No long forms."
       className="scroll-mt-24"

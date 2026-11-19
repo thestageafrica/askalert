@@ -14,6 +14,7 @@ export function Categories() {
   return (
     <Section
       id="categories"
+      eyebrow="Browse"
       title="Categories"
       description="Start with what is live in Lekki. More categories are on the way."
       className="scroll-mt-24"

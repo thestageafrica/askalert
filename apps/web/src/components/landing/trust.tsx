@@ -21,7 +21,11 @@ const items = [
 
 export function Trust() {
   return (
-    <Section title="Trust built in" description="Clear rules. Your choice. Less guessing.">
+    <Section
+      eyebrow="Why AskAlert"
+      title="Trust built in"
+      description="Clear rules. Your choice. Less guessing."
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         {items.map((item) => (
           <Card key={item.title} className="h-full">

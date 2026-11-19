@@ -16,9 +16,15 @@ const REVERSED_SOURCES = [
   '/brand/askalert-logo-all-white.png',
 ] as const;
 
-function Wordmark({ className }: { className?: string }) {
+function Wordmark({ className, onDark = false }: { className?: string; onDark?: boolean }) {
   return (
-    <span className={cn('text-base font-extrabold tracking-tight text-navy-900', className)}>
+    <span
+      className={cn(
+        'text-lg font-extrabold tracking-tight',
+        onDark ? 'text-surface' : 'text-navy-900',
+        className,
+      )}
+    >
       Ask<span className="text-orange-500">Alert</span>
     </span>
   );
@@ -39,26 +45,8 @@ export function Logo({
     return <Wordmark className={className} />;
   }
 
-  if (reversedExhausted && defaultFailed) {
-    return (
-      <span className={cn('inline-flex items-center rounded-full bg-surface px-3 py-1.5', className)}>
-        <Wordmark />
-      </span>
-    );
-  }
-
   if (reversedExhausted) {
-    return (
-      <span className={cn('inline-flex items-center rounded-full bg-surface px-3 py-1.5', className)}>
-        <img
-          src={DEFAULT_SRC}
-          alt={alt}
-          className="h-8 w-auto"
-          onError={() => setDefaultFailed(true)}
-          {...props}
-        />
-      </span>
-    );
+    return <Wordmark className={className} onDark />;
   }
 
   const src = wantsReversed ? REVERSED_SOURCES[reversedIndex] : DEFAULT_SRC;

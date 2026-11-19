@@ -30,6 +30,7 @@ function PhoneFrame({
 export function PhoneShowcase() {
   return (
     <Section
+      eyebrow="Take a look"
       title="Built for your phone"
       description="Ask, compare, and confirm without leaving WhatsApp or your browser."
     >

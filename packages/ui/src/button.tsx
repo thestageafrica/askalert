@@ -28,22 +28,28 @@ export type ButtonAsLinkProps = SharedProps &
 export type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
 
 const sizeClasses: Record<ButtonSize, string> = {
-  md: 'min-h-11 px-5 text-sm',
-  lg: 'min-h-12 px-6 text-base',
+  md: 'min-h-11 px-6 text-sm tracking-tight',
+  lg: 'min-h-[3.25rem] px-8 text-[0.95rem] tracking-tight sm:min-h-14 sm:px-9 sm:text-base',
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: cn(
-    'bg-linear-to-r from-orange-500 to-orange-400 text-navy-900',
+    'bg-linear-to-r from-orange-500 via-orange-500 to-orange-400 text-navy-900',
     'shadow-[var(--shadow-orange-glow)]',
-    'hover:brightness-[1.03] active:brightness-95',
+    'hover:-translate-y-0.5 hover:shadow-[var(--shadow-orange-glow-strong)] hover:brightness-[1.04]',
+    'active:translate-y-0 active:brightness-95',
   ),
   secondary: cn(
-    'border bg-surface/10 text-foreground backdrop-blur-sm',
-    'border-navy-900/20 dark:border-surface/35 dark:bg-surface/10',
-    'hover:bg-surface-subtle dark:hover:bg-surface/15',
+    'border border-navy-900/15 bg-surface/70 text-navy-900 backdrop-blur-md',
+    'shadow-sm shadow-navy-950/5',
+    'hover:-translate-y-0.5 hover:bg-surface hover:border-navy-900/25',
+    'dark:border-surface/30 dark:bg-surface/10 dark:text-surface',
+    'dark:hover:bg-surface/16 dark:hover:border-surface/45',
   ),
-  ghost: 'bg-transparent text-foreground hover:bg-surface-subtle dark:hover:bg-navy-700',
+  ghost: cn(
+    'bg-transparent text-foreground',
+    'hover:bg-surface-subtle dark:hover:bg-navy-700/70',
+  ),
 };
 
 function buttonClassName({
@@ -58,7 +64,7 @@ function buttonClassName({
   disabled?: boolean;
 }) {
   return cn(
-    'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition',
+    'inline-flex items-center justify-center gap-2 rounded-full font-bold transition duration-200',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
     'focus-visible:ring-offset-background',
     disabled ? 'pointer-events-none cursor-not-allowed opacity-60' : null,

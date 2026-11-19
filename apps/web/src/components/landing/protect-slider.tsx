@@ -21,6 +21,7 @@ export function ProtectSlider() {
   return (
     <Section
       id="protect"
+      eyebrow="Protected payments"
       title="You decide how much to protect"
       description="AskAlert can hold part of the payout until you confirm the job. Move the slider to see how it splits."
       className="scroll-mt-24"

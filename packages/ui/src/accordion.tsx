@@ -30,14 +30,20 @@ export function Accordion({ items, className, allowMultiple = false }: Accordion
   };
 
   return (
-    <div className={cn('flex w-full flex-col gap-2', className)}>
+    <div className={cn('flex w-full flex-col gap-3', className)}>
       {items.map((item) => {
         const open = openIds.includes(item.id);
         const panelId = `${baseId}-panel-${item.id}`;
         const buttonId = `${baseId}-button-${item.id}`;
 
         return (
-          <div key={item.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div
+            key={item.id}
+            className={cn(
+              'overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm',
+              'transition hover:border-border',
+            )}
+          >
             <h3>
               <button
                 type="button"
@@ -45,22 +51,27 @@ export function Accordion({ items, className, allowMultiple = false }: Accordion
                 aria-expanded={open}
                 aria-controls={panelId}
                 className={cn(
-                  'flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left',
-                  'text-base font-semibold text-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  'focus-visible:ring-inset',
+                  'flex min-h-12 w-full items-center justify-between gap-3 px-5 py-4 text-left',
+                  'text-base font-bold text-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                 )}
                 onClick={() => toggle(item.id)}
               >
                 <span>{item.title}</span>
-                <span aria-hidden className="text-muted-foreground">
+                <span
+                  aria-hidden
+                  className={cn(
+                    'inline-flex size-8 items-center justify-center rounded-full bg-surface-subtle text-sm text-muted-foreground',
+                    'dark:bg-navy-700',
+                  )}
+                >
                   {open ? '−' : '+'}
                 </span>
               </button>
             </h3>
             {open ? (
-              <div id={panelId} role="region" aria-labelledby={buttonId} className="px-4 pb-4">
-                <div className="text-sm text-muted-foreground">{item.content}</div>
+              <div id={panelId} role="region" aria-labelledby={buttonId} className="px-5 pb-5">
+                <div className="text-sm leading-relaxed text-muted-foreground">{item.content}</div>
               </div>
             ) : null}
           </div>
