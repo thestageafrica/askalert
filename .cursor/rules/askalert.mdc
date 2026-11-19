@@ -1,0 +1,67 @@
+---
+description: AskAlert project rules for stack, money, design, content, quality, security, and process
+alwaysApply: true
+---
+
+# AskAlert Project Rules
+
+AskAlert is an agentic marketplace where an AI agent finds vendors or buyers, negotiates, and recommends the best options. Launch market: Lekki, Lagos, Nigeria. Tagline: Ask. Alert. Delivered.
+
+## Stack
+
+- TypeScript (strict)
+- pnpm workspaces
+- Turborepo
+- Next.js App Router
+- Tailwind CSS
+- Vitest
+- Zod
+
+## Layout
+
+- `apps/web`
+- `apps/admin`
+- `packages/ui`
+- `packages/category-engine`
+- `packages/payments`
+- `packages/config`
+
+## Money
+
+- Always use integers in minor units (kobo). Never floats.
+- Every amount carries a currency code.
+- Format Naira with `Intl.NumberFormat('en-NG')`.
+
+## Design
+
+- Use design tokens only. Never hard-coded hex values inside components.
+- Navy text on orange buttons.
+- Never white small text on orange.
+- Minimum touch target 44px.
+- Mobile-first.
+- Support light and dark mode.
+
+## Content
+
+- Plain English.
+- Short sentences.
+- Friendly and clear.
+
+## Quality
+
+- No `any`.
+- No unused code.
+- Every package has tests.
+- Run `pnpm lint`, `pnpm typecheck`, and `pnpm test` before finishing any task.
+
+## Security
+
+- No secrets in code.
+- Keep an `.env.example`.
+- Validate all external input with Zod.
+
+## Process
+
+- Small commits.
+- Explain what changed.
+- Ask before adding a new dependency.
