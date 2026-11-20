@@ -1,0 +1,108 @@
+{
+  "slug": "tutors",
+  "name": "Tutors",
+  "icon": "book",
+  "status": "draft",
+  "pricing_mode": "rate_card",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 1,
+  "commission_pct": 12,
+  "escrow": {
+    "mode": "fixed",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 0,
+    "auto_release_hours": 48,
+    "fee_bearer": "vendor",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": false,
+  "fulfilment": "provider",
+  "vendor_requirements": [
+    "Subject competence proof",
+    "Lagos home or online availability",
+    "Safeguarding contact for under-18 learners"
+  ],
+  "media_allowed": ["photo"],
+  "max_vendors_per_mission": 5,
+  "response_deadline_minutes": 180,
+  "attributes": [
+    {
+      "key": "subject",
+      "label": "Subject",
+      "type": "text",
+      "required": true,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 60 }
+    },
+    {
+      "key": "learner_level",
+      "label": "Learner level",
+      "type": "select",
+      "required": true,
+      "applies_to": "need",
+      "options": ["primary", "js1_js3", "ss1_ss3", "university", "professional"]
+    },
+    {
+      "key": "mode",
+      "label": "Mode",
+      "type": "select",
+      "required": true,
+      "applies_to": "both",
+      "options": ["in_person", "online", "either"]
+    },
+    {
+      "key": "sessions_per_week",
+      "label": "Sessions per week",
+      "type": "number",
+      "required": true,
+      "applies_to": "need",
+      "validation": { "min": 1, "max": 14 }
+    },
+    {
+      "key": "area",
+      "label": "Area",
+      "type": "area",
+      "required": false,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "budget_per_session",
+      "label": "Budget per session",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 300000 }
+    },
+    {
+      "key": "session_rate",
+      "label": "Session rate",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 300000 }
+    }
+  ],
+  "agent": {
+    "tone": "Encouraging and clear.",
+    "extra_rules": [
+      "Confirm whether the learner is under 18.",
+      "Match curriculum goals before negotiating rate."
+    ],
+    "negotiation_hints": [
+      "Offer a trial session when tutors are close on price.",
+      "Prefer tutors who can share a simple lesson plan."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.2,
+    "rating": 0.35,
+    "response_speed": 0.15,
+    "proximity": 0.15,
+    "fit": 0.15
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "slug": "real-estate",
+  "name": "Real estate",
+  "icon": "building",
+  "status": "draft",
+  "pricing_mode": "fixed",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 3,
+  "commission_pct": 5,
+  "escrow": {
+    "mode": "buyer_selectable",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 0,
+    "auto_release_hours": 168,
+    "fee_bearer": "platform",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": true,
+  "fulfilment": "none",
+  "vendor_requirements": [
+    "Agency or landlord verification",
+    "Title or allocation documents ready for viewing",
+    "Lagos listing photos"
+  ],
+  "media_allowed": ["photo"],
+  "max_vendors_per_mission": 6,
+  "response_deadline_minutes": 360,
+  "attributes": [
+    {
+      "key": "intent",
+      "label": "Intent",
+      "type": "select",
+      "required": true,
+      "applies_to": "need",
+      "options": ["rent", "buy", "short_lease"]
+    },
+    {
+      "key": "property_type",
+      "label": "Property type",
+      "type": "select",
+      "required": true,
+      "applies_to": "both",
+      "options": ["apartment", "duplex", "land", "shop", "office"]
+    },
+    {
+      "key": "bedrooms",
+      "label": "Bedrooms",
+      "type": "number",
+      "required": false,
+      "applies_to": "both",
+      "validation": { "min": 0, "max": 20 }
+    },
+    {
+      "key": "area",
+      "label": "Area",
+      "type": "area",
+      "required": true,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "budget",
+      "label": "Budget",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 50000000 }
+    },
+    {
+      "key": "asking_price",
+      "label": "Asking price",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 10000000 }
+    },
+    {
+      "key": "amenities",
+      "label": "Amenities",
+      "type": "multi",
+      "required": false,
+      "applies_to": "both",
+      "options": ["parking", "security", "generator", "borehole", "elevator"]
+    }
+  ],
+  "agent": {
+    "tone": "Careful and transparent.",
+    "extra_rules": [
+      "Never rush a buyer past inspection.",
+      "Flag agency fees separately from rent or purchase price."
+    ],
+    "negotiation_hints": [
+      "Use comparable listings in the same street before countering.",
+      "Hold more in escrow when documents are still outstanding."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.35,
+    "rating": 0.15,
+    "response_speed": 0.1,
+    "proximity": 0.2,
+    "fit": 0.2
+  }
+}

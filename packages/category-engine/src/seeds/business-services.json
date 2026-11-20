@@ -1,0 +1,108 @@
+{
+  "slug": "business-services",
+  "name": "Business services",
+  "icon": "briefcase",
+  "status": "draft",
+  "pricing_mode": "quote",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 2,
+  "commission_pct": 10,
+  "escrow": {
+    "mode": "buyer_selectable",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 0,
+    "auto_release_hours": 96,
+    "fee_bearer": "vendor",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": false,
+  "fulfilment": "none",
+  "vendor_requirements": [
+    "Portfolio or sample work",
+    "Clear delivery timeline",
+    "Business contact on WhatsApp"
+  ],
+  "media_allowed": ["photo"],
+  "max_vendors_per_mission": 5,
+  "response_deadline_minutes": 240,
+  "attributes": [
+    {
+      "key": "service_need",
+      "label": "What do you need?",
+      "type": "text",
+      "required": true,
+      "applies_to": "need",
+      "validation": { "min_length": 10, "max_length": 400 }
+    },
+    {
+      "key": "category",
+      "label": "Service category",
+      "type": "select",
+      "required": true,
+      "applies_to": "both",
+      "options": ["design", "accounting", "legal", "marketing", "admin", "other"]
+    },
+    {
+      "key": "deadline",
+      "label": "Deadline",
+      "type": "date",
+      "required": true,
+      "applies_to": "need"
+    },
+    {
+      "key": "budget",
+      "label": "Budget",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 2000000 }
+    },
+    {
+      "key": "area",
+      "label": "Area",
+      "type": "area",
+      "required": false,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "quote_amount",
+      "label": "Quote amount",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 1000000 }
+    },
+    {
+      "key": "turnaround_days",
+      "label": "Turnaround days",
+      "type": "number",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "days",
+      "validation": { "min": 1, "max": 90 }
+    }
+  ],
+  "agent": {
+    "tone": "Crisp and professional.",
+    "extra_rules": [
+      "Break the work into milestones when the job is large.",
+      "Never accept vague delivery dates."
+    ],
+    "negotiation_hints": [
+      "Trade scope before trading price.",
+      "Ask for a revision limit in writing."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.25,
+    "rating": 0.3,
+    "response_speed": 0.2,
+    "proximity": 0.05,
+    "fit": 0.2
+  }
+}

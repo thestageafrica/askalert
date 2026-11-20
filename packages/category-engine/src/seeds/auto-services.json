@@ -1,0 +1,107 @@
+{
+  "slug": "auto-services",
+  "name": "Auto services",
+  "icon": "wrench",
+  "status": "draft",
+  "pricing_mode": "quote",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 2,
+  "commission_pct": 10,
+  "escrow": {
+    "mode": "buyer_selectable",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 0,
+    "auto_release_hours": 48,
+    "fee_bearer": "vendor",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": true,
+  "fulfilment": "none",
+  "vendor_requirements": [
+    "Workshop address or mobile van details",
+    "Spare-parts policy in writing",
+    "At least one mechanic on duty"
+  ],
+  "media_allowed": ["photo", "voice_note"],
+  "max_vendors_per_mission": 4,
+  "response_deadline_minutes": 120,
+  "attributes": [
+    {
+      "key": "vehicle_make",
+      "label": "Vehicle make",
+      "type": "text",
+      "required": true,
+      "applies_to": "need",
+      "validation": { "min_length": 2, "max_length": 40 }
+    },
+    {
+      "key": "issue",
+      "label": "Issue",
+      "type": "text",
+      "required": true,
+      "applies_to": "need",
+      "validation": { "min_length": 5, "max_length": 240 }
+    },
+    {
+      "key": "service_type",
+      "label": "Service type",
+      "type": "select",
+      "required": true,
+      "applies_to": "both",
+      "options": ["diagnostics", "servicing", "bodywork", "tyres", "towing"]
+    },
+    {
+      "key": "area",
+      "label": "Area",
+      "type": "area",
+      "required": true,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "budget",
+      "label": "Budget",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 1000000 }
+    },
+    {
+      "key": "quote_amount",
+      "label": "Quote amount",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 500000 }
+    },
+    {
+      "key": "mobile_service",
+      "label": "Can come to me",
+      "type": "boolean",
+      "required": false,
+      "applies_to": "offer"
+    }
+  ],
+  "agent": {
+    "tone": "Practical and safety-first.",
+    "extra_rules": [
+      "Separate labour and parts in every quote.",
+      "Warn the buyer before any repair that needs extra parts."
+    ],
+    "negotiation_hints": [
+      "Ask for a diagnosis fee credit when the buyer proceeds with the repair.",
+      "Prefer workshops with a clear warranty window."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.3,
+    "rating": 0.3,
+    "response_speed": 0.2,
+    "proximity": 0.15,
+    "fit": 0.05
+  }
+}

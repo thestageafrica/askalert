@@ -1,0 +1,108 @@
+{
+  "slug": "shortlets",
+  "name": "Shortlets",
+  "icon": "home",
+  "status": "pilot",
+  "pricing_mode": "rate_card",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 2,
+  "commission_pct": 10,
+  "escrow": {
+    "mode": "buyer_selectable",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 0,
+    "auto_release_hours": 48,
+    "fee_bearer": "vendor",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": false,
+  "fulfilment": "none",
+  "vendor_requirements": [
+    "Verified host profile",
+    "Clear cancellation policy",
+    "Working Wi-Fi disclosure"
+  ],
+  "media_allowed": ["photo"],
+  "max_vendors_per_mission": 6,
+  "response_deadline_minutes": 120,
+  "attributes": [
+    {
+      "key": "check_in",
+      "label": "Check-in date",
+      "type": "date",
+      "required": true,
+      "applies_to": "need"
+    },
+    {
+      "key": "check_out",
+      "label": "Check-out date",
+      "type": "date",
+      "required": true,
+      "applies_to": "need"
+    },
+    {
+      "key": "guests",
+      "label": "Guests",
+      "type": "number",
+      "required": true,
+      "applies_to": "need",
+      "unit": "guests",
+      "validation": { "min": 1, "max": 20 }
+    },
+    {
+      "key": "bedrooms",
+      "label": "Bedrooms",
+      "type": "number",
+      "required": true,
+      "applies_to": "both",
+      "unit": "rooms",
+      "validation": { "min": 1, "max": 10 }
+    },
+    {
+      "key": "budget_per_night",
+      "label": "Budget per night",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 1500000 }
+    },
+    {
+      "key": "area",
+      "label": "Area",
+      "type": "area",
+      "required": true,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "nightly_rate",
+      "label": "Nightly rate",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 1000000 }
+    }
+  ],
+  "agent": {
+    "tone": "Calm and practical.",
+    "extra_rules": [
+      "Reject offers that cannot cover the full stay dates.",
+      "Always confirm self check-in and parking if the buyer asked."
+    ],
+    "negotiation_hints": [
+      "Ask hosts for a multi-night discount before changing dates.",
+      "Prefer verified hosts with clear house rules."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.35,
+    "rating": 0.25,
+    "response_speed": 0.15,
+    "proximity": 0.15,
+    "fit": 0.1
+  }
+}

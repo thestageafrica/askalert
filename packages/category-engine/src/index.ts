@@ -1,18 +1,60 @@
+import { findSeedCategoryBySlug, listSeedCategories } from './seeds/index';
+
+export {
+  agentSchema,
+  appliesToSchema,
+  attributeSchema,
+  attributeTypeSchema,
+  attributeValidationSchema,
+  categoryConfigSchema,
+  categoryStatusSchema,
+  escrowModeSchema,
+  escrowSchema,
+  feeBearerSchema,
+  fulfilmentModeSchema,
+  mediaAllowedSchema,
+  negotiationModeSchema,
+  pricingModeSchema,
+  rankingWeightsSchema,
+  type AppliesTo,
+  type AttributeType,
+  type CategoryAttribute,
+  type CategoryConfig,
+  type CategoryStatus,
+  type RankingWeights,
+} from './schemas';
+
+export { buildIntakeSteps, type IntakeStep } from './build-intake-steps';
+export {
+  publishErrors,
+  validateConfig,
+  type ConfigValidationResult,
+} from './validate-config';
+export {
+  findSeedCategoryBySlug,
+  listSeedCategories,
+  seedCategories,
+} from './seeds/index';
+
+/** @deprecated Prefer CategoryConfig from seed configs. Kept for admin shell compatibility. */
 export type Category = {
   id: string;
   name: string;
   slug: string;
 };
 
-const categories: readonly Category[] = [
-  { id: 'cat_home', name: 'Home services', slug: 'home-services' },
-  { id: 'cat_food', name: 'Food and drinks', slug: 'food-and-drinks' },
-];
-
 export function listCategories(): readonly Category[] {
-  return categories;
+  return listSeedCategories().map((category) => ({
+    id: category.slug,
+    name: category.name,
+    slug: category.slug,
+  }));
 }
 
 export function findCategoryBySlug(slug: string): Category | undefined {
-  return categories.find((category) => category.slug === slug);
+  const category = findSeedCategoryBySlug(slug);
+  if (!category) {
+    return undefined;
+  }
+  return { id: category.slug, name: category.name, slug: category.slug };
 }

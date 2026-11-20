@@ -1,0 +1,100 @@
+{
+  "slug": "car-hire-with-driver",
+  "name": "Car hire with driver",
+  "icon": "car",
+  "status": "draft",
+  "pricing_mode": "rate_card",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 1,
+  "commission_pct": 10,
+  "escrow": {
+    "mode": "buyer_selectable",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 0,
+    "auto_release_hours": 24,
+    "fee_bearer": "vendor",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": false,
+  "fulfilment": "provider",
+  "vendor_requirements": [
+    "Valid driver licence",
+    "Insured vehicle",
+    "Lagos route experience"
+  ],
+  "media_allowed": ["photo"],
+  "max_vendors_per_mission": 4,
+  "response_deadline_minutes": 60,
+  "attributes": [
+    {
+      "key": "trip_date",
+      "label": "Trip date",
+      "type": "date",
+      "required": true,
+      "applies_to": "need"
+    },
+    {
+      "key": "duration_hours",
+      "label": "Duration",
+      "type": "number",
+      "required": true,
+      "applies_to": "need",
+      "unit": "hours",
+      "validation": { "min": 1, "max": 72 }
+    },
+    {
+      "key": "pickup_area",
+      "label": "Pickup area",
+      "type": "area",
+      "required": true,
+      "applies_to": "need",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "vehicle_class",
+      "label": "Vehicle class",
+      "type": "select",
+      "required": true,
+      "applies_to": "both",
+      "options": ["saloon", "suv", "bus", "luxury"]
+    },
+    {
+      "key": "budget",
+      "label": "Budget",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 2000000 }
+    },
+    {
+      "key": "offer_rate",
+      "label": "Offer rate",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 1500000 }
+    }
+  ],
+  "agent": {
+    "tone": "Professional and on-time focused.",
+    "extra_rules": [
+      "Confirm waiting-time fees up front.",
+      "Never book an uninsured vehicle."
+    ],
+    "negotiation_hints": [
+      "Ask for a full-day rate when the trip may run long.",
+      "Prefer drivers already near the pickup area."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.3,
+    "rating": 0.25,
+    "response_speed": 0.2,
+    "proximity": 0.2,
+    "fit": 0.05
+  }
+}

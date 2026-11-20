@@ -19,7 +19,10 @@ export default function AdminHomePage() {
           </div>
           <ul className="mb-6 list-disc pl-5 text-muted-foreground">
             {categories.map((category) => (
-              <li key={category.id}>{category.name}</li>
+              <li key={category.slug}>
+                {category.name}{' '}
+                <span className="text-xs uppercase tracking-wide">({category.slug})</span>
+              </li>
             ))}
           </ul>
           <Button>Open queue</Button>

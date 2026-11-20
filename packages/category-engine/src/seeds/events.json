@@ -1,0 +1,100 @@
+{
+  "slug": "events",
+  "name": "Events",
+  "icon": "party",
+  "status": "pilot",
+  "pricing_mode": "quote",
+  "negotiation": "assisted",
+  "autopilot_max_rounds": 2,
+  "commission_pct": 8,
+  "escrow": {
+    "mode": "buyer_selectable",
+    "default_hold_pct": 60,
+    "min_hold_pct": 0,
+    "max_hold_pct": 100,
+    "vendor_min_release_pct": 30,
+    "auto_release_hours": 72,
+    "fee_bearer": "vendor",
+    "refund_commission_on_vendor_fault": true
+  },
+  "inspection_required": false,
+  "fulfilment": "none",
+  "vendor_requirements": [
+    "Valid CAC or business name",
+    "At least two recent event photos",
+    "Lagos service coverage"
+  ],
+  "media_allowed": ["photo", "voice_note"],
+  "max_vendors_per_mission": 5,
+  "response_deadline_minutes": 180,
+  "attributes": [
+    {
+      "key": "event_date",
+      "label": "Event date",
+      "type": "date",
+      "required": true,
+      "applies_to": "need"
+    },
+    {
+      "key": "guest_count",
+      "label": "Guest count",
+      "type": "number",
+      "required": true,
+      "applies_to": "need",
+      "unit": "guests",
+      "validation": { "min": 1, "max": 5000 }
+    },
+    {
+      "key": "budget",
+      "label": "Budget",
+      "type": "money",
+      "required": true,
+      "applies_to": "need",
+      "unit": "kobo",
+      "validation": { "min": 5000000 }
+    },
+    {
+      "key": "venue_area",
+      "label": "Venue area",
+      "type": "area",
+      "required": true,
+      "applies_to": "both",
+      "validation": { "min_length": 2, "max_length": 80 }
+    },
+    {
+      "key": "event_type",
+      "label": "Event type",
+      "type": "select",
+      "required": true,
+      "applies_to": "both",
+      "options": ["birthday", "wedding", "corporate", "naming", "other"]
+    },
+    {
+      "key": "offer_price",
+      "label": "Offer price",
+      "type": "money",
+      "required": true,
+      "applies_to": "offer",
+      "unit": "kobo",
+      "validation": { "min": 1000000 }
+    }
+  ],
+  "agent": {
+    "tone": "Warm, clear, and Lagos-friendly.",
+    "extra_rules": [
+      "Confirm guest count before asking vendors.",
+      "Never promise a venue the vendor has not confirmed."
+    ],
+    "negotiation_hints": [
+      "Ask for a package that fits the budget before pushing for discounts.",
+      "Prefer vendors who can hold a deposit against escrow."
+    ]
+  },
+  "ranking_weights": {
+    "price": 0.3,
+    "rating": 0.25,
+    "response_speed": 0.2,
+    "proximity": 0.15,
+    "fit": 0.1
+  }
+}
