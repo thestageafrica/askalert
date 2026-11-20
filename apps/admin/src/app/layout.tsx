@@ -13,8 +13,16 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'AskAlert Admin',
-  description: 'AskAlert admin shell',
+  title: {
+    default: 'AskAlert Admin',
+    template: '%s | AskAlert Admin',
+  },
+  description: 'AskAlert admin console for categories, vendors and operations.',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: { index: false, follow: false },
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

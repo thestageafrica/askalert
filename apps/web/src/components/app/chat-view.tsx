@@ -87,7 +87,7 @@ export function ChatView({ chatId }: { chatId: string }) {
         })}
       </div>
 
-      <div className="sticky bottom-16 space-y-3 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky bottom-24 space-y-3 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="flex gap-2 overflow-x-auto pb-1">
           {quickReplies.map((reply) => (
             <button

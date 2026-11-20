@@ -12,7 +12,7 @@ export default function AppSectionLayout({ children }: { children: ReactNode }) 
   return (
     <MockStoreProvider>
       <div className="min-h-screen bg-[radial-gradient(120%_80%_at_50%_-10%,_color-mix(in_srgb,var(--orange-500)_10%,transparent),_transparent_55%),var(--background)]">
-        <div className="mx-auto min-h-screen w-full max-w-lg pb-24">{children}</div>
+        <div className="mx-auto min-h-screen w-full max-w-lg pb-28">{children}</div>
         <BottomNav />
       </div>
     </MockStoreProvider>
