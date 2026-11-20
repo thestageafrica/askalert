@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if (pathname === '/api/health' || pathname === '/robots.txt') {
+    return NextResponse.next();
+  }
+
   const user = process.env.ADMIN_BASIC_USER;
   const password = process.env.ADMIN_BASIC_PASSWORD;
 
@@ -31,5 +36,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|brand/).*)'],
 };

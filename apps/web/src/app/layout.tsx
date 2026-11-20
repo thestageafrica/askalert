@@ -24,6 +24,21 @@ export const metadata: Metadata = {
     template: '%s | AskAlert',
   },
   description: APP_DESCRIPTION,
+  keywords: ['AskAlert', 'Lagos', 'vendors', 'shortlets', 'events', 'home care', 'escrow'],
+  authors: [{ name: 'AskAlert Technologies Limited' }],
+  creator: 'AskAlert Technologies Limited',
+  openGraph: {
+    type: 'website',
+    locale: 'en_NG',
+    siteName: APP_NAME,
+    title: 'AskAlert | Ask. Alert. Delivered.',
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AskAlert | Ask. Alert. Delivered.',
+    description: APP_DESCRIPTION,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

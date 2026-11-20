@@ -28,7 +28,7 @@ export function SiteFooter() {
         </nav>
       </Container>
       <Container width="xl" className="border-t border-surface/10 py-4">
-        <p className="text-sm text-surface/60">© 2026 AskAlert</p>
+        <p className="text-sm text-surface/60">© 2026 AskAlert Technologies Limited</p>
       </Container>
     </footer>
   );

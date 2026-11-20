@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@askalert/ui';
+import { Button, Card } from '@askalert/ui';
 import { StatusChip } from '../../components/status-chip';
 import { useAdminStore } from '../../lib/admin-store';
 import { canEditCategories } from '../../lib/roles';
@@ -13,10 +13,13 @@ export default function CategoriesPage() {
   const canEdit = canEditCategories(role);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Categories</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">
+            Marketplace
+          </p>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight">Categories</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Config-driven marketplace categories from the category engine.
           </p>
@@ -44,7 +47,35 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {categories.map((category) => (
+          <Card
+            key={category.id}
+            className="border border-border/70 p-4 shadow-[0_12px_28px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition hover:-translate-y-0.5"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-lg font-extrabold text-foreground">{category.draft.name}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{category.draft.slug}</p>
+              </div>
+              <StatusChip status={category.draft.status} />
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-card-muted px-3 py-2.5">
+              <p className="text-sm font-semibold text-foreground">
+                {category.vendorsCount} vendors
+              </p>
+              <Link
+                href={`/categories/${category.id}`}
+                className="text-sm font-bold text-orange-600 hover:underline"
+              >
+                {canEdit ? 'Edit' : 'View'}
+              </Link>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <div className="overflow-x-auto rounded-[1.35rem] border border-border/70 bg-card shadow-sm">
         <table className="w-full min-w-[40rem] text-left text-sm">
           <thead className="bg-card-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -56,7 +87,7 @@ export default function CategoriesPage() {
           </thead>
           <tbody>
             {categories.map((category) => (
-              <tr key={category.id} className="border-t border-border">
+              <tr key={category.id} className="border-t border-border transition hover:bg-orange-500/5">
                 <td className="px-4 py-3">
                   <p className="font-bold text-foreground">{category.draft.name}</p>
                   <p className="text-xs text-muted-foreground">{category.draft.slug}</p>

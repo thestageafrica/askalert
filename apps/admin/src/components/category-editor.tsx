@@ -128,22 +128,30 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/categories" className="text-sm font-semibold text-orange-600">
-            ← Categories
-          </Link>
-          <h1 className="mt-2 text-2xl font-extrabold tracking-tight">{draft.name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StatusChip status={draft.status} />
-            <span className="text-sm text-muted-foreground">{draft.slug}</span>
+      <div className="relative overflow-hidden rounded-[1.5rem] border border-navy-700/25 bg-navy-950 px-5 py-5 text-surface shadow-[0_16px_40px_color-mix(in_srgb,var(--navy-950)_16%,transparent)]">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_100%_0%,_var(--glow-orange-strong),_transparent_55%)]"
+          aria-hidden
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <Link href="/categories" className="text-sm font-semibold text-orange-400">
+              ← Categories
+            </Link>
+            <h1 className="mt-2 text-3xl font-extrabold tracking-tight">{draft.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <StatusChip status={draft.status} />
+              <span className="rounded-full border border-surface/15 bg-surface/10 px-2.5 py-1 text-xs font-semibold text-surface/75">
+                {draft.slug}
+              </span>
+            </div>
           </div>
+          {!canEdit ? (
+            <p className="rounded-full border border-surface/15 bg-surface/10 px-3 py-2 text-xs font-bold text-surface/80">
+              View only · {role}
+            </p>
+          ) : null}
         </div>
-        {!canEdit ? (
-          <p className="rounded-full bg-card-muted px-3 py-2 text-xs font-bold text-muted-foreground">
-            View only · {role}
-          </p>
-        ) : null}
       </div>
 
       <Tabs defaultValue="basics">

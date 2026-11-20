@@ -3,7 +3,7 @@ export function getSiteUrl(): string {
 }
 
 export function getWhatsAppNumber(): string {
-  return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '+2348000000000';
+  return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348000000000';
 }
 
 /** Digits only for https://wa.me/ links. */

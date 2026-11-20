@@ -47,8 +47,8 @@ export function ChatView({ chatId }: { chatId: string }) {
         }
       />
 
-      <div className="flex-1 space-y-3 px-4 py-4">
-        <p className="rounded-2xl border border-dashed border-border bg-card-muted px-3 py-2 text-center text-xs text-muted-foreground">
+      <div className="flex-1 space-y-3 bg-[radial-gradient(90%_40%_at_50%_0%,_color-mix(in_srgb,var(--orange-500)_8%,transparent),_transparent_55%)] px-4 py-4">
+        <p className="rounded-2xl border border-dashed border-border/80 bg-card/90 px-3 py-2 text-center text-xs font-medium text-muted-foreground shadow-sm backdrop-blur">
           Contact details are shared after booking
         </p>
 

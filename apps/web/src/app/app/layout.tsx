@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function AppSectionLayout({ children }: { children: ReactNode }) {
   return (
     <MockStoreProvider>
-      <div className="min-h-screen bg-[radial-gradient(120%_80%_at_50%_-10%,_color-mix(in_srgb,var(--orange-500)_10%,transparent),_transparent_55%),var(--background)]">
+      <div className="relative min-h-screen overflow-x-hidden bg-[radial-gradient(120%_70%_at_50%_-8%,_color-mix(in_srgb,var(--orange-500)_14%,transparent),_transparent_52%),radial-gradient(80%_50%_at_100%_30%,_color-mix(in_srgb,var(--navy-700)_8%,transparent),_transparent_55%),var(--surface-subtle)]">
         <div className="mx-auto min-h-screen w-full max-w-lg pb-28">{children}</div>
         <BottomNav />
       </div>

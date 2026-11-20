@@ -58,36 +58,38 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))]"
       >
         <div className="relative mx-auto max-w-lg">
-          <div className="flex items-end justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950/92 px-1.5 pb-2 pt-2 shadow-[0_-8px_32px_rgba(10,15,51,0.35)] backdrop-blur-xl">
+          <div className="flex items-end justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950/92 px-1.5 pb-2 pt-2 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)] backdrop-blur-xl">
             {left.map((item) => (
               <NavLink key={item.href} item={item} pathname={pathname} />
             ))}
 
-            {/* Spacer for the raised Ask button */}
-            <div className="w-[4.75rem] shrink-0" aria-hidden />
+            <button
+              type="button"
+              onClick={() => setAskOpen(true)}
+              className={cn(
+                'relative flex min-h-14 w-[5.25rem] shrink-0 flex-col items-center justify-end gap-1 px-1',
+                'text-[10px] font-semibold tracking-wide text-orange-400',
+                'focus-visible:outline-none',
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute -top-7 flex size-[3.85rem] items-center justify-center rounded-full',
+                  'bg-gradient-to-br from-orange-400 to-orange-500 text-navy-900',
+                  'shadow-[0_12px_28px_var(--glow-orange-strong)]',
+                  'ring-[6px] ring-navy-950/75',
+                  'transition hover:-translate-y-0.5 hover:brightness-105',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950',
+                )}
+              >
+                <AskIcon />
+              </span>
+              Start Ask
+            </button>
 
             {right.map((item) => (
               <NavLink key={item.href} item={item} pathname={pathname} />
             ))}
-          </div>
-
-          <div className="pointer-events-none absolute inset-x-0 -top-7 flex justify-center">
-            <button
-              type="button"
-              aria-label="Ask AskAlert"
-              onClick={() => setAskOpen(true)}
-              className={cn(
-                'pointer-events-auto flex size-[3.85rem] items-center justify-center rounded-full',
-                'bg-gradient-to-br from-orange-400 to-orange-500 text-navy-900',
-                'shadow-[0_12px_28px_var(--glow-orange-strong)]',
-                // Halo matches the navy nav (semi-transparent), like the sample cutout gap
-                'ring-[6px] ring-navy-950/75',
-                'transition hover:-translate-y-0.5 hover:brightness-105',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950',
-              )}
-            >
-              <AskIcon />
-            </button>
           </div>
         </div>
       </nav>
@@ -101,14 +103,16 @@ export function BottomNav() {
             <button
               key={category.slug}
               type="button"
-              className="flex min-h-12 w-full items-center justify-between rounded-2xl border border-border bg-card-muted px-4 text-left text-sm font-bold text-foreground"
+              className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card px-4 text-left shadow-sm transition hover:border-orange-500/40 hover:bg-orange-500/5"
               onClick={() => {
                 setAskOpen(false);
                 router.push(`/app/new/${category.slug}`);
               }}
             >
-              <span>{category.name}</span>
-              <span className="text-xs font-semibold text-orange-600">Start</span>
+              <span className="text-sm font-extrabold text-foreground">{category.name}</span>
+              <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-navy-900">
+                Start
+              </span>
             </button>
           ))}
         </div>
@@ -126,12 +130,19 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     <Link
       href={item.href}
       className={cn(
-        'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-semibold tracking-wide',
-        active ? 'text-orange-500' : 'text-surface/70 hover:text-surface',
+        'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-semibold tracking-wide transition',
+        active ? 'text-orange-400' : 'text-surface/65 hover:text-surface',
       )}
       aria-current={active ? 'page' : undefined}
     >
-      {item.icon(active)}
+      <span
+        className={cn(
+          'flex size-9 items-center justify-center rounded-xl transition',
+          active && 'bg-orange-500/15',
+        )}
+      >
+        {item.icon(active)}
+      </span>
       {item.label}
     </Link>
   );

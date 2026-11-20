@@ -42,3 +42,7 @@ Thumbs.db
 # Serwist generated service worker
 apps/web/public/sw*
 apps/web/public/swe-worker*
+
+# Local secrets / scratch (never commit)
+DEPLOYINFO.md
+.tmp-icons/

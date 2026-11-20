@@ -172,15 +172,17 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
 function Timeline({ status }: { status: RequestStatus }) {
   const active = statusIndex(status);
   return (
-    <ol className="grid grid-cols-4 gap-2">
+    <ol className="grid grid-cols-4 gap-2 rounded-[1.35rem] border border-border/60 bg-card p-3 shadow-sm">
       {timeline.map((item, index) => {
         const done = index <= active;
+        const current = index === active;
         return (
           <li key={item.id} className="text-center">
             <div
               className={cn(
-                'mx-auto mb-2 h-1.5 rounded-full',
+                'mx-auto mb-2 h-1.5 rounded-full transition',
                 done ? 'bg-orange-500' : 'bg-border',
+                current && 'shadow-[0_0_12px_var(--glow-orange)]',
               )}
             />
             <p

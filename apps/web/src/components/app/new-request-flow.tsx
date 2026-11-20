@@ -91,9 +91,9 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
         title={`New ${category.name.toLowerCase()} ask`}
         subtitle="One clear question at a time."
       />
-      <div className="space-y-5 px-4 pt-5">
+      <div className="space-y-5 px-4 pt-2">
         <div
-          className="h-2 overflow-hidden rounded-full bg-border"
+          className="h-2.5 overflow-hidden rounded-full bg-border/80 shadow-inner"
           role="progressbar"
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
@@ -101,13 +101,13 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
           aria-label="Ask progress"
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400 transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400 shadow-[0_0_12px_var(--glow-orange)] transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {phase === 'questions' && step ? (
-          <div className="rounded-[1.5rem] border border-border/70 bg-card p-5 shadow-sm">
+          <div className="rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-[0_12px_28px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
             <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
               Question {index + 1} of {steps.length}
             </p>

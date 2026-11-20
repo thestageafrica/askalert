@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
+import { securityHeaders } from './src/lib/security-headers';
 
 // Serwist (Workbox successor): first-class Next App Router support, precache +
 // runtime caching, and offline document fallbacks without hand-rolling a SW.
@@ -20,6 +21,15 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@askalert/ui', '@askalert/payments', '@askalert/category-engine'],
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
+  },
 };
 
 export default withSerwist(nextConfig);
