@@ -35,3 +35,14 @@ export function createMoney(amountKobo: number, currency: Money['currency'] = 'N
 
   return { amountKobo, currency };
 }
+
+export {
+  computeEscrowSplit,
+  computeEscrowSplitInputSchema,
+  escrowBoundsSchema,
+  feeBearerSchema,
+  type ComputeEscrowSplitInput,
+  type EscrowBounds,
+  type EscrowSplitResult,
+  type FeeBearer,
+} from './compute-escrow-split';
