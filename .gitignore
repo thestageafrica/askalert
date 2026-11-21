@@ -46,3 +46,4 @@ apps/web/public/swe-worker*
 # Local secrets / scratch (never commit)
 DEPLOYINFO.md
 .tmp-icons/
+.tmp-lighthouse*.json
