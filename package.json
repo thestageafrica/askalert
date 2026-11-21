@@ -9,8 +9,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "db:generate-seed": "node scripts/generate-seed.mjs",
-    "db:push": "supabase db push",
-    "db:seed": "supabase db query --linked -f supabase/seed.sql"
+    "db:push": "supabase db push --remote --yes",
+    "db:seed": "supabase db query --remote --yes -f supabase/seed.sql"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

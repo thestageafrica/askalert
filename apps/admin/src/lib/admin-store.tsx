@@ -40,23 +40,40 @@ export type ManagedCategory = {
   };
 };
 
+type PublishOutcome = { ok: true } | { ok: false; errors: string[] };
+
 type AdminStore = {
   role: AdminRole;
   setRole: (role: AdminRole) => void;
   categories: ManagedCategory[];
+  categoriesLoading: boolean;
   getCategory: (id: string) => ManagedCategory | undefined;
   updateDraft: (id: string, draft: CategoryConfig) => void;
   publishCategory: (
     id: string,
     note: string,
     nextStatus?: CategoryStatus,
-  ) => { ok: true } | { ok: false; errors: string[] };
+  ) => Promise<PublishOutcome>;
   rollbackCategory: (id: string, versionId: string) => void;
   createCategory: (fromId?: string) => ManagedCategory;
   setReadiness: (id: string, key: keyof ManagedCategory['readiness'], value: boolean) => void;
 };
 
 const AdminStoreContext = createContext<AdminStore | null>(null);
+
+function supabaseEnabledOnClient(): boolean {
+  return process.env.NEXT_PUBLIC_USE_SUPABASE === 'true';
+}
+
+function readinessFromStatus(status: CategoryStatus): ManagedCategory['readiness'] {
+  return {
+    verifiedVendors: status !== 'draft',
+    fastResponders: status === 'pilot' || status === 'live',
+    supplyOwner: true,
+    termsReady: status !== 'draft',
+    evaluationPassed: status === 'pilot' || status === 'live',
+  };
+}
 
 function seedManaged(): ManagedCategory[] {
   return listSeedCategories().map((config, index) => ({
@@ -72,26 +89,58 @@ function seedManaged(): ManagedCategory[] {
         published: config.status === 'pilot' || config.status === 'live',
       },
     ],
-    readiness: {
-      verifiedVendors: config.status !== 'draft',
-      fastResponders: config.status === 'pilot' || config.status === 'live',
-      supplyOwner: true,
-      termsReady: config.status !== 'draft',
-      evaluationPassed: config.status === 'pilot' || config.status === 'live',
-    },
+    readiness: readinessFromStatus(config.status),
   }));
 }
 
+function fromSupabaseRows(
+  rows: Array<{
+    id: string;
+    slug: string;
+    vendorsCount?: number;
+    draft: CategoryConfig;
+    status?: CategoryStatus;
+  }>,
+): ManagedCategory[] {
+  return rows.map((row, index) => {
+    const status = row.status ?? row.draft.status;
+    const draft: CategoryConfig = {
+      ...structuredClone(row.draft),
+      status,
+    };
+    return {
+      id: row.id,
+      vendorsCount: row.vendorsCount ?? 8 + index * 3,
+      draft,
+      versions: [
+        {
+          id: `${row.slug}_v1`,
+          note: 'Loaded from Supabase',
+          createdAt: new Date().toISOString(),
+          config: structuredClone(draft),
+          published: status === 'pilot' || status === 'live',
+        },
+      ],
+      readiness: readinessFromStatus(status),
+    };
+  });
+}
+
 export function AdminStoreProvider({ children }: { children: ReactNode }) {
+  const useRemote = supabaseEnabledOnClient();
   const [role, setRole] = useState<AdminRole>('super_admin');
-  const [categories, setCategories] = useState<ManagedCategory[]>(() => seedManaged());
+  const [categories, setCategories] = useState<ManagedCategory[]>(() =>
+    useRemote ? [] : seedManaged(),
+  );
+  const [categoriesLoading, setCategoriesLoading] = useState(useRemote);
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_USE_SUPABASE !== 'true') {
+    if (!useRemote) {
       return;
     }
 
     let cancelled = false;
+    setCategoriesLoading(true);
     void fetch('/api/categories')
       .then(async (response) => {
         const body = (await response.json()) as {
@@ -103,67 +152,60 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             draft: CategoryConfig;
             status?: CategoryStatus;
           }>;
+          error?: string;
         };
-        if (!response.ok || body.source !== 'supabase' || !body.categories || cancelled) {
+        if (cancelled) {
           return;
         }
-        setCategories(
-          body.categories.map((row, index) => ({
-            id: row.id,
-            vendorsCount: row.vendorsCount ?? 8 + index * 3,
-            draft: structuredClone(row.draft),
-            versions: [
-              {
-                id: `${row.slug}_v1`,
-                note: 'Loaded from Supabase',
-                createdAt: new Date().toISOString(),
-                config: structuredClone(row.draft),
-                published:
-                  row.draft.status === 'pilot' ||
-                  row.draft.status === 'live' ||
-                  row.status === 'pilot' ||
-                  row.status === 'live',
-              },
-            ],
-            readiness: {
-              verifiedVendors: row.draft.status !== 'draft',
-              fastResponders:
-                row.draft.status === 'pilot' || row.draft.status === 'live',
-              supplyOwner: true,
-              termsReady: row.draft.status !== 'draft',
-              evaluationPassed:
-                row.draft.status === 'pilot' || row.draft.status === 'live',
-            },
-          })),
-        );
+        if (!response.ok || body.source !== 'supabase' || !body.categories) {
+          setCategories(seedManaged());
+          return;
+        }
+        setCategories(fromSupabaseRows(body.categories));
       })
       .catch(() => {
-        // Keep mock seeds if Supabase hydrate fails.
+        if (!cancelled) {
+          setCategories(seedManaged());
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setCategoriesLoading(false);
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [useRemote]);
 
   const getCategory = useCallback(
-    (id: string) => categories.find((category) => category.id === id),
+    (id: string) =>
+      categories.find(
+        (category) => category.id === id || category.draft.slug === id,
+      ),
     [categories],
   );
 
   const updateDraft = useCallback((id: string, draft: CategoryConfig) => {
     setCategories((current) =>
-      current.map((category) => (category.id === id ? { ...category, draft } : category)),
+      current.map((category) =>
+        category.id === id || category.draft.slug === id
+          ? { ...category, draft }
+          : category,
+      ),
     );
   }, []);
 
   const publishCategory = useCallback(
-    (
+    async (
       id: string,
       note: string,
       nextStatus: CategoryStatus = 'pilot',
-    ): { ok: true } | { ok: false; errors: string[] } => {
-      const managed = categories.find((category) => category.id === id);
+    ): Promise<PublishOutcome> => {
+      const managed = categories.find(
+        (category) => category.id === id || category.draft.slug === id,
+      );
       if (!managed) {
         return { ok: false, errors: ['Category not found.'] };
       }
@@ -177,8 +219,40 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         return { ok: false, errors: result.errors };
       }
 
+      if (useRemote) {
+        try {
+          const response = await fetch(
+            `/api/categories/${encodeURIComponent(managed.id)}/publish`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                config: result.config,
+                note: note.trim() || 'Published update',
+                nextStatus,
+              }),
+            },
+          );
+          const body = (await response.json()) as {
+            ok?: boolean;
+            errors?: string[];
+            error?: string;
+          };
+          if (!response.ok || body.ok === false) {
+            return {
+              ok: false,
+              errors:
+                body.errors ??
+                (body.error ? [body.error] : ['Could not save to Supabase.']),
+            };
+          }
+        } catch {
+          return { ok: false, errors: ['Could not reach the publish API.'] };
+        }
+      }
+
       const version: CategoryVersion = {
-        id: `${id}_v${managed.versions.length + 1}`,
+        id: `${managed.id}_v${managed.versions.length + 1}`,
         note: note.trim() || 'Published update',
         createdAt: new Date().toISOString(),
         config: structuredClone(result.config),
@@ -187,38 +261,26 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
 
       setCategories((current) =>
         current.map((category) =>
-          category.id === id
+          category.id === managed.id
             ? {
                 ...category,
                 draft: structuredClone(result.config),
                 versions: [version, ...category.versions],
+                readiness: readinessFromStatus(result.config.status),
               }
             : category,
         ),
       );
 
-      // Fire-and-forget sync when Supabase is enabled (API validates again).
-      if (process.env.NEXT_PUBLIC_USE_SUPABASE === 'true') {
-        void fetch(`/api/categories/${encodeURIComponent(id)}/publish`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            config: result.config,
-            note: version.note,
-            nextStatus,
-          }),
-        });
-      }
-
       return { ok: true };
     },
-    [categories],
+    [categories, useRemote],
   );
 
   const rollbackCategory = useCallback((id: string, versionId: string) => {
     setCategories((current) =>
       current.map((category) => {
-        if (category.id !== id) {
+        if (category.id !== id && category.draft.slug !== id) {
           return category;
         }
         const version = category.versions.find((item) => item.id === versionId);
@@ -233,7 +295,9 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const createCategory = useCallback(
     (fromId?: string) => {
       const source = fromId
-        ? categories.find((category) => category.id === fromId)?.draft
+        ? categories.find(
+            (category) => category.id === fromId || category.draft.slug === fromId,
+          )?.draft
         : undefined;
       const slugBase = source ? `${source.slug}-copy` : `category-${Date.now()}`;
       const draft = source
@@ -250,13 +314,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         vendorsCount: 0,
         draft,
         versions: [],
-        readiness: {
-          verifiedVendors: false,
-          fastResponders: false,
-          supplyOwner: false,
-          termsReady: false,
-          evaluationPassed: false,
-        },
+        readiness: readinessFromStatus('draft'),
       };
 
       setCategories((current) => [created, ...current]);
@@ -269,7 +327,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
     (id: string, key: keyof ManagedCategory['readiness'], value: boolean) => {
       setCategories((current) =>
         current.map((category) =>
-          category.id === id
+          category.id === id || category.draft.slug === id
             ? { ...category, readiness: { ...category.readiness, [key]: value } }
             : category,
         ),
@@ -283,6 +341,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       role,
       setRole,
       categories,
+      categoriesLoading,
       getCategory,
       updateDraft,
       publishCategory,
@@ -293,6 +352,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
     [
       role,
       categories,
+      categoriesLoading,
       getCategory,
       updateDraft,
       publishCategory,

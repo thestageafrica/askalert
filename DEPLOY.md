@@ -98,12 +98,15 @@ From the repo root (after `npx supabase login`):
 # Link once (use your project ref from the Supabase dashboard URL)
 npx supabase link --project-ref YOUR_PROJECT_REF
 
-# Push schema + RLS
-npx supabase db push
+# Push schema + RLS to the linked remote project (not local Docker)
+pnpm db:push
 
 # Load Lagos areas + nine category seeds
-npx supabase db query --linked -f supabase/seed.sql
+pnpm db:seed
 ```
+# Equivalent: `npx supabase db push --remote --yes` then
+# `npx supabase db query --remote --yes -f supabase/seed.sql`
+
 
 To regenerate `supabase/seed.sql` from `packages/category-engine` JSON seeds:
 

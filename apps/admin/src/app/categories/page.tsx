@@ -9,7 +9,7 @@ import { canEditCategories } from '../../lib/roles';
 
 export default function CategoriesPage() {
   const router = useRouter();
-  const { categories, createCategory, role } = useAdminStore();
+  const { categories, categoriesLoading, createCategory, role } = useAdminStore();
   const canEdit = canEditCategories(role);
 
   return (
@@ -46,6 +46,14 @@ export default function CategoriesPage() {
           </Button>
         </div>
       </div>
+
+      {categoriesLoading ? (
+        <div
+          className="h-32 animate-pulse rounded-2xl border border-border bg-card-muted"
+          aria-busy="true"
+          aria-label="Loading categories"
+        />
+      ) : null}
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {categories.map((category) => (

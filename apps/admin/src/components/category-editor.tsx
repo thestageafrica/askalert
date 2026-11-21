@@ -31,8 +31,15 @@ const readinessLabels = {
 } as const;
 
 export function CategoryEditor({ categoryId }: { categoryId: string }) {
-  const { getCategory, updateDraft, publishCategory, rollbackCategory, setReadiness, role } =
-    useAdminStore();
+  const {
+    getCategory,
+    updateDraft,
+    publishCategory,
+    rollbackCategory,
+    setReadiness,
+    role,
+    categoriesLoading,
+  } = useAdminStore();
   const { toast } = useToast();
   const category = getCategory(categoryId);
   const canEdit = canEditCategories(role);
@@ -40,12 +47,23 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
   const [publishNote, setPublishNote] = useState('');
   const [publishErrors, setPublishErrors] = useState<string[]>([]);
   const [publishStatus, setPublishStatus] = useState<CategoryStatus>('pilot');
+  const [publishing, setPublishing] = useState(false);
 
   const draft = category?.draft;
   const intakePreview = useMemo(
     () => (draft ? buildIntakeSteps(draft, 'need') : []),
     [draft],
   );
+
+  if (categoriesLoading) {
+    return (
+      <div
+        className="h-40 animate-pulse rounded-2xl border border-border bg-card-muted"
+        aria-busy="true"
+        aria-label="Loading category"
+      />
+    );
+  }
 
   if (!category || !draft) {
     return (
@@ -114,16 +132,34 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
     });
   };
 
-  const onPublish = () => {
-    const result = publishCategory(category.id, publishNote, publishStatus);
-    if (!result.ok) {
-      setPublishErrors(result.errors);
-      toast({ title: 'Publish blocked', description: 'Fix the errors below.', tone: 'danger' });
-      return;
+  const onPublish = async () => {
+    setPublishing(true);
+    try {
+      const result = await publishCategory(category.id, publishNote, publishStatus);
+      if (!result.ok) {
+        setPublishErrors(result.errors);
+        toast({
+          title: 'Publish blocked',
+          description: result.errors[0] ?? 'Fix the errors below.',
+          tone: 'danger',
+        });
+        return;
+      }
+      setPublishErrors([]);
+      setPublishNote('');
+      // Keep draft status in sync with what was published.
+      updateDraft(category.id, { ...draft, status: publishStatus });
+      toast({
+        title: 'Published',
+        description:
+          process.env.NEXT_PUBLIC_USE_SUPABASE === 'true'
+            ? 'Saved to Supabase. Refresh will keep this status.'
+            : 'Version saved in memory (mock mode).',
+        tone: 'success',
+      });
+    } finally {
+      setPublishing(false);
     }
-    setPublishErrors([]);
-    setPublishNote('');
-    toast({ title: 'Published', description: 'Version saved in memory.', tone: 'success' });
   };
 
   return (
@@ -194,8 +230,15 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
               { value: 'live', label: 'Live' },
               { value: 'paused', label: 'Paused' },
             ]}
-            onChange={(event) => patch({ status: event.target.value as CategoryStatus })}
+            onChange={(event) => {
+              const status = event.target.value as CategoryStatus;
+              patch({ status });
+              setPublishStatus(status);
+            }}
           />
+          <p className="text-xs text-muted-foreground">
+            Status only sticks after you Publish (Versions tab).
+          </p>
         </TabsContent>
 
         <TabsContent value="attributes" className="mt-4 space-y-3">
@@ -517,8 +560,8 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
                 placeholder="What changed?"
               />
             </div>
-            <Button className="mt-3" disabled={!canPublish} onClick={onPublish}>
-              Publish version
+            <Button className="mt-3" disabled={!canPublish || publishing} onClick={() => void onPublish()}>
+              {publishing ? 'Publishing…' : 'Publish version'}
             </Button>
             {publishErrors.length > 0 ? (
               <ul className="mt-3 space-y-1 rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
