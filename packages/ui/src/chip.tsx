@@ -18,7 +18,7 @@ export function Chip({ children, statusDot = false, className, ...props }: ChipP
     >
       {statusDot ? (
         <span className="relative flex size-2.5" aria-hidden>
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-40" />
+          <span className="absolute inline-flex size-full rounded-full bg-success opacity-40 motion-safe:animate-ping" />
           <span className="relative inline-flex size-2.5 rounded-full bg-success" />
         </span>
       ) : null}

@@ -100,11 +100,15 @@ function QuotesMini() {
 }
 
 export function HeroPhones() {
+  // Desktop-only: keeps mobile LCP on the hero text (Lighthouse mobile).
   return (
-    <div className="relative mx-auto h-[430px] w-full max-w-[520px] lg:h-[560px]" aria-hidden>
+    <div
+      className="relative mx-auto hidden h-[560px] w-full max-w-[520px] lg:block"
+      aria-hidden
+    >
       <MiniPhone
         light
-        className="left-1/2 top-12 z-0 -translate-x-[92%] -rotate-6 opacity-90 sm:top-[50px]"
+        className="left-1/2 top-12 z-0 -translate-x-[92%] -rotate-6 opacity-90"
       >
         <QuotesMini />
       </MiniPhone>
@@ -112,10 +116,10 @@ export function HeroPhones() {
         <RequestMini />
       </MiniPhone>
 
-      <span className="absolute bottom-8 left-0 z-20 max-w-[220px] animate-[bob_5s_ease-in-out_infinite] rounded-2xl border border-surface/15 bg-navy-950/90 px-3 py-2.5 text-xs font-bold text-surface shadow-xl sm:bottom-16">
+      <span className="absolute bottom-16 left-0 z-20 max-w-[220px] rounded-2xl border border-surface/15 bg-navy-950/90 px-3 py-2.5 text-xs font-bold text-surface shadow-xl motion-safe:animate-[bob_5s_ease-in-out_infinite]">
         Verified vendors · Lagos
       </span>
-      <span className="absolute right-0 top-8 z-20 max-w-[230px] animate-[bob_5s_ease-in-out_infinite] rounded-2xl border border-surface/15 bg-navy-950/90 px-3 py-2.5 text-xs font-bold text-surface shadow-xl [animation-delay:-2.5s] sm:top-16">
+      <span className="absolute right-0 top-16 z-20 max-w-[230px] rounded-2xl border border-surface/15 bg-navy-950/90 px-3 py-2.5 text-xs font-bold text-surface shadow-xl motion-safe:animate-[bob_5s_ease-in-out_infinite] motion-safe:[animation-delay:-2.5s]">
         Hold 40% until you confirm
       </span>
     </div>

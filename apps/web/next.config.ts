@@ -22,11 +22,23 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   transpilePackages: ['@askalert/ui', '@askalert/payments', '@askalert/category-engine'],
   poweredByHeader: false,
+  compress: true,
+  experimental: {
+    optimizePackageImports: ['@askalert/ui'],
+  },
   async headers() {
     return [
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      {
+        source: '/brand/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/icons/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ];
   },

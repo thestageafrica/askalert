@@ -39,6 +39,7 @@ export function HomeView() {
       <div className="space-y-6 px-4 pt-2">
         <div className="relative -mt-1">
           <Input
+            name="category-search"
             aria-label="Search categories"
             placeholder="Search shortlets, events, home care…"
             value={query}

@@ -55,6 +55,9 @@ export function Logo({
     <img
       src={src}
       alt={alt}
+      width={160}
+      height={32}
+      decoding="async"
       className={cn('h-8 w-auto', className)}
       onError={() => {
         if (wantsReversed) {

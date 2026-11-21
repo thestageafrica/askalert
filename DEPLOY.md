@@ -154,9 +154,13 @@ Use these endpoints for Vercel or external uptime monitors.
 
 ## Checklist before calling Phase 1 done
 
-- [ ] Web preview loads over HTTPS
-- [ ] Admin preview asks for Basic Auth
-- [ ] `/api/health` OK on both
-- [ ] WhatsApp CTAs open the correct `wa.me` number
-- [ ] Lighthouse ≥ 90 on `/` and `/app` (or documented exceptions)
-- [ ] Secrets only in Vercel env — never in git
+- [x] Web loads over HTTPS (`https://www.askalert.com`)
+- [x] Admin asks for Basic Auth (`https://admin.askalert.com`)
+- [x] `/api/health` OK on both
+- [x] GitHub connected; pushes auto-deploy both projects
+- [ ] WhatsApp CTAs open the correct `wa.me` number (replace placeholder `2348000000000`)
+- [ ] Lighthouse ≥ 90 on `/` and `/app` (retest in **Incognito**; extensions skew Performance)
+  - Baseline (extensions on): `/` Perf 34 / A11y 100 / BP 100 / SEO 100; `/app` Perf 49 / A11y 94 / BP 100 / SEO 100
+  - Perf fixes shipped: fewer font weights, desktop-only hero phones, lazy below-fold sections, Input id/name, asset cache headers
+- [ ] Revoke any Vercel token that was shared outside the dashboard
+- [x] Secrets only in Vercel env — never in git

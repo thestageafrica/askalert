@@ -16,13 +16,13 @@ export function SiteHeader() {
   const whatsappUrl = getWhatsAppUrl('Hi AskAlert, I need help.');
 
   return (
-    <header className="sticky top-0 z-40 border-b border-surface/10 bg-navy-950/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-surface/10 bg-navy-950/95 lg:bg-navy-950/85 lg:backdrop-blur-xl">
       <Container width="xl" className="flex min-h-[4.25rem] items-center justify-between gap-4 py-3">
         <a
           href="#top"
           className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
         >
-          <Logo variant="reversed" className="h-8" />
+          <Logo variant="reversed" className="h-8" fetchPriority="high" />
         </a>
 
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">

@@ -1,21 +1,37 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { Container } from '@askalert/ui';
 import { Categories } from '../components/landing/categories';
-import { Faq } from '../components/landing/faq';
 import { Hero } from '../components/landing/hero';
 import { HowItWorks } from '../components/landing/how-it-works';
-import { PhoneShowcase } from '../components/landing/phone-showcase';
-import { ProtectSlider } from '../components/landing/protect-slider';
 import { SiteFooter } from '../components/landing/site-footer';
 import { SiteHeader } from '../components/landing/site-header';
 import { Trust } from '../components/landing/trust';
-import { Vendors } from '../components/landing/vendors';
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_TAGLINE,
   getSiteUrl,
 } from '../lib/site';
+
+const PhoneShowcase = dynamic(
+  () =>
+    import('../components/landing/phone-showcase').then((mod) => mod.PhoneShowcase),
+  { ssr: true },
+);
+const ProtectSlider = dynamic(
+  () =>
+    import('../components/landing/protect-slider').then((mod) => mod.ProtectSlider),
+  { ssr: true },
+);
+const Vendors = dynamic(
+  () => import('../components/landing/vendors').then((mod) => mod.Vendors),
+  { ssr: true },
+);
+const Faq = dynamic(
+  () => import('../components/landing/faq').then((mod) => mod.Faq),
+  { ssr: true },
+);
 
 const siteUrl = getSiteUrl();
 
@@ -79,31 +95,31 @@ export default function HomePage() {
             </Container>
           </div>
 
-          <div className="bg-background">
+          <div className="bg-background [content-visibility:auto] [contain-intrinsic-size:800px]">
             <Container width="xl">
               <PhoneShowcase />
             </Container>
           </div>
 
-          <div className="bg-surface-subtle dark:bg-navy-950/50">
+          <div className="bg-surface-subtle [content-visibility:auto] [contain-intrinsic-size:640px] dark:bg-navy-950/50">
             <Container width="xl">
               <ProtectSlider />
             </Container>
           </div>
 
-          <div className="bg-background">
+          <div className="bg-background [content-visibility:auto] [contain-intrinsic-size:520px]">
             <Container width="xl">
               <Trust />
             </Container>
           </div>
 
-          <div className="bg-surface-subtle dark:bg-navy-950/50">
+          <div className="bg-surface-subtle [content-visibility:auto] [contain-intrinsic-size:520px] dark:bg-navy-950/50">
             <Container width="xl">
               <Vendors />
             </Container>
           </div>
 
-          <div className="bg-background">
+          <div className="bg-background [content-visibility:auto] [contain-intrinsic-size:640px]">
             <Container width="xl">
               <Faq />
             </Container>

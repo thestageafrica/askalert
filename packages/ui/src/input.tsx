@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 import { cn } from './lib/cn';
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -10,17 +10,20 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, label, hint, error, id, ...props },
+  { className, label, hint, error, id, name, ...props },
   ref,
 ) {
-  const inputId = id ?? props.name;
+  const generatedId = useId();
+  const inputId = id ?? name ?? generatedId;
+  const inputName = name ?? inputId;
 
   return (
-    <label className="flex w-full flex-col gap-1.5 text-sm text-foreground">
+    <label className="flex w-full flex-col gap-1.5 text-sm text-foreground" htmlFor={inputId}>
       {label ? <span className="font-medium">{label}</span> : null}
       <input
         ref={ref}
         id={inputId}
+        name={inputName}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
         className={cn(
