@@ -6,6 +6,7 @@ export {
   listManagedCategories,
   listPublicCategories,
   publishCategoryVersion,
+  resolveCategoryId,
   type CategoryWithConfig,
   type PublishInput,
   type PublishResult,

@@ -4,6 +4,7 @@ import {
   createServerClient,
   isSupabaseEnabled,
   publishCategoryVersion,
+  resolveCategoryId,
 } from '@askalert/db';
 import { z } from 'zod';
 
@@ -37,8 +38,21 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const client = createServerClient(process.env, { useServiceRole: true });
+    const categoryId = await resolveCategoryId(client, id);
+    if (!categoryId) {
+      return NextResponse.json(
+        {
+          ok: false,
+          errors: [
+            `No category found for "${id}". Load categories from Supabase first, then publish.`,
+          ],
+        },
+        { status: 404 },
+      );
+    }
+
     const result = await publishCategoryVersion(client, {
-      categoryId: id,
+      categoryId,
       config: parsed.data.config,
       note: parsed.data.note,
       nextStatus: parsed.data.nextStatus,
@@ -51,6 +65,7 @@ export async function POST(request: Request, { params }: Params) {
 
     return NextResponse.json({
       ok: true,
+      categoryId,
       versionId: result.versionId,
       versionNumber: result.versionNumber,
     });

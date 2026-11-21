@@ -219,6 +219,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         return { ok: false, errors: result.errors };
       }
 
+      let resolvedId = managed.id;
       if (useRemote) {
         try {
           const response = await fetch(
@@ -235,6 +236,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           );
           const body = (await response.json()) as {
             ok?: boolean;
+            categoryId?: string;
             errors?: string[];
             error?: string;
           };
@@ -246,13 +248,16 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
                 (body.error ? [body.error] : ['Could not save to Supabase.']),
             };
           }
+          if (body.categoryId) {
+            resolvedId = body.categoryId;
+          }
         } catch {
           return { ok: false, errors: ['Could not reach the publish API.'] };
         }
       }
 
       const version: CategoryVersion = {
-        id: `${managed.id}_v${managed.versions.length + 1}`,
+        id: `${resolvedId}_v${managed.versions.length + 1}`,
         note: note.trim() || 'Published update',
         createdAt: new Date().toISOString(),
         config: structuredClone(result.config),
@@ -261,9 +266,10 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
 
       setCategories((current) =>
         current.map((category) =>
-          category.id === managed.id
+          category.id === managed.id || category.draft.slug === managed.draft.slug
             ? {
                 ...category,
+                id: resolvedId,
                 draft: structuredClone(result.config),
                 versions: [version, ...category.versions],
                 readiness: readinessFromStatus(result.config.status),
