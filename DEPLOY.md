@@ -33,9 +33,12 @@ Framework for both: **Next.js** (App Router).
    ```bash
    pnpm install
    ```
-5. Build command (from `apps/web`):
+5. Build settings (Root Directory `apps/web`):
    ```bash
-   pnpm build
+   # Install Command
+   cd ../.. && pnpm install
+   # Build Command (builds workspace packages first)
+   cd ../.. && pnpm turbo run build --filter=@askalert/web
    ```
 6. Add environment variables (Production + Preview):
 

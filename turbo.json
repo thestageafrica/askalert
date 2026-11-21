@@ -1,5 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "ADMIN_BASIC_USER",
+    "ADMIN_BASIC_PASSWORD",
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_WHATSAPP_NUMBER"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
