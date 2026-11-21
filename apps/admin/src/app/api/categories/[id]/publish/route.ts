@@ -49,7 +49,11 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ ok: false, errors: result.errors }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({
+      ok: true,
+      versionId: result.versionId,
+      versionNumber: result.versionNumber,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Publish failed';
     return NextResponse.json({ error: message }, { status: 500 });
