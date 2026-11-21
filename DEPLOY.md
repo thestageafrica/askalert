@@ -79,6 +79,40 @@ Framework for both: **Next.js** (App Router).
 - Point `admin.` (for example `admin.askalert.com`) at the **admin** project.
 - Update `NEXT_PUBLIC_SITE_URL` on each project to match the final HTTPS URLs, then redeploy.
 
+## Supabase (Phase 1B categories)
+
+Create a Supabase project (pick a region close to Lagos users, for example `eu-west-1` or `eu-central-1`). Put keys only in `.env.local` and Vercel env — never in chat or git.
+
+| Name | Where | Notes |
+| --- | --- | --- |
+| `USE_SUPABASE` / `NEXT_PUBLIC_USE_SUPABASE` | Web + Admin | `true` to load categories from Supabase; `false` (default) keeps mock seeds |
+| `NEXT_PUBLIC_SUPABASE_URL` | Web + Admin | Project URL from Supabase → Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Web + Admin | Anon/public key (RLS-protected) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Admin only** | Server-side writes. Never expose to the browser or `NEXT_PUBLIC_*` |
+
+### Apply migrations and seed
+
+From the repo root (after `npx supabase login`):
+
+```powershell
+# Link once (use your project ref from the Supabase dashboard URL)
+npx supabase link --project-ref YOUR_PROJECT_REF
+
+# Push schema + RLS
+npx supabase db push
+
+# Load Lagos areas + nine category seeds
+npx supabase db query --linked -f supabase/seed.sql
+```
+
+To regenerate `supabase/seed.sql` from `packages/category-engine` JSON seeds:
+
+```powershell
+node scripts/generate-seed.mjs
+```
+
+Then set `NEXT_PUBLIC_USE_SUPABASE=true` (and the keys above) on Vercel for both projects, set `SUPABASE_SERVICE_ROLE_KEY` on **admin only**, and redeploy. Publish a category in admin; it should appear on web `/app` when status is `pilot` or `live`.
+
 ## Security headers
 
 Both apps send:
@@ -165,3 +199,5 @@ Use these endpoints for Vercel or external uptime monitors.
   - Accepted for Phase 1: `/app` clears 90; landing is effectively at target given storage warning
 - [ ] Revoke any Vercel token that was shared outside the dashboard
 - [x] Secrets only in Vercel env — never in git
+- [ ] Supabase linked, migrations pushed, seed loaded
+- [ ] `USE_SUPABASE=true` only after seed; mock fallback works when false

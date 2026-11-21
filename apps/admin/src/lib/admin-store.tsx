@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -85,6 +86,66 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AdminRole>('super_admin');
   const [categories, setCategories] = useState<ManagedCategory[]>(() => seedManaged());
 
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_USE_SUPABASE !== 'true') {
+      return;
+    }
+
+    let cancelled = false;
+    void fetch('/api/categories')
+      .then(async (response) => {
+        const body = (await response.json()) as {
+          source?: string;
+          categories?: Array<{
+            id: string;
+            slug: string;
+            vendorsCount?: number;
+            draft: CategoryConfig;
+            status?: CategoryStatus;
+          }>;
+        };
+        if (!response.ok || body.source !== 'supabase' || !body.categories || cancelled) {
+          return;
+        }
+        setCategories(
+          body.categories.map((row, index) => ({
+            id: row.id,
+            vendorsCount: row.vendorsCount ?? 8 + index * 3,
+            draft: structuredClone(row.draft),
+            versions: [
+              {
+                id: `${row.slug}_v1`,
+                note: 'Loaded from Supabase',
+                createdAt: new Date().toISOString(),
+                config: structuredClone(row.draft),
+                published:
+                  row.draft.status === 'pilot' ||
+                  row.draft.status === 'live' ||
+                  row.status === 'pilot' ||
+                  row.status === 'live',
+              },
+            ],
+            readiness: {
+              verifiedVendors: row.draft.status !== 'draft',
+              fastResponders:
+                row.draft.status === 'pilot' || row.draft.status === 'live',
+              supplyOwner: true,
+              termsReady: row.draft.status !== 'draft',
+              evaluationPassed:
+                row.draft.status === 'pilot' || row.draft.status === 'live',
+            },
+          })),
+        );
+      })
+      .catch(() => {
+        // Keep mock seeds if Supabase hydrate fails.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const getCategory = useCallback(
     (id: string) => categories.find((category) => category.id === id),
     [categories],
@@ -135,6 +196,19 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             : category,
         ),
       );
+
+      // Fire-and-forget sync when Supabase is enabled (API validates again).
+      if (process.env.NEXT_PUBLIC_USE_SUPABASE === 'true') {
+        void fetch(`/api/categories/${encodeURIComponent(id)}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config: result.config,
+            note: version.note,
+            nextStatus,
+          }),
+        });
+      }
 
       return { ok: true };
     },

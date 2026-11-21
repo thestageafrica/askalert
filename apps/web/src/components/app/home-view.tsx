@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { listSeedCategories } from '@askalert/category-engine';
 import { Button, Chip, Input, cn } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { CategoryGlyph } from './category-glyph';
 import { EmptyState } from './empty-state';
 import { StatusPill } from './status-pill';
 import { useMockStore } from '../../lib/app/mock-store';
+import { useCategories } from '../../lib/use-categories';
 
 function isLiveCategory(status: string) {
   return status === 'pilot' || status === 'live';
@@ -16,9 +16,10 @@ function isLiveCategory(status: string) {
 
 export function HomeView() {
   const { latestRequest, notifyInterest, addNotifyInterest, account } = useMockStore();
+  const { categories: allCategories, loading } = useCategories();
   const [query, setQuery] = useState('');
 
-  const categories = listSeedCategories().filter((category) =>
+  const categories = allCategories.filter((category) =>
     query.trim()
       ? category.name.toLowerCase().includes(query.trim().toLowerCase())
       : true,
@@ -101,7 +102,16 @@ export function HomeView() {
             </div>
           </div>
 
-          {categories.length === 0 ? (
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3" aria-busy="true" aria-label="Loading categories">
+              {[0, 1, 2, 3].map((slot) => (
+                <div
+                  key={slot}
+                  className="min-h-44 animate-pulse rounded-[1.4rem] border border-border/60 bg-card-muted/80"
+                />
+              ))}
+            </div>
+          ) : categories.length === 0 ? (
             <EmptyState
               title="No matches"
               description="Try another word, or clear search to see live categories."

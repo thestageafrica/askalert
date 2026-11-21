@@ -2,17 +2,18 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { buildIntakeSteps, findSeedCategoryBySlug } from '@askalert/category-engine';
+import { buildIntakeSteps } from '@askalert/category-engine';
 import { Button, Input, cn } from '@askalert/ui';
 import { involvementOptions } from '../../lib/app/involvement';
 import { useMockStore } from '../../lib/app/mock-store';
 import type { InvolvementMode } from '../../lib/app/types';
+import { useCategory } from '../../lib/use-categories';
 import { AppHeader } from './app-header';
 
 export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
   const router = useRouter();
   const { createRequest } = useMockStore();
-  const category = findSeedCategoryBySlug(categorySlug);
+  const { category, loading } = useCategory(categorySlug);
   const steps = useMemo(
     () => (category ? buildIntakeSteps(category, 'need') : []),
     [category],
@@ -23,6 +24,15 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
   const [error, setError] = useState<string | null>(null);
   const [involvement, setInvolvement] = useState<InvolvementMode>('assist');
   const [phase, setPhase] = useState<'questions' | 'involvement' | 'summary'>('questions');
+
+  if (loading) {
+    return (
+      <div className="p-4" aria-busy="true">
+        <AppHeader title="Loading…" subtitle="Fetching category questions." />
+        <div className="mt-6 h-40 animate-pulse rounded-2xl bg-card-muted" />
+      </div>
+    );
+  }
 
   if (!category || (category.status !== 'pilot' && category.status !== 'live')) {
     return (

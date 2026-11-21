@@ -1,0 +1,31 @@
+{
+  "name": "@askalert/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@askalert/category-engine": "workspace:*",
+    "@supabase/supabase-js": "^2.119.2",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@askalert/config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

@@ -20,7 +20,12 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@askalert/ui', '@askalert/payments', '@askalert/category-engine'],
+  transpilePackages: [
+    '@askalert/ui',
+    '@askalert/payments',
+    '@askalert/category-engine',
+    '@askalert/db',
+  ],
   poweredByHeader: false,
   compress: true,
   experimental: {

@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
-import { listSeedCategories } from '@askalert/category-engine';
 import { Button, Sheet, cn } from '@askalert/ui';
+import { useCategories } from '../../lib/use-categories';
 
 type NavItem = {
   href: string;
@@ -44,9 +44,9 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [askOpen, setAskOpen] = useState(false);
-  // Only resolve seed categories when the Ask sheet opens (keeps /app first paint lighter).
+  const { categories } = useCategories();
   const liveCategories = askOpen
-    ? listSeedCategories().filter(
+    ? categories.filter(
         (category) => category.status === 'pilot' || category.status === 'live',
       )
     : [];
