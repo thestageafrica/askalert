@@ -161,6 +161,7 @@ Use these endpoints for Vercel or external uptime monitors.
 - [ ] WhatsApp CTAs open the correct `wa.me` number (replace placeholder `2348000000000`)
 - [ ] Lighthouse ≥ 90 on `/` and `/app` (retest in **Incognito**; extensions skew Performance)
   - Baseline (extensions on): `/` Perf 34 / A11y 100 / BP 100 / SEO 100; `/app` Perf 49 / A11y 94 / BP 100 / SEO 100
-  - Perf fixes shipped: fewer font weights, desktop-only hero phones, lazy below-fold sections, Input id/name, asset cache headers
+  - Incognito after first pass: `/` Perf 50; `/app` Perf 82
+  - Further fixes: PWA install JS only on `/app`, server SiteHeader, lighter hero (no client Button islands / fewer paints), defer Ask-sheet seed load
 - [ ] Revoke any Vercel token that was shared outside the dashboard
 - [x] Secrets only in Vercel env — never in git

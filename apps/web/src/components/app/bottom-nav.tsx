@@ -44,9 +44,12 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [askOpen, setAskOpen] = useState(false);
-  const liveCategories = listSeedCategories().filter(
-    (category) => category.status === 'pilot' || category.status === 'live',
-  );
+  // Only resolve seed categories when the Ask sheet opens (keeps /app first paint lighter).
+  const liveCategories = askOpen
+    ? listSeedCategories().filter(
+        (category) => category.status === 'pilot' || category.status === 'live',
+      )
+    : [];
 
   const left = items.slice(0, 2);
   const right = items.slice(2);
@@ -58,7 +61,7 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))]"
       >
         <div className="relative mx-auto max-w-lg">
-          <div className="flex items-end justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950/92 px-1.5 pb-2 pt-2 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)] backdrop-blur-xl">
+          <div className="flex items-end justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950 px-1.5 pb-2 pt-2 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)]">
             {left.map((item) => (
               <NavLink key={item.href} item={item} pathname={pathname} />
             ))}
