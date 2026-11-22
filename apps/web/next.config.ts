@@ -1,7 +1,21 @@
+import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 import { securityHeaders } from './src/lib/security-headers';
+
+const require = createRequire(import.meta.url);
+const { loadMonorepoEnv } = require('./load-monorepo-env.cjs') as {
+  loadMonorepoEnv: (appDir: string) => void;
+};
+const { assertProductionEnv } = require('./assert-production-env.cjs') as {
+  assertProductionEnv: () => void;
+};
+loadMonorepoEnv(__dirname);
+// Only enforce during `next build` so lint/dev stay unblocked.
+if (process.argv.includes('build')) {
+  assertProductionEnv();
+}
 
 // Serwist (Workbox successor): first-class Next App Router support, precache +
 // runtime caching, and offline document fallbacks without hand-rolling a SW.

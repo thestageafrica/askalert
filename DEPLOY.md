@@ -44,8 +44,8 @@ Framework for both: **Next.js** (App Router).
 
 | Name | Example | Notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | `https://askalert.com` | No trailing slash. Use the Vercel URL until the domain is connected. |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `2348012345678` | International digits only — **no** `+` or spaces. |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.askalert.com` | No trailing slash. Must be the public domain — **never** `*.vercel.app`. |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `2348012345678` | International digits only — **no** `+` or spaces. Placeholder `2348000000000` fails the production build. |
 
 7. Deploy. Confirm:
    - `https://<web>/` loads the landing page
@@ -98,7 +98,7 @@ From the repo root (after `npx supabase login`):
 # Link once (use your project ref from the Supabase dashboard URL)
 npx supabase link --project-ref YOUR_PROJECT_REF
 
-# Push schema + RLS to the linked remote project (not local Docker)
+# Push schema + RLS + table GRANTs to the linked remote project (not local Docker)
 pnpm db:push
 
 # Load Lagos areas + nine category seeds
@@ -106,6 +106,9 @@ pnpm db:seed
 ```
 # Equivalent: `npx supabase db push --remote --yes` then
 # `npx supabase db query --remote --yes -f supabase/seed.sql`
+#
+# If publish fails with "permission denied for table …", you are missing the
+# grants migration — run `pnpm db:push` again so `20260321000003_table_grants` applies.
 
 
 To regenerate `supabase/seed.sql` from `packages/category-engine` JSON seeds:
@@ -195,7 +198,7 @@ Use these endpoints for Vercel or external uptime monitors.
 - [x] Admin asks for Basic Auth (`https://admin.askalert.com`)
 - [x] `/api/health` OK on both
 - [x] GitHub connected; pushes auto-deploy both projects
-- [ ] WhatsApp CTAs open the correct `wa.me` number (replace placeholder `2348000000000`)
+- [x] WhatsApp CTAs open the correct `wa.me` number (not placeholder `2348000000000`)
 - [x] Lighthouse (Incognito, after Perf passes)
   - `/` → Perf **89** / A11y 100 / BP 100 / SEO 100 (1pt under 90; Lighthouse also warned IndexedDB/PWA storage noise)
   - `/app` → Perf **95** / A11y 94 / BP 100 / SEO 100

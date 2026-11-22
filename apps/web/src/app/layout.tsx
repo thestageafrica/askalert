@@ -2,6 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Providers } from '../components/providers';
+import { WhatsAppDevWarning } from '../components/whatsapp-dev-warning';
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TAGLINE,
+  getSiteUrl,
+} from '../lib/site';
 import './globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -13,37 +20,39 @@ const plusJakarta = Plus_Jakarta_Sans({
   preload: true,
 });
 
-const APP_NAME = 'AskAlert';
-const APP_DESCRIPTION =
-  'Tell AskAlert what you need in Lagos. We ask verified vendors, compare offers, and bring you the best ones.';
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-  applicationName: APP_NAME,
+  metadataBase: new URL(siteUrl),
+  applicationName: SITE_NAME,
   title: {
-    default: 'AskAlert | Ask. Alert. Delivered.',
-    template: '%s | AskAlert',
+    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: APP_DESCRIPTION,
+  description: SITE_DESCRIPTION,
   keywords: ['AskAlert', 'Lagos', 'vendors', 'shortlets', 'events', 'home care', 'escrow'],
   authors: [{ name: 'AskAlert Technologies Limited' }],
   creator: 'AskAlert Technologies Limited',
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     type: 'website',
     locale: 'en_NG',
-    siteName: APP_NAME,
-    title: 'AskAlert | Ask. Alert. Delivered.',
-    description: APP_DESCRIPTION,
+    url: siteUrl,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AskAlert | Ask. Alert. Delivered.',
-    description: APP_DESCRIPTION,
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: APP_NAME,
+    title: SITE_NAME,
   },
   formatDetection: {
     telephone: false,
@@ -59,6 +68,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+        <WhatsAppDevWarning />
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -7,6 +7,9 @@ import { Button, Sheet, Slider, cn } from '@askalert/ui';
 import { showInstallPromptAfterBooking } from '../pwa/install-prompt';
 import {
   DEMO_COMMISSION_PCT,
+  DEMO_ESCROW_BOUNDS,
+  DEMO_FEE_BEARER,
+  DEMO_HOLD_PCT,
   DEMO_PROCESSING_FEE_MINOR,
 } from '../../lib/app/mock-data';
 import { useMockStore } from '../../lib/app/mock-store';
@@ -25,7 +28,7 @@ export function CheckoutSheet({
 }) {
   const router = useRouter();
   const { markBooked } = useMockStore();
-  const [holdPct, setHoldPct] = useState(60);
+  const [holdPct, setHoldPct] = useState(DEMO_HOLD_PCT);
   const [paying, setPaying] = useState(false);
 
   const split = useMemo(() => {
@@ -36,13 +39,12 @@ export function CheckoutSheet({
       totalMinor: quote.priceMinor,
       commissionPct: DEMO_COMMISSION_PCT,
       processingFeeMinor: DEMO_PROCESSING_FEE_MINOR,
-      feeBearer: 'vendor',
+      feeBearer: DEMO_FEE_BEARER,
       holdPct,
-      bounds: {
-        minHoldPct: request.categorySlug === 'events' ? 0 : 0,
-        maxHoldPct: 100,
-        vendorMinReleasePct: request.categorySlug === 'events' ? 30 : 0,
-      },
+      bounds:
+        request.categorySlug === 'events'
+          ? { minHoldPct: 0, maxHoldPct: 100, vendorMinReleasePct: 30 }
+          : DEMO_ESCROW_BOUNDS,
     });
   }, [quote, holdPct, request.categorySlug]);
 

@@ -1,8 +1,16 @@
 import type { AppRequest, ChatThread, Quote } from './types';
 
-export const DEMO_TOTAL_MINOR = 10_000_000;
+/** Demo total matching the landing phone + protect slider (₦128,500). */
+export const DEMO_TOTAL_MINOR = 12_850_000;
 export const DEMO_COMMISSION_PCT = 12;
 export const DEMO_PROCESSING_FEE_MINOR = 160_000;
+export const DEMO_HOLD_PCT = 40;
+export const DEMO_FEE_BEARER = 'vendor' as const;
+export const DEMO_ESCROW_BOUNDS = {
+  minHoldPct: 0,
+  maxHoldPct: 100,
+  vendorMinReleasePct: 0,
+} as const;
 
 export const mockQuotes: Quote[] = [
   {
@@ -19,7 +27,7 @@ export const mockQuotes: Quote[] = [
     id: 'q_palm',
     vendorAlias: 'Palm Court',
     verified: true,
-    priceMinor: 10_500_000,
+    priceMinor: 13_200_000,
     availability: 'Fri–Sun · pool access',
     rating: 4.7,
     reason: 'Strong reviews, a little above budget.',
@@ -28,7 +36,7 @@ export const mockQuotes: Quote[] = [
     id: 'q_ocean',
     vendorAlias: 'Oceanview Stay',
     verified: true,
-    priceMinor: 11_200_000,
+    priceMinor: 14_500_000,
     availability: 'Fri–Mon · sea view',
     rating: 4.8,
     reason: 'Premium option if you want the view.',
@@ -71,7 +79,7 @@ export const seedChat: ChatThread = {
     {
       id: 'm2',
       from: 'vendor',
-      text: 'We can do the 2-bed at ₦100,000 for the weekend, self check-in included.',
+      text: 'We can do the 2-bed at ₦128,500 for the weekend, self check-in included.',
       at: '09:18',
     },
     {

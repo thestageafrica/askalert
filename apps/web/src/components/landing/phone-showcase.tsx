@@ -219,8 +219,8 @@ function CheckoutScreen() {
           <div className="h-full w-[40%] rounded-full bg-gradient-to-r from-orange-500 to-orange-400" />
         </div>
         <div className="mt-2 space-y-1 text-[9px] text-surface/70">
-          <p>Vendor now · ₦77,100</p>
-          <p>AskAlert holds · ₦51,400</p>
+          <p>Vendor now · ₦66,888</p>
+          <p>AskAlert holds · ₦44,592</p>
         </div>
       </div>
 

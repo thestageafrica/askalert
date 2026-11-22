@@ -1,24 +1,37 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { createMoney, formatNaira } from '@askalert/payments';
+import { computeEscrowSplit, createMoney, formatNaira } from '@askalert/payments';
 import { Card, Section, Slider, cn } from '@askalert/ui';
-
-const PAY_KOBO = 10_000_000; // ₦100,000
-const DISTRIBUTABLE_KOBO = 8_640_000; // ₦86,400 placeholder until Prompt 7
+import {
+  DEMO_COMMISSION_PCT,
+  DEMO_ESCROW_BOUNDS,
+  DEMO_FEE_BEARER,
+  DEMO_HOLD_PCT,
+  DEMO_PROCESSING_FEE_MINOR,
+  DEMO_TOTAL_MINOR,
+} from '../../lib/app/mock-data';
 
 export function ProtectSlider() {
-  const [holdPercent, setHoldPercent] = useState(40);
+  const [holdPercent, setHoldPercent] = useState(DEMO_HOLD_PCT);
 
-  const { vendorNow, held, vendorPct } = useMemo(() => {
-    const heldKobo = Math.trunc((DISTRIBUTABLE_KOBO * holdPercent) / 100);
-    const vendorKobo = DISTRIBUTABLE_KOBO - heldKobo;
-    return {
-      held: createMoney(heldKobo),
-      vendorNow: createMoney(vendorKobo),
-      vendorPct: 100 - holdPercent,
-    };
-  }, [holdPercent]);
+  const split = useMemo(
+    () =>
+      computeEscrowSplit({
+        totalMinor: DEMO_TOTAL_MINOR,
+        commissionPct: DEMO_COMMISSION_PCT,
+        processingFeeMinor: DEMO_PROCESSING_FEE_MINOR,
+        feeBearer: DEMO_FEE_BEARER,
+        holdPct: holdPercent,
+        bounds: DEMO_ESCROW_BOUNDS,
+      }),
+    [holdPercent],
+  );
+
+  const vendorPct = 100 - split.effectiveHoldPct;
+  const total = createMoney(DEMO_TOTAL_MINOR);
+  const vendorNow = createMoney(split.releasedNowMinor);
+  const held = createMoney(split.heldMinor);
 
   return (
     <Section
@@ -57,7 +70,7 @@ export function ProtectSlider() {
 
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              { label: 'You pay', value: formatNaira(createMoney(PAY_KOBO)), tone: 'bg-card' },
+              { label: 'You pay', value: formatNaira(total), tone: 'bg-card' },
               {
                 label: 'Vendor now',
                 value: formatNaira(vendorNow),
@@ -84,11 +97,11 @@ export function ProtectSlider() {
             <div>
               <p className="text-sm font-bold text-foreground">Try a hold amount</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Example job total {formatNaira(createMoney(PAY_KOBO))}
+                Example job total {formatNaira(total)}
               </p>
             </div>
             <span className="rounded-full bg-orange-500 px-3 py-1 text-sm font-extrabold text-navy-900">
-              {holdPercent}%
+              {split.effectiveHoldPct}%
             </span>
           </div>
 
@@ -98,14 +111,14 @@ export function ProtectSlider() {
             max={100}
             step={5}
             value={holdPercent}
-            valueLabel={`${holdPercent}% held`}
+            valueLabel={`${split.effectiveHoldPct}% held`}
             onChange={(event) => setHoldPercent(Number(event.target.value))}
           />
 
           <div className="mt-8">
             <div className="mb-2 flex items-center justify-between text-xs font-semibold text-muted-foreground">
               <span>Vendor {vendorPct}%</span>
-              <span>Hold {holdPercent}%</span>
+              <span>Hold {split.effectiveHoldPct}%</span>
             </div>
             <div className="flex h-4 overflow-hidden rounded-full bg-surface-subtle dark:bg-navy-700">
               <div
@@ -114,20 +127,20 @@ export function ProtectSlider() {
               />
               <div
                 className="bg-orange-500 transition-all duration-200"
-                style={{ width: `${holdPercent}%` }}
+                style={{ width: `${split.effectiveHoldPct}%` }}
               />
             </div>
           </div>
 
           <div className="mt-8 rounded-2xl border border-border bg-surface-subtle p-4 dark:bg-navy-950/50">
             <p className="text-base text-foreground">
-              You pay <strong>{formatNaira(createMoney(PAY_KOBO))}</strong>. Vendor receives{' '}
+              You pay <strong>{formatNaira(total)}</strong>. Vendor receives{' '}
               <strong>{formatNaira(vendorNow)}</strong> now. AskAlert holds{' '}
               <strong>{formatNaira(held)}</strong> until you confirm the job.
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
-              Split uses a distributable amount of {formatNaira(createMoney(DISTRIBUTABLE_KOBO))}{' '}
-              for this demo.
+              Commission and processing fees come out first. Hold applies to the remaining{' '}
+              {formatNaira(createMoney(split.distributableMinor))}.
             </p>
           </div>
         </Card>

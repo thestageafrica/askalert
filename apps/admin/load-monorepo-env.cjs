@@ -1,0 +1,46 @@
+const fs = require('node:fs');
+const path = require('node:path');
+
+/**
+ * Load KEY=VALUE lines into process.env.
+ * @param {string} filePath
+ * @param {boolean} override
+ */
+function loadEnvFile(filePath, override) {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+  const text = fs.readFileSync(filePath, 'utf8');
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) {
+      continue;
+    }
+    const eq = line.indexOf('=');
+    if (eq <= 0) {
+      continue;
+    }
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (override || process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
+/** Root .env.local first, then app .env.local (app wins). */
+function loadMonorepoEnv(appDir) {
+  const rootDir = path.join(appDir, '../..');
+  loadEnvFile(path.join(rootDir, '.env'), false);
+  loadEnvFile(path.join(rootDir, '.env.local'), false);
+  loadEnvFile(path.join(appDir, '.env'), true);
+  loadEnvFile(path.join(appDir, '.env.local'), true);
+}
+
+module.exports = { loadMonorepoEnv };
