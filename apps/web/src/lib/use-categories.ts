@@ -6,7 +6,12 @@ import {
   listSeedCategories,
   type CategoryConfig,
 } from '@askalert/category-engine';
-import { isSupabaseEnabled } from '@askalert/db';
+import {
+  createBrowserClient,
+  getPublicCategoryBySlug,
+  isSupabaseEnabled,
+  listPublicCategories,
+} from '@askalert/db';
 
 function supabaseOnClient(): boolean {
   return isSupabaseEnabled({
@@ -36,17 +41,11 @@ export function useCategories(): {
 
     let cancelled = false;
     setLoading(true);
-    fetch('/api/categories')
-      .then(async (response) => {
-        const body = (await response.json()) as {
-          categories?: CategoryConfig[];
-          error?: string;
-        };
-        if (!response.ok) {
-          throw new Error(body.error ?? 'Could not load categories');
-        }
+
+    void listPublicCategories(createBrowserClient())
+      .then((rows) => {
         if (!cancelled) {
-          setCategories(body.categories ?? []);
+          setCategories(rows);
           setError(null);
         }
       })
@@ -91,24 +90,11 @@ export function useCategory(slug: string): {
 
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/categories/${encodeURIComponent(slug)}`)
-      .then(async (response) => {
-        const body = (await response.json()) as {
-          category?: CategoryConfig;
-          error?: string;
-        };
-        if (response.status === 404) {
-          if (!cancelled) {
-            setCategory(undefined);
-            setError(null);
-          }
-          return;
-        }
-        if (!response.ok) {
-          throw new Error(body.error ?? 'Could not load category');
-        }
+
+    void getPublicCategoryBySlug(slug, createBrowserClient())
+      .then((row) => {
         if (!cancelled) {
-          setCategory(body.category);
+          setCategory(row);
           setError(null);
         }
       })

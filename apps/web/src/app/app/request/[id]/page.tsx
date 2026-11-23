@@ -1,15 +1,9 @@
-import type { Metadata } from 'next';
-import { RequestDetailView } from '../../../../components/app/request-detail-view';
+import { RequestPageClient } from './page-client';
 
-type PageProps = {
-  params: Promise<{ id: string }>;
-};
+export function generateStaticParams() {
+  return [{ id: 'req_shortlet_01' }];
+}
 
-export const metadata: Metadata = {
-  title: 'Request',
-};
-
-export default async function RequestPage({ params }: PageProps) {
-  const { id } = await params;
-  return <RequestDetailView requestId={id} />;
+export default function RequestPage() {
+  return <RequestPageClient />;
 }

@@ -2,7 +2,6 @@ import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
-import { securityHeaders } from './src/lib/security-headers';
 
 const require = createRequire(import.meta.url);
 const { loadMonorepoEnv } = require('./load-monorepo-env.cjs') as {
@@ -17,8 +16,7 @@ if (process.argv.includes('build')) {
   assertProductionEnv();
 }
 
-// Serwist (Workbox successor): first-class Next App Router support, precache +
-// runtime caching, and offline document fallbacks without hand-rolling a SW.
+// Serwist: precache + offline fallback for the static Cloudflare Pages export.
 const revision =
   spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf-8' }).stdout?.trim() ||
   crypto.randomUUID();
@@ -27,13 +25,18 @@ const withSerwist = withSerwistInit({
   swSrc: 'src/app/sw.ts',
   swDest: 'public/sw.js',
   additionalPrecacheEntries: [
-    { url: '/offline', revision },
-    { url: '/app', revision },
+    { url: '/offline/', revision },
+    { url: '/app/', revision },
   ],
   disable: process.env.NODE_ENV === 'development',
 });
 
 const nextConfig: NextConfig = {
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
   transpilePackages: [
     '@askalert/ui',
     '@askalert/payments',
@@ -44,22 +47,6 @@ const nextConfig: NextConfig = {
   compress: true,
   experimental: {
     optimizePackageImports: ['@askalert/ui'],
-  },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: securityHeaders,
-      },
-      {
-        source: '/brand/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
-      {
-        source: '/icons/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
-    ];
   },
 };
 

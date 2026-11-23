@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { resolveCategoryId } from './categories';
+import { resolveCategoryId } from './resolve-category-id';
 import type { AskAlertSupabase } from './client';
 
 describe('resolveCategoryId', () => {

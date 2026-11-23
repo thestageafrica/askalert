@@ -1,18 +1,10 @@
-import type { Metadata } from 'next';
-import { NewRequestFlow } from '../../../../components/app/new-request-flow';
+import { listSeedCategories } from '@askalert/category-engine';
+import { NewRequestPageClient } from './page-client';
 
-type PageProps = {
-  params: Promise<{ category: string }>;
-};
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { category } = await params;
-  return {
-    title: `New ${category} ask`,
-  };
+export function generateStaticParams() {
+  return listSeedCategories().map((category) => ({ category: category.slug }));
 }
 
-export default async function NewRequestPage({ params }: PageProps) {
-  const { category } = await params;
-  return <NewRequestFlow categorySlug={category} />;
+export default function NewRequestPage() {
+  return <NewRequestPageClient />;
 }

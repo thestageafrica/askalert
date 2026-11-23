@@ -15,6 +15,12 @@ import {
   type CategoryConfig,
   type CategoryStatus,
 } from '@askalert/category-engine';
+import {
+  createBrowserClient,
+  listManagedCategories,
+  publishCategoryVersion,
+  resolveCategoryId,
+} from '@askalert/db';
 import { createBlankCategory } from './blank-category';
 import type { AdminRole } from './roles';
 
@@ -141,27 +147,21 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
     setCategoriesLoading(true);
-    void fetch('/api/categories')
-      .then(async (response) => {
-        const body = (await response.json()) as {
-          source?: string;
-          categories?: Array<{
-            id: string;
-            slug: string;
-            vendorsCount?: number;
-            draft: CategoryConfig;
-            status?: CategoryStatus;
-          }>;
-          error?: string;
-        };
+    void listManagedCategories(createBrowserClient())
+      .then((rows) => {
         if (cancelled) {
           return;
         }
-        if (!response.ok || body.source !== 'supabase' || !body.categories) {
-          setCategories(seedManaged());
-          return;
-        }
-        setCategories(fromSupabaseRows(body.categories));
+        setCategories(
+          fromSupabaseRows(
+            rows.map((row) => ({
+              id: row.id,
+              slug: row.slug,
+              draft: row.config,
+              status: row.status,
+            })),
+          ),
+        );
       })
       .catch(() => {
         if (!cancelled) {
@@ -222,37 +222,40 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       let resolvedId = managed.id;
       if (useRemote) {
         try {
-          const response = await fetch(
-            `/api/categories/${encodeURIComponent(managed.id)}/publish`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                config: result.config,
-                note: note.trim() || 'Published update',
-                nextStatus,
-              }),
-            },
-          );
-          const body = (await response.json()) as {
-            ok?: boolean;
-            categoryId?: string;
-            errors?: string[];
-            error?: string;
-          };
-          if (!response.ok || body.ok === false) {
+          const client = createBrowserClient();
+          const categoryId = await resolveCategoryId(client, managed.id);
+          if (!categoryId) {
             return {
               ok: false,
-              errors:
-                body.errors ??
-                (body.error ? [body.error] : ['Could not save to Supabase.']),
+              errors: [
+                `No category found for "${managed.id}". Load categories from Supabase first, then publish.`,
+              ],
             };
           }
-          if (body.categoryId) {
-            resolvedId = body.categoryId;
+          const published = await publishCategoryVersion(client, {
+            categoryId,
+            config: result.config,
+            note: note.trim() || 'Published update',
+            nextStatus,
+            actor: 'admin',
+          });
+          if (!published.ok) {
+            return {
+              ok: false,
+              errors: [
+                ...published.errors,
+                'Static admin uses the anon key. If RLS blocks writes, publish from a trusted Worker later or adjust policies.',
+              ],
+            };
           }
-        } catch {
-          return { ok: false, errors: ['Could not reach the publish API.'] };
+          resolvedId = categoryId;
+        } catch (error) {
+          return {
+            ok: false,
+            errors: [
+              error instanceof Error ? error.message : 'Could not publish to Supabase.',
+            ],
+          };
         }
       }
 

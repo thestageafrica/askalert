@@ -1,13 +1,10 @@
-'use client';
+import { listSeedCategories } from '@askalert/category-engine';
+import { CategoryDetailPageClient } from './page-client';
 
-import { use } from 'react';
-import { CategoryEditor } from '../../../components/category-editor';
+export function generateStaticParams() {
+  return listSeedCategories().map((category) => ({ id: category.slug }));
+}
 
-type PageProps = {
-  params: Promise<{ id: string }>;
-};
-
-export default function CategoryDetailPage({ params }: PageProps) {
-  const { id } = use(params);
-  return <CategoryEditor categoryId={id} />;
+export default function CategoryDetailPage() {
+  return <CategoryDetailPageClient />;
 }

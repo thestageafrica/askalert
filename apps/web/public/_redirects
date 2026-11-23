@@ -1,0 +1,6 @@
+# Client-side app routes: serve a pre-rendered shell so hard refreshes work
+# after new mock IDs are created in the browser.
+/app/new/*/ /app/new/shortlets/index.html 200
+/app/request/*/success/ /app/request/req_shortlet_01/success/index.html 200
+/app/request/*/ /app/request/req_shortlet_01/index.html 200
+/app/chat/*/ /app/chat/chat_shortlet_01/index.html 200

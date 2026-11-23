@@ -1,209 +1,106 @@
-# Deploy AskAlert (Phase 1)
+# Deploy AskAlert (Phase 1) — Cloudflare Pages
 
-## Live deployments (CLI)
+AskAlert is a pnpm + Turborepo monorepo. Production uses **two Cloudflare Pages projects** from the same Git repository as **static exports** (`next export` / `output: 'export'`). There is no Node server at runtime.
 
-| App | Production URL |
-| --- | --- |
-| Web | https://askalert-web.vercel.app |
-| Admin | https://askalert-admin.vercel.app |
+| Project | Root Directory | Build command | Output directory |
+| --- | --- | --- | --- |
+| Web | `apps/web` | `cd ../.. && pnpm install && pnpm turbo run build --filter=@askalert/web` | `out` |
+| Admin | `apps/admin` | `cd ../.. && pnpm install && pnpm turbo run build --filter=@askalert/admin` | `out` |
 
-Admin Basic Auth (change in the Vercel dashboard when you can): username `admin`. Password is stored only in Vercel env `ADMIN_BASIC_PASSWORD` — do not commit it.
+Framework preset: **None** (or static assets). Cloudflare serves the `out/` folder.
 
-**Security:** never put Vercel tokens or passwords in this file. Use `vercel login` or a local env var `VERCEL_TOKEN`.
+## Environment variables
 
-**GitHub:** connect the Vercel account to GitHub (`thestageafrica/askalert`) so future pushes auto-deploy. Until then, deploy from the repo root with the CLI.
+Set these on each Pages project (Production + Preview):
 
-AskAlert is a pnpm + Turborepo monorepo. Production uses **two Vercel projects** from the same Git repository:
-
-| Project | Root Directory | Purpose |
-| --- | --- | --- |
-| Web | `apps/web` | Marketing site, PWA, `/app` mock shell |
-| Admin | `apps/admin` | Operations console (HTTP Basic Auth) |
-
-Framework for both: **Next.js** (App Router).
-
-## Manual Vercel setup
-
-### 1. Web project
-
-1. In Vercel: **Add New → Project** and import the AskAlert repository.
-2. Set **Root Directory** to `apps/web`.
-3. Framework Preset: Next.js (auto-detected).
-4. Install command (monorepo): leave Vercel’s default, or use:
-   ```bash
-   pnpm install
-   ```
-5. Build settings (Root Directory `apps/web`):
-   ```bash
-   # Install Command
-   cd ../.. && pnpm install
-   # Build Command (builds workspace packages first)
-   cd ../.. && pnpm turbo run build --filter=@askalert/web
-   ```
-6. Add environment variables (Production + Preview):
+### Web (`askalert.com` / `www.askalert.com`)
 
 | Name | Example | Notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | `https://www.askalert.com` | No trailing slash. Must be the public domain — **never** `*.vercel.app`. |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `2348012345678` | International digits only — **no** `+` or spaces. Placeholder `2348000000000` fails the production build. |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.askalert.com` | No trailing slash. Never a `*.vercel.app` or `*.pages.dev` placeholder once the custom domain is live. |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `2348026047303` | Digits only. Placeholder `2348000000000` fails the production build. |
+| `NEXT_PUBLIC_USE_SUPABASE` | `false` | `true` only after Supabase is seeded. |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://….supabase.co` | Required when Supabase is on. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `…` | Public anon key (RLS-protected). |
 
-7. Deploy. Confirm:
-   - `https://<web>/` loads the landing page
-   - `https://<web>/app` loads the app shell
-   - `https://<web>/api/health` returns `{ "ok": true, ... }`
-   - `https://<web>/robots.txt` allows crawling and points at the sitemap
-   - `https://<web>/sitemap.xml` lists public pages
-
-### 2. Admin project
-
-1. **Add New → Project** again from the **same** repository.
-2. Set **Root Directory** to `apps/admin`.
-3. Add environment variables:
+### Admin (`admin.askalert.com`)
 
 | Name | Example | Notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | `https://admin.askalert.com` | Admin URL, no trailing slash. |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `2348012345678` | Optional; same format as web. |
-| `ADMIN_BASIC_USER` | `ops` | Required. HTTP Basic Auth username. |
-| `ADMIN_BASIC_PASSWORD` | *(long random secret)* | Required. Never commit this value. |
+| `NEXT_PUBLIC_SITE_URL` | `https://admin.askalert.com` | Admin public URL. |
+| `NEXT_PUBLIC_USE_SUPABASE` | `false` | Same flag pattern as web. |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://….supabase.co` | When Supabase is on. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `…` | Browser client only on static hosting. |
 
-4. Deploy. Confirm:
-   - Visiting the admin URL prompts for a username/password
-   - Wrong credentials are rejected
-   - `https://<admin>/api/health` is reachable **without** auth (for uptime checks)
-   - `https://<admin>/robots.txt` disallows all crawlers
+**Do not** put `SUPABASE_SERVICE_ROLE_KEY` in Pages env for these static apps. Service-role writes belong on a trusted Worker later.
 
-### 3. Domains (later)
+## Cloudflare Access (admin)
 
-- Point the main domain (for example `askalert.com`) at the **web** project.
-- Point `admin.` (for example `admin.askalert.com`) at the **admin** project.
-- Update `NEXT_PUBLIC_SITE_URL` on each project to match the final HTTPS URLs, then redeploy.
+HTTP Basic Auth middleware is removed. Protect the admin hostname with **Cloudflare Access** (Zero Trust):
 
-## Supabase (Phase 1B categories)
+1. Zero Trust → Access → Applications → Add application → Self-hosted
+2. Application domain: `admin.askalert.com`
+3. Policy: allow your team email addresses (Google / one-time PIN / etc.)
+4. Confirm the free plan covers your small team before relying on it commercially
 
-Create a Supabase project (pick a region close to Lagos users, for example `eu-west-1` or `eu-central-1`). Put keys only in `.env.local` and Vercel env — never in chat or git.
+Admin `robots.txt` still disallows all crawlers. `_headers` also sends `X-Robots-Tag: noindex, nofollow`.
 
-| Name | Where | Notes |
-| --- | --- | --- |
-| `USE_SUPABASE` / `NEXT_PUBLIC_USE_SUPABASE` | Web + Admin | `true` to load categories from Supabase; `false` (default) keeps mock seeds |
-| `NEXT_PUBLIC_SUPABASE_URL` | Web + Admin | Project URL from Supabase → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Web + Admin | Anon/public key (RLS-protected) |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Admin only** | Server-side writes. Never expose to the browser or `NEXT_PUBLIC_*` |
+## Domains
 
-### Apply migrations and seed
+1. Add `askalert.com` and `www.askalert.com` to the **web** Pages project.
+2. Add `admin.askalert.com` to the **admin** Pages project.
+3. Follow Cloudflare DNS instructions for your registrar (or move DNS to Cloudflare).
+4. Update `NEXT_PUBLIC_SITE_URL` on each project, then redeploy.
+5. Only after phone testing looks good, turn off any old Vercel project.
 
-From the repo root (after `npx supabase login`):
+## What ships as static files
 
-```powershell
-# Link once (use your project ref from the Supabase dashboard URL)
-npx supabase link --project-ref YOUR_PROJECT_REF
-
-# Push schema + RLS + table GRANTs to the linked remote project (not local Docker)
-pnpm db:push
-
-# Load Lagos areas + nine category seeds
-pnpm db:seed
-```
-# Equivalent: `npx supabase db push --remote --yes` then
-# `npx supabase db query --remote --yes -f supabase/seed.sql`
-#
-# If publish fails with "permission denied for table …", you are missing the
-# grants migration — run `pnpm db:push` again so `20260321000003_table_grants` applies.
-
-
-To regenerate `supabase/seed.sql` from `packages/category-engine` JSON seeds:
-
-```powershell
-node scripts/generate-seed.mjs
-```
-
-Then set `NEXT_PUBLIC_USE_SUPABASE=true` (and the keys above) on Vercel for both projects, set `SUPABASE_SERVICE_ROLE_KEY` on **admin only**, and redeploy. Publish a category in admin; it should appear on web `/app` when status is `pilot` or `live`.
-
-## Security headers
-
-Both apps send:
-
-- `Content-Security-Policy` (see `apps/*/src/lib/security-headers.ts`)
-- `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `X-Frame-Options: DENY`
-- `Permissions-Policy` (camera, mic, geolocation, payment disabled)
-
-`X-Powered-By` is disabled.
+- `public/_headers` — CSP and browser hardening, long cache for `/_next/static`, brand, icons
+- `public/_redirects` — SPA-style 200 rewrites for dynamic `/app/*` (web) and `/categories/*` (admin) shells
+- `public/health.json` — `{ "ok": true }` for uptime checks (replaces `/api/health`)
+- `public/og.png` / `public/twitter-og.png` — static Open Graph images (web)
+- `public/sw.js` — Serwist service worker (web PWA + offline `/offline/`)
 
 ## Local production check
 
-From the repo root:
-
 ```powershell
+# From repo root — needs real-looking env (see apps/web/.env.local)
 pnpm --filter @askalert/web build
-pnpm --filter @askalert/web start
-```
-
-```powershell
 pnpm --filter @askalert/admin build
-pnpm --filter @askalert/admin start
+
+# Serve the static folders (no Next server)
+npx --yes serve apps/web/out -l 3000
+npx --yes serve apps/admin/out -l 3001
 ```
 
-Copy each app’s `.env.example` to `.env.local` before building if you need custom values.
+Smoke-test:
 
-## Lighthouse
+- `http://localhost:3000/` landing
+- `http://localhost:3000/app/` app shell
+- `http://localhost:3000/offline/` offline page
+- `http://localhost:3000/health.json`
+- DevTools → Application → Service Worker registered; Network offline → `/offline/` fallback
+- `http://localhost:3001/` admin shell (Access is Cloudflare-only)
 
-After deploy (or against local `next start`):
+## Supabase (optional, Phase 1B)
 
-1. Chrome DevTools → Lighthouse
-2. Run on the **landing page** (`/`) and **`/app`**
-3. Target **90+** for Performance, Accessibility, Best Practices, and SEO
-4. Prefer mobile profile for `/app`
+Same as before: link project, `pnpm db:push`, `pnpm db:seed`, then set `NEXT_PUBLIC_USE_SUPABASE=true` on Pages. Web reads public categories with the anon key. Admin publish also uses the anon key on static hosting — RLS must allow those writes, or keep Supabase off until a Worker holds the service role.
 
-Common fixes if a score dips under 90:
+## Optional: Vercel
 
-- Compress hero imagery / keep brand PNGs reasonably sized
-- Keep the LCP text/hero simple above the fold
-- Ensure every image has width/height or CSS sizing
-- Confirm `NEXT_PUBLIC_SITE_URL` is HTTPS in production (SEO / OG)
+Vercel is **not** required. If you keep a Vercel project temporarily:
 
-## Optional: Vercel Analytics
+- Root Directory still `apps/web` / `apps/admin`
+- Build must produce `out/` (already configured via `output: 'export'`)
+- Prefer Cloudflare for free static hosting going forward
 
-Not installed by default (keeps the dependency surface small).
+## Checklist
 
-If you enable it later:
-
-1. In the Vercel project: **Analytics → Enable**
-2. Add `@vercel/analytics` to the app and render `<Analytics />` in the root layout
-3. Set `NEXT_PUBLIC_VERCEL_ANALYTICS=1` if you gate the component behind a flag
-
-**What it collects (high level):** anonymized page views, performance Web Vitals, and route information. It does **not** replace a full product analytics suite and should not include secrets or PII in URLs.
-
-See [Vercel Analytics docs](https://vercel.com/docs/analytics).
-
-## Health checks
-
-| App | Path | Auth |
-| --- | --- | --- |
-| Web | `/api/health` | None |
-| Admin | `/api/health` | None (explicitly excluded from Basic Auth) |
-
-Use these endpoints for Vercel or external uptime monitors.
-
-## Monorepo notes
-
-- Packages live under `packages/*` and are consumed via `workspace:*`.
-- Vercel should detect pnpm from the root lockfile when Root Directory is set to an app.
-- If install fails, set the Vercel **Install Command** to `cd ../.. && pnpm install` only when support docs for your Vercel version require it; usually Root Directory + pnpm is enough.
-
-## Checklist before calling Phase 1 done
-
-- [x] Web loads over HTTPS (`https://www.askalert.com`)
-- [x] Admin asks for Basic Auth (`https://admin.askalert.com`)
-- [x] `/api/health` OK on both
-- [x] GitHub connected; pushes auto-deploy both projects
-- [x] WhatsApp CTAs open the correct `wa.me` number (not placeholder `2348000000000`)
-- [x] Lighthouse (Incognito, after Perf passes)
-  - `/` → Perf **89** / A11y 100 / BP 100 / SEO 100 (1pt under 90; Lighthouse also warned IndexedDB/PWA storage noise)
-  - `/app` → Perf **95** / A11y 94 / BP 100 / SEO 100
-  - Accepted for Phase 1: `/app` clears 90; landing is effectively at target given storage warning
-- [ ] Revoke any Vercel token that was shared outside the dashboard
-- [x] Secrets only in Vercel env — never in git
-- [ ] Supabase linked, migrations pushed, seed loaded
-- [ ] `USE_SUPABASE=true` only after seed; mock fallback works when false
+- [ ] Web Pages project builds `out/`
+- [ ] Admin Pages project builds `out/`
+- [ ] Custom domains on Cloudflare
+- [ ] Admin behind Cloudflare Access
+- [ ] WhatsApp CTAs use the real number
+- [ ] OG preview shows `askalert.com` (not a preview hostname)
+- [ ] Offline / PWA works on a phone
+- [ ] Old Vercel deployment disabled after cutover

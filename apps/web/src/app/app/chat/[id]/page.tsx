@@ -1,15 +1,9 @@
-import type { Metadata } from 'next';
-import { ChatView } from '../../../../components/app/chat-view';
+import { ChatThreadPageClient } from './page-client';
 
-type PageProps = {
-  params: Promise<{ id: string }>;
-};
+export function generateStaticParams() {
+  return [{ id: 'chat_shortlet_01' }];
+}
 
-export const metadata: Metadata = {
-  title: 'Chat thread',
-};
-
-export default async function ChatThreadPage({ params }: PageProps) {
-  const { id } = await params;
-  return <ChatView chatId={id} />;
+export default function ChatThreadPage() {
+  return <ChatThreadPageClient />;
 }

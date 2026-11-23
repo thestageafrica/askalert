@@ -39,8 +39,6 @@ jobs:
       - name: Build
         env:
           NEXT_PUBLIC_SITE_URL: https://www.askalert.com
-          # Non-placeholder digits for CI only — production uses the real Vercel env value.
+          # Non-placeholder digits for CI only — production uses the real Pages env value.
           NEXT_PUBLIC_WHATSAPP_NUMBER: '2348012345678'
-          ADMIN_BASIC_USER: admin
-          ADMIN_BASIC_PASSWORD: ci-placeholder-password
         run: pnpm build

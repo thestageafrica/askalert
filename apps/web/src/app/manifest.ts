@@ -1,5 +1,8 @@
 import type { MetadataRoute } from 'next';
 
+/** Required for `output: 'export'`. */
+export const dynamic = 'force-static';
+
 /** Bump when swapping approved artwork so browsers drop the old install icon. */
 const ICON_VERSION = '3';
 
@@ -9,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'AskAlert',
     description:
       'Tell AskAlert what you need in Lagos. We ask verified vendors, compare offers, and bring you the best ones.',
-    start_url: '/app',
+    start_url: '/app/',
     display: 'standalone',
     background_color: '#0F1545',
     theme_color: '#0F1545',

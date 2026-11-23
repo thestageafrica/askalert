@@ -1,4 +1,8 @@
-/** Shared security headers for AskAlert web (Vercel / Next.js). */
+/**
+ * Security header values for AskAlert web.
+ * Static Cloudflare Pages deploys apply these via `public/_headers`.
+ * Kept here so unit tests stay the source of truth for CSP content.
+ */
 
 export function buildContentSecurityPolicy(): string {
   const directives = [

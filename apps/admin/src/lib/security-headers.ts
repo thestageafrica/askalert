@@ -1,4 +1,7 @@
-/** Shared security headers for AskAlert admin (Vercel / Next.js). */
+/**
+ * Security header values for AskAlert admin.
+ * Static Cloudflare Pages deploys apply these via `public/_headers`.
+ */
 
 export function buildContentSecurityPolicy(): string {
   const directives = [
