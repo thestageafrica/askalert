@@ -73,20 +73,25 @@ export function AuthShell({
   }
 
   return (
-    <div className="min-h-screen bg-navy-950 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
-      {/* Desktop: full story slideshow on the left */}
-      <div className="relative hidden min-h-screen lg:block">
-        <StorySlideshow contentAlign="middle" className="min-h-screen" />
+    <div className="min-h-screen bg-navy-950 lg:grid lg:h-dvh lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] lg:overflow-hidden">
+      {/* Desktop: pinned story panel — does not scroll with the form */}
+      <div className="relative hidden h-dvh lg:block">
+        <StorySlideshow contentAlign="middle" className="h-full min-h-0" />
       </div>
 
-      <div className="relative flex min-h-screen flex-col">
+      <div className="relative flex min-h-screen flex-col lg:h-dvh lg:min-h-0 lg:overflow-y-auto">
         {/* Mobile: compact story strip */}
-        <div className="lg:hidden">
+        <div className="shrink-0 lg:hidden">
           <StorySlideshow compact className="h-[40vh] min-h-[15.5rem] max-h-[22rem]" />
         </div>
 
         <div className="relative z-10 flex flex-1 flex-col px-4 pb-10 sm:px-6 lg:justify-center lg:px-10 lg:py-12 xl:px-14">
-          <div className={['-mt-8 self-center sm:-mt-10 lg:mt-0 lg:self-stretch lg:max-w-md', formCardClassName].join(' ')}>
+          <div
+            className={[
+              '-mt-8 self-center sm:-mt-10 lg:mt-0 lg:max-w-md lg:self-stretch',
+              formCardClassName,
+            ].join(' ')}
+          >
             <Link
               href="/"
               className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"

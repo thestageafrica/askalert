@@ -86,7 +86,15 @@ export function StorySlideshow({
       ))}
 
       {showChrome ? (
-        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-3 p-5 sm:p-8">
+        <div
+          className={cn(
+            'absolute inset-x-0 z-10 flex items-center gap-3',
+            // Compact mobile strip: dots only, lifted above the overlapping form card.
+            compact
+              ? 'bottom-12 justify-center px-5'
+              : 'bottom-0 justify-between p-5 sm:p-8',
+          )}
+        >
           <div className="flex gap-2" role="tablist" aria-label="Story slides">
             {AUTH_STORY_SLIDES.map((item, slideIndex) => (
               <button
@@ -103,24 +111,27 @@ export function StorySlideshow({
               />
             ))}
           </div>
-          <div className="flex gap-2">
-            <CarouselButton
-              label="Previous slide"
-              onClick={() =>
-                setIndex(
-                  (current) => (current - 1 + AUTH_STORY_SLIDES.length) % AUTH_STORY_SLIDES.length,
-                )
-              }
-            >
-              ‹
-            </CarouselButton>
-            <CarouselButton
-              label="Next slide"
-              onClick={() => setIndex((current) => (current + 1) % AUTH_STORY_SLIDES.length)}
-            >
-              ›
-            </CarouselButton>
-          </div>
+          {!compact ? (
+            <div className="flex gap-2">
+              <CarouselButton
+                label="Previous slide"
+                onClick={() =>
+                  setIndex(
+                    (current) =>
+                      (current - 1 + AUTH_STORY_SLIDES.length) % AUTH_STORY_SLIDES.length,
+                  )
+                }
+              >
+                ‹
+              </CarouselButton>
+              <CarouselButton
+                label="Next slide"
+                onClick={() => setIndex((current) => (current + 1) % AUTH_STORY_SLIDES.length)}
+              >
+                ›
+              </CarouselButton>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -199,7 +210,7 @@ function SlidePanel({
             'relative z-[1] flex h-full flex-col px-6 pt-10 sm:px-10',
             middle
               ? 'justify-center pb-24'
-              : cn('justify-end pb-20', compact ? 'pb-16' : 'sm:pb-24'),
+              : cn('justify-end', compact ? 'pb-20' : 'pb-20 sm:pb-24'),
           )}
         >
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-400">
