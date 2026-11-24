@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Logo, cn } from '@askalert/ui';
+import { Button, Logo, cn } from '@askalert/ui';
+import { useAdminAuth } from '../lib/admin-auth';
 import { useAdminStore } from '../lib/admin-store';
 import { roleLabels, type AdminRole } from '../lib/roles';
 
@@ -39,6 +40,9 @@ function isActive(pathname: string, href: string) {
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { role, setRole } = useAdminStore();
+  const { user, signOut, supabaseConfigured } = useAdminAuth();
+  const emailLabel = user?.email?.split('@')[0] ?? 'Admin';
+  const initials = emailLabel.slice(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen bg-[radial-gradient(90%_60%_at_0%_0%,_color-mix(in_srgb,var(--orange-500)_10%,transparent),_transparent_50%),radial-gradient(70%_50%_at_100%_0%,_color-mix(in_srgb,var(--navy-700)_12%,transparent),_transparent_45%),var(--surface-subtle)] lg:grid lg:grid-cols-[16.5rem_1fr]">
@@ -85,10 +89,25 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </label>
             <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1.5 shadow-sm">
               <span className="flex size-8 items-center justify-center rounded-full bg-navy-950 text-[11px] font-extrabold text-orange-400">
-                Ada
+                {initials}
               </span>
-              <span className="pr-1 text-xs font-bold text-foreground">{roleLabels[role]}</span>
+              <span className="max-w-[9rem] truncate pr-1 text-xs font-bold text-foreground">
+                {user?.email ?? roleLabels[role]}
+              </span>
             </div>
+            {supabaseConfigured ? (
+              <Button
+                variant="secondary"
+                className="min-h-11"
+                onClick={() => {
+                  void signOut().then(() => {
+                    window.location.href = '/sign-in/';
+                  });
+                }}
+              >
+                Sign out
+              </Button>
+            ) : null}
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
