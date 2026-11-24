@@ -1,29 +1,34 @@
 import {
-  createBrowserClient,
   getPublicCategoryBySlug,
-  isSupabaseEnabled,
   listPublicCategories,
 } from '@askalert/db';
 import type { CategoryConfig } from '@askalert/category-engine';
+import { webBrowserClient, webSupabaseEnabled, webSupabaseEnv } from './supabase-browser';
 
 /**
  * Resolves categories for the web app.
  * USE_SUPABASE=true loads Live rows from Supabase; otherwise mock seeds.
  */
 export async function loadPublicCategories(): Promise<CategoryConfig[]> {
-  if (!isSupabaseEnabled()) {
-    return listPublicCategories(null);
+  if (!webSupabaseEnabled()) {
+    return listPublicCategories(null, webSupabaseEnv());
   }
-  const client = createBrowserClient();
-  return listPublicCategories(client);
+  const client = webBrowserClient();
+  if (!client) {
+    return listPublicCategories(null, webSupabaseEnv());
+  }
+  return listPublicCategories(client, webSupabaseEnv());
 }
 
 export async function loadPublicCategoryBySlug(
   slug: string,
 ): Promise<CategoryConfig | undefined> {
-  if (!isSupabaseEnabled()) {
-    return getPublicCategoryBySlug(slug, null);
+  if (!webSupabaseEnabled()) {
+    return getPublicCategoryBySlug(slug, null, webSupabaseEnv());
   }
-  const client = createBrowserClient();
-  return getPublicCategoryBySlug(slug, client);
+  const client = webBrowserClient();
+  if (!client) {
+    return getPublicCategoryBySlug(slug, null, webSupabaseEnv());
+  }
+  return getPublicCategoryBySlug(slug, client, webSupabaseEnv());
 }

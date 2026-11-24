@@ -74,7 +74,11 @@ export async function listPublicCategories(
       if (!raw) {
         return null;
       }
-      return parseConfig(raw);
+      try {
+        return parseConfig(raw);
+      } catch {
+        return null;
+      }
     })
     .filter((config): config is CategoryConfig => config !== null);
 }
@@ -255,9 +259,8 @@ export async function listManagedCategories(
       .single();
 
     if (versionError || !version) {
-      throw new Error(
-        `Failed to load version for ${category.slug}: ${versionError?.message ?? 'missing'}`,
-      );
+      // Anon RLS only exposes live/pilot published versions — skip the rest.
+      continue;
     }
 
     const { data: attributes, error: attrError } = await client
@@ -267,14 +270,18 @@ export async function listManagedCategories(
       .order('sort_order');
 
     if (attrError) {
-      throw new Error(`Failed to load attributes for ${category.slug}: ${attrError.message}`);
+      continue;
     }
 
-    results.push({
-      ...category,
-      config: parseConfig(version.config),
-      attributes: attributes ?? [],
-    });
+    try {
+      results.push({
+        ...category,
+        config: parseConfig(version.config),
+        attributes: attributes ?? [],
+      });
+    } catch {
+      continue;
+    }
   }
 
   return results;

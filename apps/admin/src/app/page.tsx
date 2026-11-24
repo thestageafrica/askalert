@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Button, Card, cn } from '@askalert/ui';
+import { DbSizeCard } from '../components/db-size-card';
 import { StatusChip } from '../components/status-chip';
 import { useAdminStore } from '../lib/admin-store';
 
@@ -9,7 +10,6 @@ const cards = [
   { label: 'Active vendors', value: '128', hint: 'Verified in Lagos', tone: 'orange' },
   { label: 'Requests today', value: '46', hint: 'Across live categories', tone: 'navy' },
   { label: 'Conversion', value: '31%', hint: 'Ask → booked', tone: 'success' },
-  { label: 'Unmet demand', value: '9', hint: 'No quote in time', tone: 'warning' },
 ] as const;
 
 const activity = [
@@ -67,7 +67,6 @@ export default function DashboardPage() {
                 card.tone === 'orange' && 'bg-orange-500',
                 card.tone === 'navy' && 'bg-navy-950',
                 card.tone === 'success' && 'bg-success',
-                card.tone === 'warning' && 'bg-warning',
               )}
             />
             <div className="p-4">
@@ -79,6 +78,7 @@ export default function DashboardPage() {
             </div>
           </Card>
         ))}
+        <DbSizeCard />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">

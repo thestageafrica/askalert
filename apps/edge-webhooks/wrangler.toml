@@ -1,0 +1,15 @@
+name = "askalert-edge-webhooks"
+main = "src/index.ts"
+compatibility_date = "2025-05-01"
+workers_dev = true
+
+# Non-secret config can live here later. Secrets are set with:
+#   pnpm --filter @askalert/edge-webhooks exec wrangler secret put WHATSAPP_VERIFY_TOKEN
+#   pnpm --filter @askalert/edge-webhooks exec wrangler secret put WHATSAPP_APP_SECRET
+#   pnpm --filter @askalert/edge-webhooks exec wrangler secret put PAYSTACK_SECRET
+#   pnpm --filter @askalert/edge-webhooks exec wrangler secret put WEBHOOK_SHARED_SECRET
+#   pnpm --filter @askalert/edge-webhooks exec wrangler secret put SUPABASE_FUNCTION_URL
+
+[vars]
+# Optional non-secret placeholders for local docs only.
+SERVICE_NAME = "askalert-edge-webhooks"

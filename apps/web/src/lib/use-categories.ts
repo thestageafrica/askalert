@@ -6,28 +6,15 @@ import {
   listSeedCategories,
   type CategoryConfig,
 } from '@askalert/category-engine';
-import {
-  createBrowserClient,
-  getPublicCategoryBySlug,
-  isSupabaseEnabled,
-  listPublicCategories,
-} from '@askalert/db';
-
-function supabaseOnClient(): boolean {
-  return isSupabaseEnabled({
-    NEXT_PUBLIC_USE_SUPABASE: process.env.NEXT_PUBLIC_USE_SUPABASE,
-    USE_SUPABASE: process.env.NEXT_PUBLIC_USE_SUPABASE,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  });
-}
+import { getPublicCategoryBySlug, listPublicCategories } from '@askalert/db';
+import { webBrowserClient, webSupabaseEnabled, webSupabaseEnv } from './supabase-browser';
 
 export function useCategories(): {
   categories: CategoryConfig[];
   loading: boolean;
   error: string | null;
 } {
-  const useRemote = supabaseOnClient();
+  const useRemote = webSupabaseEnabled();
   const [categories, setCategories] = useState<CategoryConfig[]>(() =>
     useRemote ? [] : [...listSeedCategories()],
   );
@@ -42,10 +29,18 @@ export function useCategories(): {
     let cancelled = false;
     setLoading(true);
 
-    void listPublicCategories(createBrowserClient())
+    const client = webBrowserClient();
+    if (!client) {
+      setCategories([...listSeedCategories()]);
+      setError('Supabase is on but URL/anon key are missing from this build.');
+      setLoading(false);
+      return;
+    }
+
+    void listPublicCategories(client, webSupabaseEnv())
       .then((rows) => {
         if (!cancelled) {
-          setCategories(rows);
+          setCategories(rows.length > 0 ? rows : [...listSeedCategories()]);
           setError(null);
         }
       })
@@ -74,7 +69,7 @@ export function useCategory(slug: string): {
   loading: boolean;
   error: string | null;
 } {
-  const useRemote = supabaseOnClient();
+  const useRemote = webSupabaseEnabled();
   const [category, setCategory] = useState<CategoryConfig | undefined>(() =>
     useRemote ? undefined : findSeedCategoryBySlug(slug),
   );
@@ -91,10 +86,18 @@ export function useCategory(slug: string): {
     let cancelled = false;
     setLoading(true);
 
-    void getPublicCategoryBySlug(slug, createBrowserClient())
+    const client = webBrowserClient();
+    if (!client) {
+      setCategory(findSeedCategoryBySlug(slug));
+      setError('Supabase is on but URL/anon key are missing from this build.');
+      setLoading(false);
+      return;
+    }
+
+    void getPublicCategoryBySlug(slug, client, webSupabaseEnv())
       .then((row) => {
         if (!cancelled) {
-          setCategory(row);
+          setCategory(row ?? findSeedCategoryBySlug(slug));
           setError(null);
         }
       })

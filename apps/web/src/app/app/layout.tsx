@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { BottomNav } from '../../components/app/bottom-nav';
 import { InstallPromptProvider } from '../../components/pwa/install-prompt';
 import { MockStoreProvider } from '../../lib/app/mock-store';
+import { PlanStoreProvider } from '../../lib/app/plan-store';
 
 export const metadata: Metadata = {
   title: 'AskAlert app',
@@ -13,10 +14,12 @@ export default function AppSectionLayout({ children }: { children: ReactNode }) 
   return (
     <InstallPromptProvider>
       <MockStoreProvider>
-        <div className="relative min-h-screen overflow-x-hidden bg-surface-subtle">
-          <div className="mx-auto min-h-screen w-full max-w-lg pb-28">{children}</div>
-          <BottomNav />
-        </div>
+        <PlanStoreProvider>
+          <div className="relative min-h-screen overflow-x-hidden bg-surface-subtle">
+            <div className="mx-auto min-h-screen w-full max-w-lg pb-28">{children}</div>
+            <BottomNav />
+          </div>
+        </PlanStoreProvider>
       </MockStoreProvider>
     </InstallPromptProvider>
   );

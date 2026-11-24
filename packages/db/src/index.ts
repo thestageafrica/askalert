@@ -1,5 +1,5 @@
 export type { AskAlertSupabase } from './client';
-export { createBrowserClient, createServerClient } from './client';
+export { createBrowserClient, createServerClient, tryCreateBrowserClient } from './client';
 export {
   getPublicCategoryBySlug,
   listAreas,
@@ -12,6 +12,17 @@ export {
 } from './categories';
 export { resolveCategoryId } from './resolve-category-id';
 export { isSupabaseEnabled, requireSupabaseEnv } from './feature-flag';
+export { publicSupabaseEnv } from './public-env';
+export {
+  assertSharedSecret,
+  buildJobPayload,
+  collectEventIds,
+  ingestEnvelopeSchema,
+  timingSafeEqualString,
+  type IngestEnvelope,
+  type WebhookSource,
+} from './webhook-ingest';
+export { getLatestDbSizeSnapshot, type DbSizeSnapshot } from './db-metrics';
 export {
   auditActionForOp,
   canPublicReadAttributes,

@@ -16,13 +16,13 @@ import {
   type CategoryStatus,
 } from '@askalert/category-engine';
 import {
-  createBrowserClient,
   listManagedCategories,
   publishCategoryVersion,
   resolveCategoryId,
 } from '@askalert/db';
 import { createBlankCategory } from './blank-category';
 import type { AdminRole } from './roles';
+import { adminBrowserClient, adminSupabaseEnabled } from './supabase-browser';
 
 export type CategoryVersion = {
   id: string;
@@ -68,7 +68,7 @@ type AdminStore = {
 const AdminStoreContext = createContext<AdminStore | null>(null);
 
 function supabaseEnabledOnClient(): boolean {
-  return process.env.NEXT_PUBLIC_USE_SUPABASE === 'true';
+  return adminSupabaseEnabled();
 }
 
 function readinessFromStatus(status: CategoryStatus): ManagedCategory['readiness'] {
@@ -147,9 +147,19 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
     setCategoriesLoading(true);
-    void listManagedCategories(createBrowserClient())
+    const client = adminBrowserClient();
+    if (!client) {
+      setCategories(seedManaged());
+      setCategoriesLoading(false);
+      return;
+    }
+    void listManagedCategories(client)
       .then((rows) => {
         if (cancelled) {
+          return;
+        }
+        if (rows.length === 0) {
+          setCategories(seedManaged());
           return;
         }
         setCategories(
@@ -222,7 +232,15 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       let resolvedId = managed.id;
       if (useRemote) {
         try {
-          const client = createBrowserClient();
+          const client = adminBrowserClient();
+          if (!client) {
+            return {
+              ok: false,
+              errors: [
+                'Supabase URL/anon key missing from this admin build. Set all three NEXT_PUBLIC_* vars and redeploy.',
+              ],
+            };
+          }
           const categoryId = await resolveCategoryId(client, managed.id);
           if (!categoryId) {
             return {

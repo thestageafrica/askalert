@@ -82,9 +82,119 @@ Smoke-test:
 - DevTools → Application → Service Worker registered; Network offline → `/offline/` fallback
 - `http://localhost:3001/` admin shell (Access is Cloudflare-only)
 
-## Supabase (optional, Phase 1B)
+## Supabase free plan (Prompt 15)
 
-Same as before: link project, `pnpm db:push`, `pnpm db:seed`, then set `NEXT_PUBLIC_USE_SUPABASE=true` on Pages. Web reads public categories with the anon key. Admin publish also uses the anon key on static hosting — RLS must allow those writes, or keep Supabase off until a Worker holds the service role.
+Region for this project: **eu-west-1** (`krrvatcjgytdbsiyvqyh`). Prefer staying on free until the first real escrow hold, then upgrade to Pro.
+
+### Apply schema + seed
+
+```powershell
+pnpm db:push
+pnpm db:seed
+```
+
+Enable Dashboard extensions if a migration notices them missing: **pgmq**, **pg_cron**, **pg_net**.
+
+### Edge Functions
+
+```powershell
+npx supabase functions deploy ingest-webhook
+npx supabase functions deploy process-jobs
+npx supabase secrets set WEBHOOK_SHARED_SECRET=… CRON_SHARED_SECRET=…
+```
+
+Point the Worker `SUPABASE_FUNCTION_URL` at:
+
+`https://<project-ref>.supabase.co/functions/v1/ingest-webhook`
+
+Configure cron HTTP target (service role / SQL editor):
+
+```sql
+insert into public.app_runtime_config (key, value) values
+  ('functions_base_url', 'https://<project-ref>.supabase.co/functions/v1'),
+  ('cron_shared_secret', '<same as CRON_SHARED_SECRET>')
+on conflict (key) do update set value = excluded.value;
+```
+
+### Feature flag
+
+Set on Pages (and local `.env.local`) when ready:
+
+- `NEXT_PUBLIC_USE_SUPABASE=true`
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Leave `false` to keep mock category seeds for local development. Admin dashboard shows a **Database size** card from `db_size_snapshots` when Supabase is on.
+
+### Backups + keep-alive (GitHub Actions)
+
+- `.github/workflows/supabase-backup.yml` — nightly encrypted `pg_dump`
+- `.github/workflows/supabase-keepalive.yml` — daily health ping
+- Restore guide: `docs/supabase-backup-restore.md`
+
+Required repo secrets: `SUPABASE_DB_URL_READONLY`, `BACKUP_GPG_PASSPHRASE`. Optional: `SUPABASE_SCRATCH_DB_URL`, `KEEPALIVE_HEALTH_URL`, S3 upload keys.
+
+### Upgrade triggers
+
+Upgrade to **Supabase Pro** at the **first real escrow hold** for:
+
+- Daily managed backups
+- No free-plan pausing
+- Headroom for DB size / Edge invocations
+
+Until then: watch DB size (warn at 350 MB), Worker requests/day, Edge Function invocations, and egress weekly.
+
+## Webhook Worker (`apps/edge-webhooks`)
+
+Single Cloudflare Worker front door for WhatsApp and Paystack webhooks.
+
+| Item | Value |
+| --- | --- |
+| App | `apps/edge-webhooks` |
+| Config | `wrangler.toml` |
+| Routes | `GET/POST /whatsapp`, `POST /paystack`, `GET /health` |
+
+### Deploy
+
+```powershell
+cd apps/edge-webhooks
+pnpm exec wrangler login
+pnpm exec wrangler deploy
+```
+
+Or from the repo root:
+
+```powershell
+pnpm --filter @askalert/edge-webhooks deploy
+```
+
+### Secrets (never commit)
+
+Set each secret with Wrangler (prompts for the value):
+
+```powershell
+pnpm --filter @askalert/edge-webhooks exec wrangler secret put WHATSAPP_VERIFY_TOKEN
+pnpm --filter @askalert/edge-webhooks exec wrangler secret put WHATSAPP_APP_SECRET
+pnpm --filter @askalert/edge-webhooks exec wrangler secret put PAYSTACK_SECRET
+pnpm --filter @askalert/edge-webhooks exec wrangler secret put WEBHOOK_SHARED_SECRET
+pnpm --filter @askalert/edge-webhooks exec wrangler secret put SUPABASE_FUNCTION_URL
+```
+
+| Secret | Purpose |
+| --- | --- |
+| `WHATSAPP_VERIFY_TOKEN` | Meta webhook verify challenge |
+| `WHATSAPP_APP_SECRET` | Validates `X-Hub-Signature-256` |
+| `PAYSTACK_SECRET` | Validates `x-paystack-signature` (HMAC SHA-512) |
+| `WEBHOOK_SHARED_SECRET` | Sent as `x-askalert-webhook-secret` to Supabase |
+| `SUPABASE_FUNCTION_URL` | Edge Function URL that receives forwarded events |
+
+Local .dev.vars (gitignored pattern via `.env*.local` / Wrangler): copy from `apps/edge-webhooks/.dev.vars.example`.
+
+### Behaviour notes
+
+- WhatsApp **sent / delivered / read** statuses are dropped
+- Incoming **messages** and **failed** statuses are kept, deduped by id, then forwarded
+- Logs only counts and error codes — never message text or phone numbers
+- Point Meta and Paystack webhook URLs at the Worker hostname after deploy
 
 ## Optional: Vercel
 
@@ -96,11 +206,19 @@ Vercel is **not** required. If you keep a Vercel project temporarily:
 
 ## Checklist
 
-- [ ] Web Pages project builds `out/`
-- [ ] Admin Pages project builds `out/`
+- [x] Web Pages project builds `out/`
+- [x] Admin Pages project builds `out/`
 - [ ] Custom domains on Cloudflare
 - [ ] Admin behind Cloudflare Access
-- [ ] WhatsApp CTAs use the real number
+- [x] WhatsApp CTAs use the real number
 - [ ] OG preview shows `askalert.com` (not a preview hostname)
 - [ ] Offline / PWA works on a phone
 - [ ] Old Vercel deployment disabled after cutover
+- [ ] Edge webhooks Worker deployed + secrets set
+- [x] Supabase queue / retention / size monitoring migrations applied
+- [x] Edge Functions `ingest-webhook` + `process-jobs` deployed
+- [ ] Set `WEBHOOK_SHARED_SECRET` / `CRON_SHARED_SECRET` + Worker `SUPABASE_FUNCTION_URL`
+- [ ] GitHub secrets for backup + keep-alive; run backup workflow once
+- [ ] Flip `NEXT_PUBLIC_USE_SUPABASE=true` after seed verify
+- [ ] Upgrade Supabase to Pro at first real escrow hold
+

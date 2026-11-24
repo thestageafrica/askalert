@@ -6,6 +6,7 @@ import { buildIntakeSteps } from '@askalert/category-engine';
 import { Button, Input, cn } from '@askalert/ui';
 import { involvementOptions } from '../../lib/app/involvement';
 import { useMockStore } from '../../lib/app/mock-store';
+import { usePlanStore } from '../../lib/app/plan-store';
 import type { InvolvementMode } from '../../lib/app/types';
 import { useCategory } from '../../lib/use-categories';
 import { AppHeader } from './app-header';
@@ -13,6 +14,7 @@ import { AppHeader } from './app-header';
 export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
   const router = useRouter();
   const { createRequest } = useMockStore();
+  const { consume } = usePlanStore();
   const { category, loading } = useCategory(categorySlug);
   const steps = useMemo(
     () => (category ? buildIntakeSteps(category, 'need') : []),
@@ -78,6 +80,20 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
   };
 
   const onSubmit = () => {
+    const entitlement = consume('start_request');
+    if (entitlement.blocked) {
+      setError(
+        entitlement.decision.outcome === 'block'
+          ? `${entitlement.decision.reason} ${entitlement.decision.nextStep}`
+          : 'You cannot start another request right now.',
+      );
+      setPhase('summary');
+      return;
+    }
+    if (entitlement.decision.outcome === 'warn_at_80') {
+      setError(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+    }
+
     const title =
       category.slug === 'shortlets'
         ? `${String(answers.bedrooms ?? '')}-bedroom shortlet · ${String(answers.area ?? 'Lagos')}`

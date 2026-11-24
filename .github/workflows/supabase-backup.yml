@@ -1,0 +1,93 @@
+name: Supabase nightly backup
+
+# Nightly encrypted pg_dump using a read-only connection string.
+# Upload target: GitHub Actions artifact (private to this repo) by default.
+# Optional: set BACKUP_S3_* secrets to also push to private object storage.
+
+on:
+  schedule:
+    - cron: '20 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client + gpg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client gnupg
+
+      - name: Dump and encrypt
+        env:
+          SUPABASE_DB_URL_READONLY: ${{ secrets.SUPABASE_DB_URL_READONLY }}
+          BACKUP_GPG_PASSPHRASE: ${{ secrets.BACKUP_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL_READONLY:-}" ]; then
+            echo "Missing secret SUPABASE_DB_URL_READONLY"
+            exit 1
+          fi
+          if [ -z "${BACKUP_GPG_PASSPHRASE:-}" ]; then
+            echo "Missing secret BACKUP_GPG_PASSPHRASE"
+            exit 1
+          fi
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          OUT="askalert-${STAMP}.sql"
+          ENC="${OUT}.gpg"
+          pg_dump --no-owner --no-acl --format=plain "$SUPABASE_DB_URL_READONLY" > "$OUT"
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+            --passphrase "$BACKUP_GPG_PASSPHRASE" \
+            -o "$ENC" "$OUT"
+          rm -f "$OUT"
+          echo "BACKUP_FILE=$ENC" >> "$GITHUB_ENV"
+          ls -lh "$ENC"
+
+      - name: Upload encrypted dump artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: askalert-db-backup
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 14
+
+      - name: Optional S3 upload
+        env:
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKUP_S3_BUCKET:-}" ]; then
+            echo "No BACKUP_S3_BUCKET; skipping object storage upload."
+            exit 0
+          fi
+          aws s3 cp "$BACKUP_FILE" "s3://${BACKUP_S3_BUCKET}/askalert/${BACKUP_FILE}"
+
+  restore-smoke:
+    needs: backup
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: askalert-db-backup
+          path: ./backup
+
+      - name: Restore smoke test (decrypt + parse)
+        env:
+          BACKUP_GPG_PASSPHRASE: ${{ secrets.BACKUP_GPG_PASSPHRASE }}
+          SUPABASE_SCRATCH_DB_URL: ${{ secrets.SUPABASE_SCRATCH_DB_URL }}
+        run: |
+          set -euo pipefail
+          bash scripts/restore-backup-smoke.sh ./backup

@@ -323,12 +323,175 @@ export type Database = {
         };
         Relationships: [];
       };
+      webhook_events: {
+        Row: {
+          id: string;
+          source: string;
+          received_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          source: string;
+          received_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          source?: string;
+          received_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      job_dead_letters: {
+        Row: {
+          id: string;
+          queue_name: string;
+          job_id: number | null;
+          payload: Json;
+          error_code: string;
+          attempts: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          queue_name?: string;
+          job_id?: number | null;
+          payload: Json;
+          error_code: string;
+          attempts?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          queue_name?: string;
+          job_id?: number | null;
+          payload?: Json;
+          error_code?: string;
+          attempts?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      messages: {
+        Row: {
+          id: string;
+          thread_id: string | null;
+          sender_role: string;
+          channel: string;
+          body: string | null;
+          body_summary: string | null;
+          media: Json | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          thread_id?: string | null;
+          sender_role?: string;
+          channel?: string;
+          body?: string | null;
+          body_summary?: string | null;
+          media?: Json | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          thread_id?: string | null;
+          sender_role?: string;
+          channel?: string;
+          body?: string | null;
+          body_summary?: string | null;
+          media?: Json | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      db_size_snapshots: {
+        Row: {
+          id: string;
+          size_bytes: number;
+          size_mb: number;
+          warning: boolean;
+          note: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          size_bytes: number;
+          size_mb: number;
+          warning?: boolean;
+          note?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          size_bytes?: number;
+          size_mb?: number;
+          warning?: boolean;
+          note?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      app_runtime_config: {
+        Row: {
+          key: string;
+          value: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          key: string;
+          value: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          key?: string;
+          value?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       is_service_role: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      enqueue_job: {
+        Args: { p_payload: Json };
+        Returns: number | null;
+      };
+      record_db_size: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      run_message_retention: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      process_askalert_job_batch: {
+        Args: { p_batch_size?: number; p_max_attempts?: number };
+        Returns: Json;
       };
     };
     Enums: Record<string, never>;

@@ -1,0 +1,5 @@
+WHATSAPP_VERIFY_TOKEN=replace-me
+WHATSAPP_APP_SECRET=replace-me
+PAYSTACK_SECRET=replace-me
+WEBHOOK_SHARED_SECRET=replace-me
+SUPABASE_FUNCTION_URL=https://YOUR_PROJECT_REF.supabase.co/functions/v1/ingest-webhook

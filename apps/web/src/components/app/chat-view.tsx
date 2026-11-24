@@ -5,11 +5,14 @@ import { Button, Input, cn } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { quickReplies } from '../../lib/app/mock-data';
 import { useMockStore } from '../../lib/app/mock-store';
+import { usePlanStore } from '../../lib/app/plan-store';
 
 export function ChatView({ chatId }: { chatId: string }) {
   const { getChat, toggleAgentControl, sendChatMessage } = useMockStore();
+  const { consume } = usePlanStore();
   const chat = getChat(chatId);
   const [draft, setDraft] = useState('');
+  const [planNotice, setPlanNotice] = useState<string | null>(null);
 
   if (!chat) {
     return (
@@ -26,6 +29,16 @@ export function ChatView({ chatId }: { chatId: string }) {
     const trimmed = text.trim();
     if (!trimmed) {
       return;
+    }
+    const entitlement = consume('relay_message');
+    if (entitlement.blocked && entitlement.decision.outcome === 'block') {
+      setPlanNotice(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+      return;
+    }
+    if (entitlement.decision.outcome === 'warn_at_80') {
+      setPlanNotice(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+    } else {
+      setPlanNotice(null);
     }
     sendChatMessage(chat.id, trimmed, 'buyer');
     setDraft('');
@@ -51,6 +64,14 @@ export function ChatView({ chatId }: { chatId: string }) {
         <p className="rounded-2xl border border-dashed border-border/80 bg-card/90 px-3 py-2 text-center text-xs font-medium text-muted-foreground shadow-sm backdrop-blur">
           Contact details are shared after booking
         </p>
+        {planNotice ? (
+          <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-center text-xs font-medium text-navy-950">
+            {planNotice}{' '}
+            <a href="/app/plan" className="font-bold underline">
+              Your plan
+            </a>
+          </p>
+        ) : null}
 
         {chat.messages.map((message) => {
           const mine = message.from === 'buyer';

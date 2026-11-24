@@ -79,6 +79,18 @@ export function AccountView() {
         </section>
 
         <section className="rounded-[1.5rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
+          <h2 className="text-sm font-bold text-foreground">Your plan</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            See remaining requests, vendors and messages in plain language.
+          </p>
+          <div className="mt-4">
+            <Button href="/app/plan" className="w-full min-h-11">
+              Open plan
+            </Button>
+          </div>
+        </section>
+
+        <section className="rounded-[1.5rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
           <h2 className="text-sm font-bold text-foreground">Data and privacy</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Vendors only see your contact after you book. You can clear local demo data anytime by
