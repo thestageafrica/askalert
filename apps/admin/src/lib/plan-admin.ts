@@ -71,23 +71,33 @@ export function getLiveVersion(plan: AdminPlanRecord): AdminPlanVersion {
 export function publishPlanVersion(
   plan: AdminPlanRecord,
   draft: PlanDraftInput,
-): { plan: AdminPlanRecord; version: AdminPlanVersion } {
-  const parsed = planDraftSchema.parse(draft);
+):
+  | { ok: true; plan: AdminPlanRecord; version: AdminPlanVersion }
+  | { ok: false; error: string } {
+  const parsed = planDraftSchema.safeParse(draft);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    return {
+      ok: false,
+      error: first?.message ?? 'Check the plan details and try again.',
+    };
+  }
   const nextVersion = Math.max(...plan.versions.map((item) => item.version)) + 1;
   const version: AdminPlanVersion = {
     version: nextVersion,
-    priceMinor: parsed.priceMinor,
-    periodDays: parsed.periodDays,
-    limits: parsed.limits,
-    features: parsed.features,
-    changeNote: parsed.changeNote,
+    priceMinor: parsed.data.priceMinor,
+    periodDays: parsed.data.periodDays,
+    limits: parsed.data.limits,
+    features: parsed.data.features,
+    changeNote: parsed.data.changeNote,
     createdAt: new Date().toISOString(),
   };
   return {
+    ok: true,
     plan: {
       ...plan,
-      name: parsed.name,
-      disabled: parsed.disabled,
+      name: parsed.data.name,
+      disabled: parsed.data.disabled,
       currentVersion: nextVersion,
       versions: [...plan.versions, version],
     },

@@ -42,6 +42,10 @@ export function PlansAdminView() {
       setMessage('Only Super admin or Operations can edit plans.');
       return;
     }
+    if (note.trim().length < 3) {
+      setMessage('Add a short change note before publishing.');
+      return;
+    }
     const parsedPrice = parseNairaInput(priceNaira);
     if (parsedPrice === null) {
       setMessage('Enter a valid plan price in Naira.');

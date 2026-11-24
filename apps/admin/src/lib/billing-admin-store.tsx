@@ -204,23 +204,19 @@ export function BillingAdminProvider({ children }: { children: ReactNode }) {
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
 
   const publishPlan = useCallback((planId: string, draft: PlanDraftInput) => {
-    try {
-      setPlans((current) => {
-        const target = current.find((plan) => plan.id === planId);
-        if (!target) {
-          throw new Error('Plan not found');
-        }
-        const { plan } = publishPlanVersion(target, draft);
-        return current.map((item) => (item.id === planId ? plan : item));
-      });
-      return { ok: true as const };
-    } catch (error) {
-      return {
-        ok: false as const,
-        error: error instanceof Error ? error.message : 'Could not publish plan',
-      };
+    const target = plans.find((plan) => plan.id === planId);
+    if (!target) {
+      return { ok: false as const, error: 'Plan not found' };
     }
-  }, []);
+    const result = publishPlanVersion(target, draft);
+    if (!result.ok) {
+      return { ok: false as const, error: result.error };
+    }
+    setPlans((current) =>
+      current.map((item) => (item.id === planId ? result.plan : item)),
+    );
+    return { ok: true as const };
+  }, [plans]);
 
   const rollbackPlan = useCallback((planId: string, version: number) => {
     try {

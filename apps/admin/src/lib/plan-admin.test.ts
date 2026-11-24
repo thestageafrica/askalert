@@ -13,7 +13,7 @@ describe('plan admin versioning', () => {
     const seed = listPlans(true).find((plan) => plan.slug === 'buyer_free');
     expect(seed).toBeTruthy();
     const plan = planFromCatalogue(seed!);
-    const { plan: next, version } = publishPlanVersion(plan, {
+    const published = publishPlanVersion(plan, {
       slug: plan.slug,
       audience: plan.audience,
       name: plan.name,
@@ -28,18 +28,24 @@ describe('plan admin versioning', () => {
       disabled: false,
       changeNote: 'Bump free requests to 3',
     });
-    expect(version.version).toBe(2);
-    expect(next.currentVersion).toBe(2);
-    expect(next.versions).toHaveLength(2);
-    expect(getLiveVersion(next).limits.requestsPerMonth).toBe(3);
+    expect(published.ok).toBe(true);
+    if (!published.ok) {
+      return;
+    }
+    expect(published.version.version).toBe(2);
+    expect(published.plan.currentVersion).toBe(2);
+    expect(published.plan.versions).toHaveLength(2);
+    expect(getLiveVersion(published.plan).limits.requestsPerMonth).toBe(3);
     // Prior version preserved for subscribers still on v1.
-    expect(next.versions.find((item) => item.version === 1)?.limits.requestsPerMonth).toBe(2);
+    expect(
+      published.plan.versions.find((item) => item.version === 1)?.limits.requestsPerMonth,
+    ).toBe(2);
   });
 
   it('rolls the catalogue pointer back without deleting versions', () => {
     const seed = listPlans(true).find((plan) => plan.slug === 'buyer_starter')!;
     let plan = planFromCatalogue(seed);
-    plan = publishPlanVersion(plan, {
+    const published = publishPlanVersion(plan, {
       slug: plan.slug,
       audience: plan.audience,
       name: plan.name,
@@ -50,30 +56,38 @@ describe('plan admin versioning', () => {
       features: getLiveVersion(plan).features,
       disabled: false,
       changeNote: 'Price test',
-    }).plan;
+    });
+    expect(published.ok).toBe(true);
+    if (!published.ok) {
+      return;
+    }
+    plan = published.plan;
     const rolled = rollbackPlanVersion(plan, 1);
     expect(rolled.currentVersion).toBe(1);
     expect(rolled.versions).toHaveLength(2);
     expect(getLiveVersion(rolled).priceMinor).toBe(seed.priceMinor);
   });
 
-  it('rejects empty change notes', () => {
+  it('rejects empty change notes without throwing', () => {
     const seed = listPlans(true)[0]!;
     const plan = planFromCatalogue(seed);
-    expect(() =>
-      publishPlanVersion(plan, {
-        slug: plan.slug,
-        audience: plan.audience,
-        name: plan.name,
-        priceMinor: 0,
-        periodDays: 30,
-        currency: 'NGN',
-        limits: getLiveVersion(plan).limits,
-        features: getLiveVersion(plan).features,
-        disabled: false,
-        changeNote: '  ',
-      }),
-    ).toThrow(/change note/i);
+    const result = publishPlanVersion(plan, {
+      slug: plan.slug,
+      audience: plan.audience,
+      name: plan.name,
+      priceMinor: 0,
+      periodDays: 30,
+      currency: 'NGN',
+      limits: getLiveVersion(plan).limits,
+      features: getLiveVersion(plan).features,
+      disabled: false,
+      changeNote: '  ',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
+    }
+    expect(result.error).toMatch(/change note/i);
   });
 
   it('previews plain capabilities', () => {
