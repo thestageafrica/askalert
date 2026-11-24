@@ -6,8 +6,8 @@ const items = [
     body: 'We check who we alert so you are not starting from strangers every time.',
   },
   {
-    title: 'Protected payments',
-    body: 'You choose how much AskAlert holds until you confirm the job.',
+    title: 'Staged payouts',
+    body: 'You choose how much is paid to the vendor now, and how much is released after you confirm the job.',
   },
   {
     title: 'Private contact details',

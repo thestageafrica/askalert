@@ -14,7 +14,7 @@ const steps = [
   {
     step: '3',
     title: 'You pick and pay safely',
-    body: 'Choose the option you like. Pay the vendor, and decide how much AskAlert should hold.',
+    body: 'Choose the option you like. Pay once, then choose how much goes to the vendor now and how much is released after you confirm completion.',
   },
 ] as const;
 

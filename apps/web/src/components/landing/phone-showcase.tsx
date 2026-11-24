@@ -197,7 +197,7 @@ function CheckoutScreen() {
           <p className="text-sm font-extrabold text-surface">Confirm stay</p>
         </div>
         <span className="rounded-full bg-success/20 px-2 py-1 text-[9px] font-bold text-success">
-          Protected
+          Staged payout
         </span>
       </div>
 
@@ -212,7 +212,7 @@ function CheckoutScreen() {
 
       <div className="mt-3 rounded-2xl border border-orange-500/25 bg-orange-500/10 p-3">
         <div className="flex items-center justify-between text-[10px]">
-          <span className="font-semibold text-surface">Hold for protection</span>
+          <span className="font-semibold text-surface">Release after confirmation</span>
           <span className="font-extrabold text-orange-400">40%</span>
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-navy-950">
@@ -220,7 +220,7 @@ function CheckoutScreen() {
         </div>
         <div className="mt-2 space-y-1 text-[9px] text-surface/70">
           <p>Vendor now · ₦66,888</p>
-          <p>AskAlert holds · ₦44,592</p>
+          <p>After confirmation · ₦44,592</p>
         </div>
       </div>
 

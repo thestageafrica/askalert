@@ -6,7 +6,7 @@ const items = [
     id: 'free',
     title: 'Is it free?',
     content:
-      'Yes for buyers to ask. Vendors can join free. If AskAlert holds money for protection, clear fees show before you pay.',
+      'Yes for buyers to ask. Vendors can join free. If a booking uses staged payout, clear fees show before you pay.',
   },
   {
     id: 'whatsapp',
@@ -22,9 +22,9 @@ const items = [
   },
   {
     id: 'hold',
-    title: "What does 'hold' mean?",
+    title: 'When is the vendor paid in full?',
     content:
-      'A hold is money AskAlert keeps until you confirm the job went well. You choose the hold percentage. The rest can go to the vendor sooner.',
+      'You pay once. You choose how much goes to the vendor now, and how much is released after you confirm the job is complete. Payments are processed by our payment partner. AskAlert is not a bank and does not keep customer funds in an AskAlert escrow account.',
   },
   {
     id: 'phone',
@@ -43,7 +43,6 @@ const items = [
     content:
       'Yes. AskAlert can do the chasing for you, or you can take an offer and continue the conversation yourself.',
   },
-  // Plan limits / extras — shared with /plans FAQ where relevant.
   plansFaqItems[0],
   plansFaqItems[1],
   plansFaqItems[2],

@@ -74,12 +74,12 @@ export function CheckoutSheet({
         </div>
 
         <Slider
-          label="Hold %"
+          label="Later release %"
           min={0}
           max={100}
           step={1}
           value={holdPct}
-          valueLabel={`${split.effectiveHoldPct}%`}
+          valueLabel={`${split.effectiveHoldPct}% after confirmation`}
           onChange={(event) => setHoldPct(Number(event.target.value))}
         />
 
@@ -99,9 +99,9 @@ export function CheckoutSheet({
           <span className="font-extrabold">
             {formatNaira(createMoney(split.releasedNowMinor))}
           </span>{' '}
-          now. AskAlert holds{' '}
+          now. The remaining{' '}
           <span className="font-extrabold">{formatNaira(createMoney(split.heldMinor))}</span>{' '}
-          until you confirm the job.
+          is released after you confirm the job.
         </p>
 
         {split.warnings.length > 0 ? (

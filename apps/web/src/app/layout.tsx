@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  keywords: ['AskAlert', 'Lagos', 'vendors', 'shortlets', 'events', 'home care', 'escrow'],
+  keywords: ['AskAlert', 'Lagos', 'vendors', 'shortlets', 'events', 'home care', 'marketplace'],
   authors: [{ name: 'AskAlert Technologies Limited' }],
   creator: 'AskAlert Technologies Limited',
   alternates: {

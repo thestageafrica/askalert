@@ -48,7 +48,7 @@ export default function PrivacyPage() {
               </p>
               <p>
                 Payment partners process card or transfer data under their own policies. AskAlert
-                stores booking and escrow status, not full card numbers, in Phase 1 demos.
+                stores booking and payout-status details, not full card numbers, in Phase 1 demos.
               </p>
               <p>
                 You can ask to see, correct, or delete personal data we hold by messaging us from the

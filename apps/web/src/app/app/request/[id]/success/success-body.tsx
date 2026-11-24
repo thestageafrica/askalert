@@ -32,7 +32,7 @@ export function SuccessBody({
             {quote ? `Booked with ${quote.vendorAlias}` : 'Booking confirmed'}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            AskAlert kept the hold you chose. Confirm the job later to release the rest.
+            The later-release share you chose will go to the vendor after you confirm the job.
           </p>
         </div>
         <div className="flex flex-col gap-3">

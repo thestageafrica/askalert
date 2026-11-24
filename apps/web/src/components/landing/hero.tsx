@@ -6,7 +6,7 @@ const glanceItems = [
   { label: 'Free', rest: 'to ask' },
   { label: 'Live', rest: 'in Lagos' },
   { label: 'Verified', rest: 'vendors only' },
-  { label: 'You choose', rest: 'how much to hold' },
+  { label: 'You choose', rest: 'payout timing' },
   { label: 'Private', rest: 'until you book' },
 ] as const;
 
@@ -22,7 +22,7 @@ export function Hero() {
               statusDot
               className="mb-6 border-surface/15 bg-navy-900/60 text-surface"
             >
-              Lagos · Verified vendors · Protected payments
+              Lagos · Verified vendors · Staged payouts
             </Chip>
 
             <h1
@@ -35,7 +35,8 @@ export function Hero() {
 
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-surface/78 sm:text-lg lg:mx-0">
               Shortlets, events, home care and more. AskAlert asks verified vendors, compares the
-              offers and brings you the best ones. You choose, and you decide how much to protect.
+              offers and brings you the best ones. You choose, and you decide when the vendor is paid
+              in full.
             </p>
 
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row lg:justify-start">

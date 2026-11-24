@@ -48,7 +48,7 @@ export type EscrowSplitResult = {
   heldMinor: number;
   releasedNowMinor: number;
   effectiveHoldPct: number;
-  protectionLabel: 'Protected' | 'Direct payment, no protection';
+  protectionLabel: 'Staged payout' | 'Full payout now';
   warnings: string[];
 };
 
@@ -113,21 +113,21 @@ export function computeEscrowSplit(input: unknown): EscrowSplitResult {
 
   if (holdPct < effectiveMinHoldPct || holdPct > effectiveMaxHoldPct) {
     warnings.push(
-      `Hold was adjusted to ${effectiveHoldPct}% to stay within the allowed range (${effectiveMinHoldPct}%–${effectiveMaxHoldPct}%).`,
+      `Later release was adjusted to ${effectiveHoldPct}% to stay within the allowed range (${effectiveMinHoldPct}%–${effectiveMaxHoldPct}%).`,
     );
   }
 
   if (effectiveHoldPct === 0) {
-    warnings.push('No amount is held. This is a direct payment with no protection.');
+    warnings.push('Full amount is set to go to the vendor now.');
   } else if (effectiveHoldPct < LOW_HOLD_WARNING_PCT) {
     warnings.push(
-      `Hold is low (${effectiveHoldPct}%). Consider holding more until you confirm the job.`,
+      `Later release is low (${effectiveHoldPct}%). Consider releasing more after you confirm the job.`,
     );
   }
 
   if (bounds.vendorMinReleasePct > 0 && effectiveMaxHoldPct < bounds.maxHoldPct) {
     warnings.push(
-      `Vendor must receive at least ${bounds.vendorMinReleasePct}% now, so hold cannot exceed ${effectiveMaxHoldPct}%.`,
+      `Vendor must receive at least ${bounds.vendorMinReleasePct}% now, so later release cannot exceed ${effectiveMaxHoldPct}%.`,
     );
   }
 
@@ -139,7 +139,7 @@ export function computeEscrowSplit(input: unknown): EscrowSplitResult {
     heldMinor,
     releasedNowMinor,
     effectiveHoldPct,
-    protectionLabel: heldMinor > 0 ? 'Protected' : 'Direct payment, no protection',
+    protectionLabel: heldMinor > 0 ? 'Staged payout' : 'Full payout now',
     warnings,
   };
 }

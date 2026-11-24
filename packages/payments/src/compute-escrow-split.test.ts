@@ -24,22 +24,20 @@ describe('computeEscrowSplit', () => {
     expect(at60.heldMinor).toBe(5_184_000);
     expect(at60.releasedNowMinor).toBe(3_456_000);
     expect(at60.effectiveHoldPct).toBe(60);
-    expect(at60.protectionLabel).toBe('Protected');
+    expect(at60.protectionLabel).toBe('Staged payout');
     expect(at60.heldMinor + at60.releasedNowMinor).toBe(at60.distributableMinor);
 
     const at0 = computeEscrowSplit({ ...requiredFixture, holdPct: 0 });
     expect(at0.distributableMinor).toBe(8_640_000);
     expect(at0.heldMinor).toBe(0);
     expect(at0.releasedNowMinor).toBe(8_640_000);
-    expect(at0.protectionLabel).toBe('Direct payment, no protection');
-    expect(at0.warnings.some((warning) => /no protection|direct payment/i.test(warning))).toBe(
-      true,
-    );
+    expect(at0.protectionLabel).toBe('Full payout now');
+    expect(at0.warnings.some((warning) => /full amount|vendor now/i.test(warning))).toBe(true);
 
     const at100 = computeEscrowSplit({ ...requiredFixture, holdPct: 100 });
     expect(at100.heldMinor).toBe(8_640_000);
     expect(at100.releasedNowMinor).toBe(0);
-    expect(at100.protectionLabel).toBe('Protected');
+    expect(at100.protectionLabel).toBe('Staged payout');
   });
 
   it('does not deduct processing fee when feeBearer is platform', () => {
@@ -119,8 +117,8 @@ describe('computeEscrowSplit', () => {
       holdPct: 10,
     });
     expect(result.effectiveHoldPct).toBe(10);
-    expect(result.protectionLabel).toBe('Protected');
-    expect(result.warnings.some((warning) => /hold is low/i.test(warning))).toBe(true);
+    expect(result.protectionLabel).toBe('Staged payout');
+    expect(result.warnings.some((warning) => /later release is low/i.test(warning))).toBe(true);
   });
 
   it('throws clear Zod errors for invalid input', () => {

@@ -37,9 +37,10 @@ export default function TermsPage() {
                 ask for real needs, treat vendors fairly, and follow Nigerian law.
               </p>
               <p>
-                AskAlert helps buyers in Lagos find verified vendors, compare offers, and choose how
-                much payment protection to use. We are not a bank. Escrow holds are a product feature
-                and will follow the final terms once published.
+                AskAlert helps buyers in Lagos find verified vendors, compare offers, and choose
+                staged payout timing. We are not a bank and do not keep customer funds in an AskAlert
+                escrow account. Payments are processed by our payment partner. Final payout terms
+                will follow the published terms once legal review is complete.
               </p>
               <p>
                 You must be 18 or older. Do not post illegal, harmful, or misleading requests. We may
