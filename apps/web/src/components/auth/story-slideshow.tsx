@@ -7,11 +7,14 @@ import { AUTH_STORY_SLIDES, type StorySlide } from '../../lib/auth/story-slides'
 export function StorySlideshow({
   compact = false,
   ambient = false,
+  contentAlign = 'bottom',
   className,
 }: {
   compact?: boolean;
   /** Full-bleed decorative mode: images only, no chrome. */
   ambient?: boolean;
+  /** Where the slide copy sits. Desktop left panel uses middle. */
+  contentAlign?: 'bottom' | 'middle';
   className?: string;
 }) {
   const labelId = useId();
@@ -19,6 +22,7 @@ export function StorySlideshow({
   const [paused, setPaused] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const slide = AUTH_STORY_SLIDES[index] ?? AUTH_STORY_SLIDES[0]!;
+  const showChrome = !ambient;
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -48,21 +52,21 @@ export function StorySlideshow({
         className,
       )}
       onMouseEnter={() => {
-        if (!ambient) setPaused(true);
+        if (showChrome) setPaused(true);
       }}
       onMouseLeave={() => {
-        if (!ambient) setPaused(false);
+        if (showChrome) setPaused(false);
       }}
       onFocusCapture={() => {
-        if (!ambient) setPaused(true);
+        if (showChrome) setPaused(true);
       }}
       onBlurCapture={(event) => {
-        if (!ambient && !event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        if (showChrome && !event.currentTarget.contains(event.relatedTarget as Node | null)) {
           setPaused(false);
         }
       }}
       onTouchStart={() => {
-        if (!ambient) setPaused(true);
+        if (showChrome) setPaused(true);
       }}
     >
       <h2 id={labelId} className="sr-only">
@@ -77,10 +81,11 @@ export function StorySlideshow({
           reduceMotion={reduceMotion}
           compact={compact}
           ambient={ambient}
+          contentAlign={contentAlign}
         />
       ))}
 
-      {!ambient ? (
+      {showChrome ? (
         <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-3 p-5 sm:p-8">
           <div className="flex gap-2" role="tablist" aria-label="Story slides">
             {AUTH_STORY_SLIDES.map((item, slideIndex) => (
@@ -132,13 +137,17 @@ function SlidePanel({
   reduceMotion,
   compact,
   ambient,
+  contentAlign,
 }: {
   slide: StorySlide;
   active: boolean;
   reduceMotion: boolean;
   compact: boolean;
   ambient: boolean;
+  contentAlign: 'bottom' | 'middle';
 }) {
+  const middle = contentAlign === 'middle' && !compact && !ambient;
+
   return (
     <div
       role="group"
@@ -178,15 +187,19 @@ function SlidePanel({
           'absolute inset-0',
           ambient
             ? 'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--navy-950)_45%,transparent),color-mix(in_srgb,var(--navy-950)_78%,transparent)_55%,var(--navy-950))]'
-            : 'bg-[linear-gradient(180deg,transparent_15%,color-mix(in_srgb,var(--navy-950)_82%,transparent)_72%)]',
+            : middle
+              ? 'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--navy-950)_40%,transparent)_0%,color-mix(in_srgb,var(--navy-950)_72%,transparent)_42%,color-mix(in_srgb,var(--navy-950)_72%,transparent)_62%,color-mix(in_srgb,var(--navy-950)_55%,transparent)_100%)]'
+              : 'bg-[linear-gradient(180deg,transparent_15%,color-mix(in_srgb,var(--navy-950)_82%,transparent)_72%)]',
         )}
         aria-hidden
       />
       {!ambient ? (
         <div
           className={cn(
-            'relative z-[1] flex h-full flex-col justify-end px-6 pb-20 pt-10 sm:px-10',
-            compact ? 'pb-16' : 'sm:pb-24',
+            'relative z-[1] flex h-full flex-col px-6 pt-10 sm:px-10',
+            middle
+              ? 'justify-center pb-24'
+              : cn('justify-end pb-20', compact ? 'pb-16' : 'sm:pb-24'),
           )}
         >
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-400">
@@ -195,7 +208,7 @@ function SlidePanel({
           <h3
             className={cn(
               'mt-3 max-w-xl font-extrabold tracking-tight text-balance drop-shadow-sm',
-              compact ? 'text-2xl' : 'text-3xl sm:text-5xl',
+              compact ? 'text-2xl' : 'text-3xl sm:text-4xl xl:text-5xl',
             )}
           >
             {slide.headline}

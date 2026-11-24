@@ -7,6 +7,16 @@ import { StorySlideshow } from './story-slideshow';
 
 const INTRO_KEY = 'askalert.auth.intro.seen';
 
+const formCardClassName = [
+  'w-full max-w-md rounded-[1.75rem] border border-surface/20 bg-surface p-6 shadow-[0_28px_80px_rgba(0,0,0,0.45)] sm:p-8',
+  'lg:border-transparent lg:shadow-[0_32px_90px_rgba(0,0,0,0.5)]',
+  // Keep the form card light even when the site theme is dark.
+  '[&_input]:bg-surface [&_input]:text-navy-900 [&_input]:placeholder:text-navy-900/40',
+  'dark:[&_input]:bg-surface dark:[&_input]:text-navy-900 dark:[&_input]:placeholder:text-navy-900/40',
+  '[&_select]:bg-surface [&_select]:text-navy-900 dark:[&_select]:bg-surface dark:[&_select]:text-navy-900',
+  '[&_a]:text-orange-700 dark:[&_a]:text-orange-700',
+].join(' ');
+
 export function AuthShell({
   title,
   subtitle,
@@ -63,35 +73,20 @@ export function AuthShell({
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-navy-950">
-      {/* Desktop: full-bleed dark story backdrop */}
-      <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden>
-        <StorySlideshow ambient className="min-h-screen" />
+    <div className="min-h-screen bg-navy-950 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
+      {/* Desktop: full story slideshow on the left */}
+      <div className="relative hidden min-h-screen lg:block">
+        <StorySlideshow contentAlign="middle" className="min-h-screen" />
       </div>
-      <div
-        className="pointer-events-none absolute inset-0 hidden bg-navy-950/35 lg:block"
-        aria-hidden
-      />
 
-      <div className="relative z-10 flex min-h-screen flex-col lg:items-center lg:justify-center lg:px-8 lg:py-12">
-        {/* Mobile: story strip they already like */}
+      <div className="relative flex min-h-screen flex-col">
+        {/* Mobile: compact story strip */}
         <div className="lg:hidden">
           <StorySlideshow compact className="h-[40vh] min-h-[15.5rem] max-h-[22rem]" />
         </div>
 
-        <div className="relative flex flex-1 flex-col px-4 pb-10 pt-0 sm:px-6 lg:flex-none lg:px-0 lg:pb-0">
-          <div
-            className={[
-              '-mt-8 w-full max-w-md self-center rounded-[1.75rem] border border-surface/20 bg-surface p-6',
-              'shadow-[0_28px_80px_rgba(0,0,0,0.45)] sm:-mt-10 sm:p-8 lg:mt-0 lg:border-transparent',
-              'lg:shadow-[0_32px_90px_rgba(0,0,0,0.5)]',
-              // Keep the form card light even when the site theme is dark.
-              '[&_input]:bg-surface [&_input]:text-navy-900 [&_input]:placeholder:text-navy-900/40',
-              'dark:[&_input]:bg-surface dark:[&_input]:text-navy-900 dark:[&_input]:placeholder:text-navy-900/40',
-              '[&_select]:bg-surface [&_select]:text-navy-900 dark:[&_select]:bg-surface dark:[&_select]:text-navy-900',
-              '[&_a]:text-orange-700 dark:[&_a]:text-orange-700',
-            ].join(' ')}
-          >
+        <div className="relative z-10 flex flex-1 flex-col px-4 pb-10 sm:px-6 lg:justify-center lg:px-10 lg:py-12 xl:px-14">
+          <div className={['-mt-8 self-center sm:-mt-10 lg:mt-0 lg:self-stretch lg:max-w-md', formCardClassName].join(' ')}>
             <Link
               href="/"
               className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
@@ -106,7 +101,7 @@ export function AuthShell({
             {footer ? <div className="mt-6 text-sm text-navy-900/60">{footer}</div> : null}
           </div>
 
-          <p className="mt-6 hidden text-center text-xs text-surface/55 lg:block">
+          <p className="mt-6 hidden text-center text-xs text-surface/55 lg:block lg:max-w-md">
             Ask. Alert. Delivered. · Lekki, Lagos
           </p>
         </div>
