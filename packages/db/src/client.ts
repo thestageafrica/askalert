@@ -16,6 +16,37 @@ export function createBrowserClient(env: EnvLike = process.env as EnvLike): AskA
 }
 
 /**
+ * Browser auth client for static apps. Persists the session in localStorage
+ * and refreshes tokens in the background.
+ */
+export function createAuthBrowserClient(
+  env: EnvLike = process.env as EnvLike,
+): AskAlertSupabase {
+  const { url, anonKey } = requireSupabaseEnv(env);
+  return createClient<Database>(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+    },
+  });
+}
+
+export function tryCreateAuthBrowserClient(
+  env: EnvLike = process.env as EnvLike,
+): AskAlertSupabase | null {
+  if (!isSupabaseEnabled(env)) {
+    return null;
+  }
+  try {
+    return createAuthBrowserClient(env);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Same as createBrowserClient, but returns null instead of throwing when
  * the flag is off or public env is incomplete. Use this from React effects.
  */

@@ -1,5 +1,37 @@
 export type { AskAlertSupabase } from './client';
-export { createBrowserClient, createServerClient, tryCreateBrowserClient } from './client';
+export {
+  createAuthBrowserClient,
+  createBrowserClient,
+  createServerClient,
+  tryCreateAuthBrowserClient,
+  tryCreateBrowserClient,
+} from './client';
+export {
+  CONSENT_VERSIONS,
+  appModeSchema,
+  accountRoleSchema,
+  buildConsentRows,
+  canAccessOwnAccountRow,
+  canEnterVendorMode,
+  consentTypeSchema,
+  hasActiveRole,
+  homePathForMode,
+  isSelfDeal,
+  isSignInRateLimited,
+  modeFromPathname,
+  nextSignInAttempts,
+  requiredConsentsGranted,
+  roleStatusSchema,
+  scorePassword,
+  vendorModeCta,
+  type AccountRole,
+  type AppMode,
+  type ConsentInput,
+  type ConsentType,
+  type PasswordStrength,
+  type RoleStatus,
+  type UserRoleRecord,
+} from './account';
 export {
   getPublicCategoryBySlug,
   listAreas,

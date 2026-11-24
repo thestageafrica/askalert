@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Input, cn } from '@askalert/ui';
 import { AppHeader } from './app-header';
+import { useAuth } from '../../lib/auth/auth-provider';
+import { useMode } from '../../lib/auth/mode-provider';
 import { useMockStore } from '../../lib/app/mock-store';
 import { useNotificationsStore } from '../../lib/app/notifications-store';
 import {
@@ -15,9 +17,12 @@ import {
 export function AccountView() {
   const { account, updateAccount } = useMockStore();
   const { unreadCount } = useNotificationsStore();
+  const { profile, user, requestDeletion, signOut, supabaseConfigured } = useAuth();
+  const { vendorCta, switchTo } = useMode();
   const [pushState, setPushState] = useState<PushPermissionState>('default');
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState<string | null>(null);
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setPushState(getPushPermissionState());
@@ -56,15 +61,49 @@ export function AccountView() {
         <section className="overflow-hidden rounded-[1.5rem] border border-border/60 bg-card shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
           <div className="border-b border-border/70 bg-gradient-to-r from-navy-950 to-navy-900 px-4 py-4 text-surface">
             <p className="text-xs font-semibold uppercase tracking-wide text-orange-400">Profile</p>
-            <p className="mt-1 text-lg font-extrabold">{account.phone}</p>
-            <p className="mt-0.5 text-xs text-surface/65">WhatsApp · Lagos demo account</p>
+            <p className="mt-1 text-lg font-extrabold">
+              {profile?.displayName || user?.email || account.phone}
+            </p>
+            <p className="mt-0.5 text-xs text-surface/65">
+              {profile?.phoneE164
+                ? profile.phoneVerifiedAt
+                  ? 'WhatsApp verified'
+                  : 'Verify your WhatsApp number · pending'
+                : 'WhatsApp · Lagos demo account'}
+            </p>
           </div>
-          <div className="p-4">
+          <div className="space-y-3 p-4">
             <Input
               label="WhatsApp number"
-              value={account.phone}
+              value={profile?.phoneE164 || account.phone}
               onChange={(event) => updateAccount({ phone: event.target.value })}
+              disabled={Boolean(profile?.phoneE164)}
+              hint={
+                profile?.phoneE164 && !profile.phoneVerifiedAt
+                  ? 'Verification unlocks when the WhatsApp adapter is live.'
+                  : undefined
+              }
             />
+            {supabaseConfigured ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-11"
+                  onClick={() => switchTo('vendor')}
+                >
+                  {vendorCta.label}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-11"
+                  onClick={() => void signOut(true)}
+                >
+                  Sign out everywhere
+                </Button>
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -167,10 +206,30 @@ export function AccountView() {
         <section className="rounded-[1.5rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
           <h2 className="text-sm font-bold text-foreground">Data and privacy</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Vendors only see your contact after you book. You can clear local demo data anytime by
-            refreshing this session.
+            Vendors only see your contact after you book. Account deletion is a soft request first —
+            we keep what we need for disputes and the law, then remove the rest.
           </p>
+          {deleteMessage ? (
+            <p className="mt-2 text-sm font-medium text-foreground">{deleteMessage}</p>
+          ) : null}
           <div className="mt-4 flex flex-col gap-2">
+            {supabaseConfigured ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="min-h-11"
+                onClick={() => {
+                  void requestDeletion().then((result) => {
+                    setDeleteMessage(
+                      result.error ??
+                        'Deletion requested. We will process it and email you when it is done.',
+                    );
+                  });
+                }}
+              >
+                Request account deletion
+              </Button>
+            ) : null}
             <Button href="/privacy" variant="secondary">
               Privacy policy
             </Button>

@@ -2,6 +2,8 @@
 
 import { ThemeProvider, ToastProvider, type Theme } from '@askalert/ui';
 import type { ReactNode } from 'react';
+import { AuthProvider } from '../lib/auth/auth-provider';
+import { ModeProvider } from '../lib/auth/mode-provider';
 
 export function Providers({
   children,
@@ -12,7 +14,11 @@ export function Providers({
 }) {
   return (
     <ThemeProvider defaultTheme={defaultTheme}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <ModeProvider>{children}</ModeProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

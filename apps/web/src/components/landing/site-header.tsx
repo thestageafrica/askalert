@@ -37,6 +37,12 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/auth/sign-in/"
+            className="hidden min-h-11 items-center justify-center rounded-full border border-surface/20 px-4 text-sm font-semibold text-surface/85 transition hover:bg-surface/10 sm:inline-flex"
+          >
+            Sign in
+          </Link>
           <a
             href={whatsappUrl}
             target="_blank"

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { AppModeBar } from '../../components/auth/app-mode-bar';
+import { RequireAuth } from '../../components/auth/require-auth';
 import { BottomNav } from '../../components/app/bottom-nav';
 import { PushPrompt } from '../../components/app/push-prompt';
 import { InstallPromptProvider } from '../../components/pwa/install-prompt';
@@ -18,11 +20,14 @@ export default function AppSectionLayout({ children }: { children: ReactNode }) 
       <MockStoreProvider>
         <PlanStoreProvider>
           <NotificationsStoreProvider>
-            <div className="relative min-h-screen overflow-x-hidden bg-surface-subtle">
-              <div className="mx-auto min-h-screen w-full max-w-lg pb-28">{children}</div>
-              <BottomNav />
-              <PushPrompt />
-            </div>
+            <RequireAuth>
+              <div className="relative min-h-screen overflow-x-hidden bg-surface-subtle">
+                <AppModeBar />
+                <div className="mx-auto min-h-screen w-full max-w-lg pb-28">{children}</div>
+                <BottomNav />
+                <PushPrompt />
+              </div>
+            </RequireAuth>
           </NotificationsStoreProvider>
         </PlanStoreProvider>
       </MockStoreProvider>

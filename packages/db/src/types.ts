@@ -560,12 +560,150 @@ export type Database = {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          id: string;
+          display_name: string;
+          phone_e164: string | null;
+          phone_verified_at: string | null;
+          avatar_url: string | null;
+          deletion_requested_at: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          display_name?: string;
+          phone_e164?: string | null;
+          phone_verified_at?: string | null;
+          avatar_url?: string | null;
+          deletion_requested_at?: string | null;
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          display_name?: string;
+          phone_e164?: string | null;
+          phone_verified_at?: string | null;
+          avatar_url?: string | null;
+          deletion_requested_at?: string | null;
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_roles: {
+        Row: {
+          id: string;
+          user_id: string;
+          role: string;
+          status: string;
+          verified_tier: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          role: string;
+          status?: string;
+          verified_tier?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          role?: string;
+          status?: string;
+          verified_tier?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_settings: {
+        Row: {
+          user_id: string;
+          last_mode: string;
+          locale: string;
+          notification_prefs: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          last_mode?: string;
+          locale?: string;
+          notification_prefs?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          last_mode?: string;
+          locale?: string;
+          notification_prefs?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      consents: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          version: string;
+          granted: boolean;
+          granted_at: string | null;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          version: string;
+          granted: boolean;
+          granted_at?: string | null;
+          source?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          version?: string;
+          granted?: boolean;
+          granted_at?: string | null;
+          source?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       is_service_role: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      is_own_vendor_user: {
+        Args: { target_user_id: string };
+        Returns: boolean;
+      };
+      assert_not_self_deal: {
+        Args: { target_vendor_user_id: string };
+        Returns: undefined;
+      };
+      request_account_deletion: {
+        Args: { retention_note?: string };
+        Returns: undefined;
       };
       enqueue_job: {
         Args: { p_payload: Json };

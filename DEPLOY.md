@@ -22,6 +22,7 @@ Set these on each Pages project (Production + Preview):
 | `NEXT_PUBLIC_USE_SUPABASE` | `false` | `true` only after Supabase is seeded. |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://….supabase.co` | Required when Supabase is on. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `…` | Public anon key (RLS-protected). |
+| Auth emails | Resend SMTP | Configure in Supabase Auth — see `docs/AUTH.md`. |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `B…` | Public half of VAPID pair for web push. |
 
 ### Admin (`admin.askalert.com`)
