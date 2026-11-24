@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     '@askalert/ui',
     '@askalert/payments',
     '@askalert/category-engine',
+    '@askalert/core',
     '@askalert/db',
   ],
   poweredByHeader: false,

@@ -18,3 +18,16 @@ export function canPublishCategories(role: AdminRole): boolean {
 export function canManageSettings(role: AdminRole): boolean {
   return role === 'super_admin';
 }
+
+/** Plans and unit costs: super admin + operations only. */
+export function canEditPlans(role: AdminRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}
+
+export function canEditUnitCosts(role: AdminRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}
+
+export function canGrantCredits(role: AdminRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}

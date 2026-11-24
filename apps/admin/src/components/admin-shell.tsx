@@ -24,6 +24,9 @@ const operations: NavItem[] = [
   { href: '/requests', label: 'Requests', icon: <BellIcon /> },
   { href: '/disputes', label: 'Disputes', icon: <AlertIcon /> },
   { href: '/payouts', label: 'Payouts', icon: <CashIcon /> },
+  { href: '/plans', label: 'Plans', icon: <PlansIcon /> },
+  { href: '/usage', label: 'Usage', icon: <UsageIcon /> },
+  { href: '/cost', label: 'Cost', icon: <CostIcon /> },
   { href: '/settings', label: 'Settings', icon: <GearIcon /> },
 ];
 
@@ -207,6 +210,32 @@ function GearIcon() {
         strokeWidth="1.8"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function PlansIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M5 5h14v4H5V5Zm0 5h14v4H5v-4Zm0 5h14v4H5v-4Z" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function UsageIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 19V5M4 19h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 15v-4M12 15V8M16 15v-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CostIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7v10M9.5 9.5c.6-1 1.5-1.5 2.5-1.5 1.4 0 2.5.8 2.5 2s-1.1 2-2.5 2h-1c-1.4 0-2.5.8-2.5 2s1.1 2 2.5 2c1 0 1.9-.5 2.5-1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

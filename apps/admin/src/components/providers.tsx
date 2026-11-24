@@ -3,6 +3,7 @@
 import { ThemeProvider, ToastProvider, type Theme } from '@askalert/ui';
 import type { ReactNode } from 'react';
 import { AdminStoreProvider } from '../lib/admin-store';
+import { BillingAdminProvider } from '../lib/billing-admin-store';
 import { AdminShell } from './admin-shell';
 
 export function Providers({
@@ -16,7 +17,9 @@ export function Providers({
     <ThemeProvider defaultTheme={defaultTheme}>
       <ToastProvider>
         <AdminStoreProvider>
-          <AdminShell>{children}</AdminShell>
+          <BillingAdminProvider>
+            <AdminShell>{children}</AdminShell>
+          </BillingAdminProvider>
         </AdminStoreProvider>
       </ToastProvider>
     </ThemeProvider>

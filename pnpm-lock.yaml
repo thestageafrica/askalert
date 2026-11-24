@@ -26,6 +26,9 @@ importers:
       '@askalert/category-engine':
         specifier: workspace:*
         version: link:../../packages/category-engine
+      '@askalert/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@askalert/db':
         specifier: workspace:*
         version: link:../../packages/db
