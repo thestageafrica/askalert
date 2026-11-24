@@ -28,8 +28,8 @@ export default function CategoriesPage() {
           <Button
             disabled={!canEdit}
             onClick={() => {
-              const created = createCategory();
-              router.push(`/categories/${created.id}`);
+              createCategory();
+              router.push('/categories/new/');
             }}
           >
             Create blank
@@ -38,8 +38,8 @@ export default function CategoriesPage() {
             variant="secondary"
             disabled={!canEdit || categories.length === 0}
             onClick={() => {
-              const created = createCategory(categories[0]?.id);
-              router.push(`/categories/${created.id}`);
+              createCategory(categories[0]?.draft.slug ?? categories[0]?.id);
+              router.push('/categories/new/');
             }}
           >
             Duplicate first
@@ -73,7 +73,7 @@ export default function CategoriesPage() {
                 {category.vendorsCount} vendors
               </p>
               <Link
-                href={`/categories/${category.id}`}
+                href={`/categories/${category.draft.slug}/`}
                 className="text-sm font-bold text-orange-600 hover:underline"
               >
                 {canEdit ? 'Edit' : 'View'}
@@ -106,7 +106,7 @@ export default function CategoriesPage() {
                 <td className="px-4 py-3 font-semibold">{category.vendorsCount}</td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/categories/${category.id}`}
+                    href={`/categories/${category.draft.slug}/`}
                     className="font-semibold text-orange-600 hover:underline"
                   >
                     {canEdit ? 'Edit' : 'View'}

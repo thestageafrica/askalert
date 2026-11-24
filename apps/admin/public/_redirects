@@ -1,2 +1,3 @@
-# Category editor deep links for seed slugs / runtime ids.
-/categories/*/ /categories/shortlets/index.html 200
+# Hard-refresh fallback for category editor deep links (static export).
+# Soft navigation must use prebuilt slugs or /categories/new/ — see generateStaticParams.
+/categories/*  /categories/shortlets/index.html  200

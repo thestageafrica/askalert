@@ -326,6 +326,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             (category) => category.id === fromId || category.draft.slug === fromId,
           )?.draft
         : undefined;
+      // Static export only has /categories/new/ for drafts — keep id "new" for routing.
       const slugBase = source ? `${source.slug}-copy` : `category-${Date.now()}`;
       const draft = source
         ? {
@@ -337,14 +338,17 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         : createBlankCategory(slugBase);
 
       const created: ManagedCategory = {
-        id: draft.slug,
+        id: 'new',
         vendorsCount: 0,
         draft,
         versions: [],
         readiness: readinessFromStatus('draft'),
       };
 
-      setCategories((current) => [created, ...current]);
+      setCategories((current) => [
+        created,
+        ...current.filter((category) => category.id !== 'new'),
+      ]);
       return created;
     },
     [categories],
