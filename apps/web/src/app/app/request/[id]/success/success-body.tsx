@@ -6,13 +6,21 @@ import { Button } from '@askalert/ui';
 import { AppHeader } from '../../../../../components/app/app-header';
 import { useMockStore } from '../../../../../lib/app/mock-store';
 
-export function SuccessBody() {
+export function SuccessBody({
+  requestId,
+  quoteId,
+}: {
+  requestId?: string | null;
+  quoteId?: string | null;
+} = {}) {
   const params = useParams<{ id: string }>();
   const search = useSearchParams();
   const { getRequest } = useMockStore();
-  const request = getRequest(params.id);
-  const quoteId = search.get('quote');
-  const quote = request?.quotes.find((item) => item.id === quoteId) ?? request?.quotes[0];
+  const id = requestId ?? params.id ?? 'req_shortlet_01';
+  const selectedQuoteId = quoteId ?? search.get('quote');
+  const request = getRequest(id);
+  const quote =
+    request?.quotes.find((item) => item.id === selectedQuoteId) ?? request?.quotes[0];
 
   return (
     <div>
@@ -29,7 +37,9 @@ export function SuccessBody() {
         </div>
         <div className="flex flex-col gap-3">
           {request ? (
-            <Button href={`/app/chat/${request.chatId}/`}>Open chat</Button>
+            <Button href={`/app/chat/open/?id=${encodeURIComponent(request.chatId)}`}>
+              Open chat
+            </Button>
           ) : null}
           <Button href="/app" variant="secondary">
             Back home

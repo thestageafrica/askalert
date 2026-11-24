@@ -12,7 +12,7 @@ import {
   DEMO_PROCESSING_FEE_MINOR,
 } from '../../lib/app/mock-data';
 import { useMockStore } from '../../lib/app/mock-store';
-import { navigateStatic } from '../../lib/app/static-nav';
+import { navigateStatic, requestDoneHref } from '../../lib/app/static-nav';
 import type { AppRequest, Quote } from '../../lib/app/types';
 
 export function CheckoutSheet({
@@ -57,7 +57,7 @@ export function CheckoutSheet({
     markBooked(request.id, quote);
     onOpenChange(false);
     showInstallPromptAfterBooking();
-    navigateStatic(`/app/request/${request.id}/success?quote=${quote.id}`);
+    navigateStatic(requestDoneHref(request.id, quote.id));
   };
 
   return (

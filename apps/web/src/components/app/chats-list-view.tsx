@@ -4,6 +4,7 @@ import { Button } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { EmptyState } from './empty-state';
 import { useMockStore } from '../../lib/app/mock-store';
+import { chatHref } from '../../lib/app/static-nav';
 
 export function ChatsListView() {
   const { chats } = useMockStore();
@@ -31,7 +32,7 @@ export function ChatsListView() {
             return (
               <a
                 key={chat.id}
-                href={`/app/chat/${chat.id}/`}
+                href={chatHref(chat.id)}
                 className="flex gap-3 rounded-[1.4rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition hover:-translate-y-0.5"
               >
                 <div className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-navy-950 text-xs font-extrabold text-orange-400">

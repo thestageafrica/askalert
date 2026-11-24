@@ -7,6 +7,7 @@ import { CategoryGlyph } from './category-glyph';
 import { EmptyState } from './empty-state';
 import { StatusPill } from './status-pill';
 import { useMockStore } from '../../lib/app/mock-store';
+import { requestHref } from '../../lib/app/static-nav';
 import { useCategories } from '../../lib/use-categories';
 
 function isLiveCategory(status: string) {
@@ -55,14 +56,14 @@ export function HomeView() {
                 Latest request
               </h2>
               <a
-                href={`/app/request/${latestRequest.id}/`}
+                href={requestHref(latestRequest.id)}
                 className="text-sm font-semibold text-orange-600"
               >
                 Open
               </a>
             </div>
             <a
-              href={`/app/request/${latestRequest.id}/`}
+              href={requestHref(latestRequest.id)}
               className="block overflow-hidden rounded-[1.5rem] border border-orange-500/25 bg-gradient-to-br from-orange-500/15 via-card to-card p-4 shadow-sm transition hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between gap-3">

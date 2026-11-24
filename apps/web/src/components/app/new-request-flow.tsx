@@ -6,7 +6,7 @@ import { Button, Input, cn } from '@askalert/ui';
 import { involvementOptions } from '../../lib/app/involvement';
 import { useMockStore } from '../../lib/app/mock-store';
 import { usePlanStore } from '../../lib/app/plan-store';
-import { navigateStatic } from '../../lib/app/static-nav';
+import { navigateStatic, requestHref } from '../../lib/app/static-nav';
 import type { InvolvementMode } from '../../lib/app/types';
 import { useCategory } from '../../lib/use-categories';
 import { AppHeader } from './app-header';
@@ -129,8 +129,8 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
       answers,
     });
     notifyFirstRequestCreated();
-    // Full load so Cloudflare `_redirects` can serve the static request shell.
-    navigateStatic(`/app/request/${request.id}`);
+    // Always-built static page + query id (dynamic [id] paths 404 on export).
+    navigateStatic(requestHref(request.id));
   };
 
   return (

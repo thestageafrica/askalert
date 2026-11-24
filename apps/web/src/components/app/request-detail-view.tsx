@@ -81,7 +81,7 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
         subtitle={`${request.categoryName} · ${request.involvement}`}
         action={
           <a
-            href={`/app/chat/${request.chatId}/`}
+            href={`/app/chat/open/?id=${encodeURIComponent(request.chatId)}`}
             className="rounded-full border border-surface/20 px-3 py-2 text-xs font-bold text-surface"
           >
             Chat

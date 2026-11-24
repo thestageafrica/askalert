@@ -269,7 +269,7 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
       });
       window.dispatchEvent(
         new CustomEvent('askalert:notification', {
-          detail: { eventType: 'quotes_ready', url: `/app/request/${id}/` },
+          detail: { eventType: 'quotes_ready', url: `/app/request/open/?id=${id}` },
         }),
       );
     }, 1200);

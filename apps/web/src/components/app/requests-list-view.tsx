@@ -5,6 +5,7 @@ import { AppHeader } from './app-header';
 import { EmptyState } from './empty-state';
 import { StatusPill } from './status-pill';
 import { useMockStore } from '../../lib/app/mock-store';
+import { requestHref } from '../../lib/app/static-nav';
 
 export function RequestsListView() {
   const { requests } = useMockStore();
@@ -25,7 +26,7 @@ export function RequestsListView() {
           requests.map((request) => (
             <a
               key={request.id}
-              href={`/app/request/${request.id}/`}
+              href={requestHref(request.id)}
               className="block rounded-[1.4rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between gap-3">

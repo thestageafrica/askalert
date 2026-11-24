@@ -40,7 +40,7 @@ const seed: AppNotification[] = [
     eventType: 'quotes_ready',
     title: 'AskAlert',
     body: 'You have a new quote',
-    url: '/app/request/req_shortlet_01/',
+    url: '/app/request/open/?id=req_shortlet_01',
     createdAt: new Date().toISOString(),
   },
 ];
