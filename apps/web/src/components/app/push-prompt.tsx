@@ -65,6 +65,9 @@ export function PushPrompt() {
       return;
     }
     setState(result.state);
+    if (result.error) {
+      window.alert(result.error);
+    }
   };
 
   return (

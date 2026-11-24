@@ -30,10 +30,14 @@ export function AccountView() {
     setPushBusy(false);
     if (result.ok) {
       setPushState('enabled');
-      setPushMessage('Notifications are on for this device.');
+      setPushMessage('Notifications are on for this device. Keep the app closed for the push test.');
       return;
     }
     setPushState(result.state);
+    if (result.error) {
+      setPushMessage(result.error);
+      return;
+    }
     if (result.state === 'ios_needs_homescreen') {
       setPushMessage(
         'On iPhone, add AskAlert to Home Screen, open it from that icon, then try again.',

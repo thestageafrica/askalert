@@ -470,6 +470,96 @@ export type Database = {
         };
         Relationships: [];
       };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          keys: Json;
+          device_label: string | null;
+          created_at: string;
+          last_success_at: string | null;
+          failed_count: number;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          endpoint: string;
+          keys?: Json;
+          device_label?: string | null;
+          created_at?: string;
+          last_success_at?: string | null;
+          failed_count?: number;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          endpoint?: string;
+          keys?: Json;
+          device_label?: string | null;
+          created_at?: string;
+          last_success_at?: string | null;
+          failed_count?: number;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_type: string;
+          title: string;
+          body: string;
+          url: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_type: string;
+          title: string;
+          body: string;
+          url?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_type?: string;
+          title?: string;
+          body?: string;
+          url?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      notification_preferences: {
+        Row: {
+          user_id: string;
+          channels_by_event: Json;
+          quiet_hours: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          channels_by_event?: Json;
+          quiet_hours?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          channels_by_event?: Json;
+          quiet_hours?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

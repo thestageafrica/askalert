@@ -1,11 +1,15 @@
 'use client';
 
+import { webBrowserClient, webSupabaseEnabled } from '../supabase-browser';
+
 export type PushPermissionState =
   | 'unsupported'
   | 'blocked'
   | 'default'
   | 'enabled'
   | 'ios_needs_homescreen';
+
+const DEMO_USER_ID = 'demo-buyer';
 
 function isIosSafari(): boolean {
   if (typeof navigator === 'undefined') {
@@ -84,13 +88,10 @@ export async function subscribeToPush(): Promise<
   const registration = await navigator.serviceWorker.ready;
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   if (!publicKey) {
-    // Demo path: permission granted without a server key yet.
     return {
-      ok: true,
-      subscription: {
-        endpoint: `https://local.askalert.demo/push/${Date.now()}`,
-        keys: { p256dh: 'demo', auth: 'demo' },
-      },
+      ok: false,
+      state: 'unsupported',
+      error: 'Push public key is missing on this build.',
     };
   }
 
@@ -102,7 +103,50 @@ export async function subscribeToPush(): Promise<
       applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
     }));
 
-  return { ok: true, subscription: subscription.toJSON() };
+  const json = subscription.toJSON();
+  const saved = await savePushSubscription(json);
+  if (!saved.ok) {
+    return { ok: false, state: 'default', error: saved.error };
+  }
+
+  return { ok: true, subscription: json };
+}
+
+async function savePushSubscription(
+  subscription: PushSubscriptionJSON,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
+    return { ok: false, error: 'Incomplete push subscription from the browser.' };
+  }
+
+  if (!webSupabaseEnabled()) {
+    // Local mock mode: keep permission on, but server push cannot target this device.
+    return { ok: true };
+  }
+
+  const client = webBrowserClient();
+  if (!client) {
+    return { ok: false, error: 'Supabase is not configured in this build.' };
+  }
+
+  const row = {
+    user_id: DEMO_USER_ID,
+    endpoint: subscription.endpoint,
+    keys: {
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+    },
+    device_label: navigator.userAgent.slice(0, 120),
+  };
+
+  const { error } = await client.from('push_subscriptions').upsert(row, {
+    onConflict: 'user_id,endpoint',
+  });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
 }
 
 export function pushStateLabel(state: PushPermissionState): string {
