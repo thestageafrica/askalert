@@ -79,15 +79,22 @@ export function AccountView() {
           <Button
             type="button"
             className="mt-4 w-full min-h-11"
-            disabled={pushBusy || pushState === 'enabled' || pushState === 'unsupported'}
+            disabled={
+              pushBusy || pushState === 'unsupported' || pushState === 'blocked'
+            }
             onClick={() => void enablePush()}
           >
-            {pushState === 'enabled'
-              ? 'Notifications enabled'
-              : pushBusy
-                ? 'Enabling…'
+            {pushBusy
+              ? 'Enabling…'
+              : pushState === 'enabled'
+                ? 'Register this device again'
                 : 'Turn on notifications'}
           </Button>
+          {pushState === 'enabled' ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Permission is on. Tap again to save this phone for closed-app push.
+            </p>
+          ) : null}
           <Button href="/app/notifications" variant="secondary" className="mt-2 w-full min-h-11">
             Notification centre{unreadCount > 0 ? ` (${unreadCount})` : ''}
           </Button>
