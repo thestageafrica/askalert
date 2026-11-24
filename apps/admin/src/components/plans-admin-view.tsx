@@ -29,12 +29,9 @@ export function PlansAdminView() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!selected) {
-      return;
-    }
     setPriceMinor(livePriceMinor);
     setRequests(liveRequests);
-  }, [selected?.id, liveVersion, livePriceMinor, liveRequests]);
+  }, [selectedId, liveVersion, livePriceMinor, liveRequests]);
 
   if (!selected || !live) {
     return <p className="text-sm text-muted-foreground">No plans seeded.</p>;
