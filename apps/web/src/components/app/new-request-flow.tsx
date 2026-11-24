@@ -1,19 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { buildIntakeSteps } from '@askalert/category-engine';
 import { Button, Input, cn } from '@askalert/ui';
 import { involvementOptions } from '../../lib/app/involvement';
 import { useMockStore } from '../../lib/app/mock-store';
 import { usePlanStore } from '../../lib/app/plan-store';
+import { navigateStatic } from '../../lib/app/static-nav';
 import type { InvolvementMode } from '../../lib/app/types';
 import { useCategory } from '../../lib/use-categories';
 import { AppHeader } from './app-header';
 import { notifyFirstRequestCreated } from './push-prompt';
 
 export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
-  const router = useRouter();
   const { createRequest } = useMockStore();
   const { check, consume } = usePlanStore();
   const { category, loading } = useCategory(categorySlug);
@@ -130,7 +129,8 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
       answers,
     });
     notifyFirstRequestCreated();
-    router.push(`/app/request/${request.id}`);
+    // Full load so Cloudflare `_redirects` can serve the static request shell.
+    navigateStatic(`/app/request/${request.id}`);
   };
 
   return (

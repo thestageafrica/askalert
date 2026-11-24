@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Button } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { EmptyState } from './empty-state';
@@ -24,9 +23,9 @@ export function RequestsListView() {
           />
         ) : (
           requests.map((request) => (
-            <Link
+            <a
               key={request.id}
-              href={`/app/request/${request.id}`}
+              href={`/app/request/${request.id}/`}
               className="block rounded-[1.4rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between gap-3">
@@ -41,7 +40,7 @@ export function RequestsListView() {
               <p className="mt-3 text-sm text-muted-foreground">
                 {request.quotes.length} quote{request.quotes.length === 1 ? '' : 's'} · tap to open
               </p>
-            </Link>
+            </a>
           ))
         )}
       </div>

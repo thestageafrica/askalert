@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { computeEscrowSplit, createMoney, formatNaira } from '@askalert/payments';
 import { Button, Sheet, Slider, cn } from '@askalert/ui';
 import { showInstallPromptAfterBooking } from '../pwa/install-prompt';
@@ -13,6 +12,7 @@ import {
   DEMO_PROCESSING_FEE_MINOR,
 } from '../../lib/app/mock-data';
 import { useMockStore } from '../../lib/app/mock-store';
+import { navigateStatic } from '../../lib/app/static-nav';
 import type { AppRequest, Quote } from '../../lib/app/types';
 
 export function CheckoutSheet({
@@ -26,7 +26,6 @@ export function CheckoutSheet({
   request: AppRequest;
   quote: Quote | null;
 }) {
-  const router = useRouter();
   const { markBooked } = useMockStore();
   const [holdPct, setHoldPct] = useState(DEMO_HOLD_PCT);
   const [paying, setPaying] = useState(false);
@@ -58,7 +57,7 @@ export function CheckoutSheet({
     markBooked(request.id, quote);
     onOpenChange(false);
     showInstallPromptAfterBooking();
-    router.push(`/app/request/${request.id}/success?quote=${quote.id}`);
+    navigateStatic(`/app/request/${request.id}/success?quote=${quote.id}`);
   };
 
   return (

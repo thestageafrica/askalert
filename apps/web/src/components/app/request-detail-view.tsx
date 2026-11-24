@@ -80,12 +80,12 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
         title={request.title}
         subtitle={`${request.categoryName} · ${request.involvement}`}
         action={
-          <Link
-            href={`/app/chat/${request.chatId}`}
+          <a
+            href={`/app/chat/${request.chatId}/`}
             className="rounded-full border border-surface/20 px-3 py-2 text-xs font-bold text-surface"
           >
             Chat
-          </Link>
+          </a>
         }
       />
 

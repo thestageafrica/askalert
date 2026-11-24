@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -21,6 +22,41 @@ import type {
   Quote,
   RequestStatus,
 } from './types';
+
+const STORAGE_KEY = 'askalert.mock.v1';
+
+type PersistedMock = {
+  requests: AppRequest[];
+  chats: ChatThread[];
+  account: AccountSettings;
+  notifyInterest: string[];
+};
+
+function readPersisted(): PersistedMock | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    return JSON.parse(raw) as PersistedMock;
+  } catch {
+    return null;
+  }
+}
+
+function writePersisted(data: PersistedMock): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // Ignore quota / private-mode failures.
+  }
+}
 
 type SendChatResult = {
   message: ChatMessage;
@@ -86,12 +122,30 @@ const VENDOR_REPLIES = [
 ];
 
 export function MockStoreProvider({ children }: { children: ReactNode }) {
-  const [ready] = useState(true);
+  const [ready, setReady] = useState(false);
   const [requests, setRequests] = useState<AppRequest[]>([seedRequest]);
   const [chats, setChats] = useState<ChatThread[]>([seedChat]);
   const [account, setAccount] = useState<AccountSettings>(defaultAccount);
   const [notifyInterest, setNotifyInterest] = useState<string[]>([]);
   const vendorTimers = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    const saved = readPersisted();
+    if (saved?.requests?.length) {
+      setRequests(saved.requests);
+      setChats(saved.chats?.length ? saved.chats : [seedChat]);
+      setAccount(saved.account ?? defaultAccount);
+      setNotifyInterest(saved.notifyInterest ?? []);
+    }
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    writePersisted({ requests, chats, account, notifyInterest });
+  }, [ready, requests, chats, account, notifyInterest]);
 
   const getRequest = useCallback(
     (id: string) => requests.find((request) => request.id === id),
@@ -184,15 +238,35 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
       ],
     };
 
-    setRequests((current) => [request, ...current]);
-    setChats((current) => [chat, ...current]);
+    setRequests((current) => {
+      const nextRequests = [request, ...current];
+      setChats((currentChats) => {
+        const nextChats = [chat, ...currentChats];
+        // Persist before any full-page navigateStatic so the new ask survives reload.
+        writePersisted({
+          requests: nextRequests,
+          chats: nextChats,
+          account,
+          notifyInterest,
+        });
+        return nextChats;
+      });
+      return nextRequests;
+    });
 
     window.setTimeout(() => {
-      setRequests((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, status: 'quotes_ready' } : item,
-        ),
-      );
+      setRequests((current) => {
+        const next: AppRequest[] = current.map((item) =>
+          item.id === id ? { ...item, status: 'quotes_ready' as const } : item,
+        );
+        writePersisted({
+          requests: next,
+          chats: readPersisted()?.chats ?? [chat, seedChat],
+          account,
+          notifyInterest,
+        });
+        return next;
+      });
       window.dispatchEvent(
         new CustomEvent('askalert:notification', {
           detail: { eventType: 'quotes_ready', url: `/app/request/${id}/` },
@@ -201,7 +275,7 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
     }, 1200);
 
     return request;
-  }, []);
+  }, [account, notifyInterest]);
 
   const setRequestStatus = useCallback((id: string, status: RequestStatus) => {
     setRequests((current) =>

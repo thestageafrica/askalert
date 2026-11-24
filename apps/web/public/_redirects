@@ -1,7 +1,17 @@
-# Client-side app routes: serve a pre-rendered shell so hard refreshes work
-# after new mock IDs are created in the browser.
+# Client-side app routes: serve a pre-rendered shell so hard refreshes / full
+# loads work after new mock IDs are created in the browser.
+# Cover both trailing-slash and bare paths (Pages + SW fetches vary).
+
+/app/new/* /app/new/shortlets/index.html 200
 /app/new/*/ /app/new/shortlets/index.html 200
+
+/app/request/*/success /app/request/req_shortlet_01/success/index.html 200
 /app/request/*/success/ /app/request/req_shortlet_01/success/index.html 200
+/app/request/* /app/request/req_shortlet_01/index.html 200
 /app/request/*/ /app/request/req_shortlet_01/index.html 200
+
+/app/chat/* /app/chat/chat_shortlet_01/index.html 200
 /app/chat/*/ /app/chat/chat_shortlet_01/index.html 200
+
+/app/notifications /app/notifications/index.html 200
 /app/notifications/ /app/notifications/index.html 200

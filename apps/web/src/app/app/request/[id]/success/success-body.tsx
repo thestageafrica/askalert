@@ -29,7 +29,7 @@ export function SuccessBody() {
         </div>
         <div className="flex flex-col gap-3">
           {request ? (
-            <Button href={`/app/chat/${request.chatId}`}>Open chat</Button>
+            <Button href={`/app/chat/${request.chatId}/`}>Open chat</Button>
           ) : null}
           <Button href="/app" variant="secondary">
             Back home

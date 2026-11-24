@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Button } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { EmptyState } from './empty-state';
@@ -30,9 +29,9 @@ export function ChatsListView() {
               .toUpperCase();
 
             return (
-              <Link
+              <a
                 key={chat.id}
-                href={`/app/chat/${chat.id}`}
+                href={`/app/chat/${chat.id}/`}
                 className="flex gap-3 rounded-[1.4rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition hover:-translate-y-0.5"
               >
                 <div className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-navy-950 text-xs font-extrabold text-orange-400">
@@ -53,7 +52,7 @@ export function ChatsListView() {
                     {chat.typing ? `${chat.vendorAlias} is typing…` : last?.text}
                   </p>
                 </div>
-              </Link>
+              </a>
             );
           })
         )}

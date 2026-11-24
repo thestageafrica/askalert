@@ -55,15 +55,15 @@ export function HomeView() {
               <h2 id="latest-request-heading" className="text-sm font-bold text-foreground">
                 Latest request
               </h2>
-              <Link
-                href={`/app/request/${latestRequest.id}`}
+              <a
+                href={`/app/request/${latestRequest.id}/`}
                 className="text-sm font-semibold text-orange-600"
               >
                 Open
-              </Link>
+              </a>
             </div>
-            <Link
-              href={`/app/request/${latestRequest.id}`}
+            <a
+              href={`/app/request/${latestRequest.id}/`}
               className="block overflow-hidden rounded-[1.5rem] border border-orange-500/25 bg-gradient-to-br from-orange-500/15 via-card to-card p-4 shadow-sm transition hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between gap-3">
@@ -88,7 +88,7 @@ export function HomeView() {
                     : 'Vendors being asked now'}
                 </p>
               </div>
-            </Link>
+            </a>
           </section>
         ) : null}
 
