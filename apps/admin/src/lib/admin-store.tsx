@@ -16,9 +16,9 @@ import {
   type CategoryStatus,
 } from '@askalert/category-engine';
 import {
+  ensureCategoryId,
   listManagedCategories,
   publishCategoryVersion,
-  resolveCategoryId,
 } from '@askalert/db';
 import { createBlankCategory } from './blank-category';
 import type { AdminRole } from './roles';
@@ -241,15 +241,11 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
               ],
             };
           }
-          const categoryId = await resolveCategoryId(client, managed.id);
-          if (!categoryId) {
-            return {
-              ok: false,
-              errors: [
-                `No category found for "${managed.id}". Load categories from Supabase first, then publish.`,
-              ],
-            };
-          }
+          const categoryId = await ensureCategoryId(client, {
+            idOrSlug:
+              managed.id === 'new' ? managed.draft.slug : managed.id,
+            config: result.config,
+          });
           const published = await publishCategoryVersion(client, {
             categoryId,
             config: result.config,
@@ -260,10 +256,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           if (!published.ok) {
             return {
               ok: false,
-              errors: [
-                ...published.errors,
-                'Static admin uses the anon key. If RLS blocks writes, publish from a trusted Worker later or adjust policies.',
-              ],
+              errors: published.errors,
             };
           }
           resolvedId = categoryId;

@@ -10,7 +10,7 @@ export {
   type PublishInput,
   type PublishResult,
 } from './categories';
-export { resolveCategoryId } from './resolve-category-id';
+export { ensureCategoryId, resolveCategoryId } from './resolve-category-id';
 export { isSupabaseEnabled, requireSupabaseEnv } from './feature-flag';
 export { publicSupabaseEnv } from './public-env';
 export {

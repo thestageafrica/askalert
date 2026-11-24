@@ -18,6 +18,12 @@ describe('resolveCategoryId', () => {
     expect(eq).toHaveBeenCalledWith('id', '22222222-2222-4222-8222-222222222206');
   });
 
+  it('returns null for the local create id "new"', async () => {
+    const client = { from: vi.fn() } as unknown as AskAlertSupabase;
+    await expect(resolveCategoryId(client, 'new')).resolves.toBeNull();
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
   it('looks up by slug when the value is not a uuid', async () => {
     const maybeSingle = vi.fn(async () => ({
       data: { id: '22222222-2222-4222-8222-222222222206' },
