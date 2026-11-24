@@ -1,5 +1,6 @@
 import { Chip, Container } from '@askalert/ui';
 import { getWhatsAppUrl } from '../../lib/site';
+import { HeroBackgroundVideo } from './hero-background-video';
 import { HeroPhones } from './hero-phones';
 
 const glanceItems = [
@@ -15,21 +16,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden bg-navy-950" aria-labelledby="hero-heading">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <video
-          className="absolute inset-0 h-full w-full object-cover opacity-[0.28]"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/brand/askalert-images-1.jpg"
-        >
-          <source src="/brand/askalert-header-banner.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--navy-950)_55%,transparent)_0%,color-mix(in_srgb,var(--navy-950)_72%,transparent)_45%,var(--navy-950)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_15%_20%,color-mix(in_srgb,var(--orange-500)_22%,transparent),transparent_60%)]" />
-      </div>
+      <HeroBackgroundVideo />
 
       <Container width="xl" className="relative py-12 sm:py-16 lg:py-20">
         <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
