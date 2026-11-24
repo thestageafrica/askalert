@@ -1,4 +1,4 @@
-import { Section, cn } from '@askalert/ui';
+import { Logo, Section, cn } from '@askalert/ui';
 import type { ReactNode } from 'react';
 
 function StatusBar({ light = false }: { light?: boolean }) {
@@ -88,7 +88,7 @@ function RequestScreen() {
       <div className="mb-3 flex items-center justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-400">New ask</p>
-          <p className="text-sm font-extrabold text-surface">AskAlert</p>
+          <Logo variant="reversed" className="mt-0.5 h-5 w-auto" />
         </div>
         <span className="rounded-full bg-orange-500/20 px-2 py-1 text-[10px] font-bold text-orange-400">
           Lagos

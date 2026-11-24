@@ -63,28 +63,52 @@ export function AuthShell({
   }
 
   return (
-    <div className="min-h-screen bg-background lg:grid lg:grid-cols-[1.15fr_0.85fr]">
-      <div className="relative hidden min-h-screen lg:block">
-        <StorySlideshow />
+    <div className="relative min-h-screen overflow-hidden bg-navy-950">
+      {/* Desktop: full-bleed dark story backdrop */}
+      <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden>
+        <StorySlideshow ambient className="min-h-screen" />
       </div>
+      <div
+        className="pointer-events-none absolute inset-0 hidden bg-navy-950/35 lg:block"
+        aria-hidden
+      />
 
-      <div className="flex min-h-screen flex-col">
+      <div className="relative z-10 flex min-h-screen flex-col lg:items-center lg:justify-center lg:px-8 lg:py-12">
+        {/* Mobile: story strip they already like */}
         <div className="lg:hidden">
-          <StorySlideshow compact className="h-[36vh] min-h-[14rem]" />
+          <StorySlideshow compact className="h-[40vh] min-h-[15.5rem] max-h-[22rem]" />
         </div>
 
-        <div className="relative z-10 -mt-6 flex flex-1 flex-col px-4 pb-10 sm:px-8 lg:mt-0 lg:justify-center lg:px-12 xl:px-16">
-          <div className="mx-auto w-full max-w-md rounded-[1.75rem] border border-border/70 bg-card/95 p-6 shadow-[0_24px_60px_color-mix(in_srgb,var(--navy-950)_12%,transparent)] backdrop-blur sm:p-8 lg:border-border/80 lg:bg-card">
-            <Link href="/" className="inline-flex">
-              <Logo className="h-8 w-auto" />
+        <div className="relative flex flex-1 flex-col px-4 pb-10 pt-0 sm:px-6 lg:flex-none lg:px-0 lg:pb-0">
+          <div
+            className={[
+              '-mt-8 w-full max-w-md self-center rounded-[1.75rem] border border-surface/20 bg-surface p-6',
+              'shadow-[0_28px_80px_rgba(0,0,0,0.45)] sm:-mt-10 sm:p-8 lg:mt-0 lg:border-transparent',
+              'lg:shadow-[0_32px_90px_rgba(0,0,0,0.5)]',
+              // Keep the form card light even when the site theme is dark.
+              '[&_input]:bg-surface [&_input]:text-navy-900 [&_input]:placeholder:text-navy-900/40',
+              'dark:[&_input]:bg-surface dark:[&_input]:text-navy-900 dark:[&_input]:placeholder:text-navy-900/40',
+              '[&_select]:bg-surface [&_select]:text-navy-900 dark:[&_select]:bg-surface dark:[&_select]:text-navy-900',
+              '[&_a]:text-orange-700 dark:[&_a]:text-orange-700',
+            ].join(' ')}
+          >
+            <Link
+              href="/"
+              className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+            >
+              <Logo className="h-9 w-auto" />
             </Link>
-            <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-navy-900 sm:text-3xl">
               {title}
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
+            <p className="mt-2 text-sm leading-relaxed text-navy-900/65">{subtitle}</p>
             <div className="mt-6">{children}</div>
-            {footer ? <div className="mt-6 text-sm text-muted-foreground">{footer}</div> : null}
+            {footer ? <div className="mt-6 text-sm text-navy-900/60">{footer}</div> : null}
           </div>
+
+          <p className="mt-6 hidden text-center text-xs text-surface/55 lg:block">
+            Ask. Alert. Delivered. · Lekki, Lagos
+          </p>
         </div>
       </div>
     </div>

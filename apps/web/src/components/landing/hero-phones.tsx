@@ -1,4 +1,4 @@
-import { cn } from '@askalert/ui';
+import { Logo, cn } from '@askalert/ui';
 import type { ReactNode } from 'react';
 
 function MiniPhone({
@@ -48,7 +48,7 @@ function RequestMini() {
   return (
     <>
       <p className="text-[9px] font-semibold uppercase tracking-wide text-orange-400">New ask</p>
-      <p className="text-xs font-extrabold text-surface">AskAlert</p>
+      <Logo variant="reversed" className="mt-0.5 h-4 w-auto" />
       <div className="mt-2 rounded-xl border border-surface/10 bg-navy-900 p-2.5">
         <p className="text-[10px] font-bold">2-bedroom shortlet</p>
         <p className="mt-0.5 text-[9px] text-surface/60">Lagos · Fri–Sun</p>

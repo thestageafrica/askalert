@@ -66,6 +66,13 @@ export function MobileNav({ whatsappUrl }: { whatsappUrl: string }) {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/auth/sign-in/"
+              className="min-h-11 rounded-xl px-3 py-3 text-base font-semibold text-surface hover:bg-navy-900"
+              onClick={() => setOpen(false)}
+            >
+              Sign in
+            </Link>
             <Button
               href={whatsappUrl}
               target="_blank"

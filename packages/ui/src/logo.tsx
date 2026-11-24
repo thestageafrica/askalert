@@ -10,7 +10,14 @@ export type LogoProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt'>
   alt?: string;
 };
 
-const DEFAULT_SRC = '/brand/askalert-logo.png';
+/** Color wordmark for light surfaces (navy + orange). */
+const DEFAULT_SOURCES = [
+  '/brand/askalert-logo-1.png',
+  '/brand/AskAlert%20-Logo-1.png',
+  '/brand/askalert-logo-color.png',
+] as const;
+
+/** Light/white wordmark for dark surfaces. */
 const REVERSED_SOURCES = [
   '/brand/askalert-logo-reversed.png',
   '/brand/askalert-logo-all-white.png',
@@ -36,12 +43,13 @@ export function Logo({
   className,
   ...props
 }: LogoProps) {
-  const [defaultFailed, setDefaultFailed] = useState(false);
+  const [defaultIndex, setDefaultIndex] = useState(0);
   const [reversedIndex, setReversedIndex] = useState(0);
   const wantsReversed = variant === 'reversed';
+  const defaultExhausted = !wantsReversed && defaultIndex >= DEFAULT_SOURCES.length;
   const reversedExhausted = wantsReversed && reversedIndex >= REVERSED_SOURCES.length;
 
-  if (defaultFailed && !wantsReversed) {
+  if (defaultExhausted) {
     return <Wordmark className={className} />;
   }
 
@@ -49,7 +57,7 @@ export function Logo({
     return <Wordmark className={className} onDark />;
   }
 
-  const src = wantsReversed ? REVERSED_SOURCES[reversedIndex] : DEFAULT_SRC;
+  const src = wantsReversed ? REVERSED_SOURCES[reversedIndex]! : DEFAULT_SOURCES[defaultIndex]!;
 
   return (
     <img
@@ -64,7 +72,7 @@ export function Logo({
           setReversedIndex((current) => current + 1);
           return;
         }
-        setDefaultFailed(true);
+        setDefaultIndex((current) => current + 1);
       }}
       {...props}
     />
