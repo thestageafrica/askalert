@@ -9,13 +9,16 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
 import { publicSupabaseEnv, tryCreateAuthBrowserClient } from '@askalert/db';
+
+type AdminUser = {
+  id: string;
+  email?: string | null;
+};
 
 type AdminAuthContextValue = {
   ready: boolean;
-  session: Session | null;
-  user: User | null;
+  user: AdminUser | null;
   supabaseConfigured: boolean;
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -34,7 +37,7 @@ function adminEnv() {
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const client = useMemo(() => tryCreateAuthBrowserClient(adminEnv()), []);
   const [ready, setReady] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     if (!client) {
@@ -43,15 +46,20 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     }
 
     let active = true;
-    void client.auth.getSession().then(({ data }) => {
+    const syncUser = (next: AdminUser | null) => {
       if (!active) return;
-      setSession(data.session);
+      setUser(next);
       setReady(true);
+    };
+
+    void client.auth.getSession().then(({ data }) => {
+      const nextUser = data.session?.user;
+      syncUser(nextUser ? { id: nextUser.id, email: nextUser.email } : null);
     });
 
     const { data: sub } = client.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      setReady(true);
+      const nextUser = next?.user;
+      syncUser(nextUser ? { id: nextUser.id, email: nextUser.email } : null);
     });
 
     return () => {
@@ -65,10 +73,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       if (!client) {
         return { error: 'Supabase is not configured for admin yet.' };
       }
-      const { error } = await client.auth.signInWithPassword({
+      const { data, error } = await client.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
+      if (!error && data.user) {
+        setUser({ id: data.user.id, email: data.user.email });
+      }
       return { error: error?.message ?? null };
     },
     [client],
@@ -79,19 +90,18 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     await client.auth.signOut();
-    setSession(null);
+    setUser(null);
   }, [client]);
 
   const value = useMemo<AdminAuthContextValue>(
     () => ({
       ready,
-      session,
-      user: session?.user ?? null,
+      user,
       supabaseConfigured: Boolean(client),
       signInWithPassword,
       signOut,
     }),
-    [client, ready, session, signInWithPassword, signOut],
+    [client, ready, user, signInWithPassword, signOut],
   );
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
