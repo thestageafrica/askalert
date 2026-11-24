@@ -1,4 +1,5 @@
 import { Accordion, Section } from '@askalert/ui';
+import { plansFaqItems } from '../../lib/plan-marketing';
 
 const items = [
   {
@@ -6,6 +7,12 @@ const items = [
     title: 'Is it free?',
     content:
       'Yes for buyers to ask. Vendors can join free. If AskAlert holds money for protection, clear fees show before you pay.',
+  },
+  {
+    id: 'whatsapp',
+    title: 'Can I use WhatsApp?',
+    content:
+      'Message us on WhatsApp and we will send you a link to continue in the app. WhatsApp chat is part of Starter.',
   },
   {
     id: 'negotiate',
@@ -36,6 +43,10 @@ const items = [
     content:
       'Yes. AskAlert can do the chasing for you, or you can take an offer and continue the conversation yourself.',
   },
+  // Plan limits / extras — shared with /plans FAQ where relevant.
+  plansFaqItems[0],
+  plansFaqItems[1],
+  plansFaqItems[2],
 ] as const;
 
 export function Faq() {

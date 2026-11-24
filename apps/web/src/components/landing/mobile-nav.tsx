@@ -1,13 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Button, Container, cn } from '@askalert/ui';
 
 const navLinks = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#categories', label: 'Categories' },
-  { href: '#vendors', label: 'For vendors' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#how-it-works', label: 'How it works' },
+  { href: '/#categories', label: 'Categories' },
+  { href: '/plans', label: 'Plans' },
+  { href: '/#vendors', label: 'For vendors' },
+  { href: '/#faq', label: 'FAQ' },
 ] as const;
 
 export function MobileNav({ whatsappUrl }: { whatsappUrl: string }) {
@@ -55,14 +57,14 @@ export function MobileNav({ whatsappUrl }: { whatsappUrl: string }) {
         >
           <Container width="xl" className="flex flex-col gap-1 py-4">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="min-h-11 rounded-xl px-3 py-3 text-base font-semibold text-surface hover:bg-navy-900"
                 onClick={() => setOpen(false)}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <Button
               href={whatsappUrl}

@@ -24,6 +24,10 @@ const ProtectSlider = dynamic(
     import('../components/landing/protect-slider').then((mod) => mod.ProtectSlider),
   { ssr: true },
 );
+const Plans = dynamic(
+  () => import('../components/landing/plans').then((mod) => mod.Plans),
+  { ssr: true },
+);
 const Vendors = dynamic(
   () => import('../components/landing/vendors').then((mod) => mod.Vendors),
   { ssr: true },
@@ -122,7 +126,17 @@ export default function HomePage() {
             </Container>
           </div>
 
-          <div className="bg-surface-subtle [content-visibility:auto] [contain-intrinsic-size:520px] dark:bg-navy-950/50">
+          <div className="relative overflow-hidden bg-surface-subtle [content-visibility:auto] [contain-intrinsic-size:720px] dark:bg-navy-950/50">
+            <div
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_0%_0%,_color-mix(in_srgb,var(--orange-500)_12%,transparent),_transparent_55%),radial-gradient(ellipse_50%_40%_at_100%_100%,_color-mix(in_srgb,var(--navy-700)_10%,transparent),_transparent_50%)]"
+              aria-hidden
+            />
+            <Container width="xl" className="relative">
+              <Plans />
+            </Container>
+          </div>
+
+          <div className="bg-background [content-visibility:auto] [contain-intrinsic-size:520px]">
             <Container width="xl">
               <Vendors />
             </Container>

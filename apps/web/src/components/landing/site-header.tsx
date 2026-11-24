@@ -1,12 +1,14 @@
+import Link from 'next/link';
 import { Container, Logo } from '@askalert/ui';
 import { getWhatsAppUrl } from '../../lib/site';
 import { MobileNav } from './mobile-nav';
 
 const navLinks = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#categories', label: 'Categories' },
-  { href: '#vendors', label: 'For vendors' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#how-it-works', label: 'How it works' },
+  { href: '/#categories', label: 'Categories' },
+  { href: '/plans', label: 'Plans' },
+  { href: '/#vendors', label: 'For vendors' },
+  { href: '/#faq', label: 'FAQ' },
 ] as const;
 
 export function SiteHeader() {
@@ -15,22 +17,22 @@ export function SiteHeader() {
   return (
     <header className="relative sticky top-0 z-40 border-b border-surface/10 bg-navy-950">
       <Container width="xl" className="flex min-h-[4.25rem] items-center justify-between gap-4 py-3">
-        <a
-          href="#top"
+        <Link
+          href="/"
           className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
         >
           <Logo variant="reversed" className="h-8" fetchPriority="high" />
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="text-sm font-semibold text-surface/75 transition hover:text-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 

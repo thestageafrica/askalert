@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Container, Logo } from '@askalert/ui';
 
 const links = [
+  { href: '/plans', label: 'Plans' },
   { href: '/terms', label: 'Terms' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/contact', label: 'Contact' },
