@@ -250,7 +250,7 @@ export function BillingAdminProvider({ children }: { children: ReactNode }) {
         return { ok: false as const, error: 'A reason is required.' };
       }
       if (!Number.isInteger(input.amountMinor) || input.amountMinor <= 0) {
-        return { ok: false as const, error: 'Credit must be a positive kobo amount.' };
+        return { ok: false as const, error: 'Credit must be a positive Naira amount.' };
       }
       const user = users.find((item) => item.userId === input.userId);
       if (!user) {

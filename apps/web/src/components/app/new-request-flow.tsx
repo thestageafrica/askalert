@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { buildIntakeSteps } from '@askalert/category-engine';
+import { formatNairaInput, parseNairaInput } from '@askalert/payments';
 import { Button, Input, cn } from '@askalert/ui';
 import { involvementOptions } from '../../lib/app/involvement';
 import { useMockStore } from '../../lib/app/mock-store';
@@ -208,29 +209,44 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
                 <Input
                   label={undefined}
                   type={
-                    step.type === 'number' || step.type === 'money'
+                    step.type === 'number'
                       ? 'number'
                       : step.type === 'date'
                         ? 'date'
                         : 'text'
                   }
+                  inputMode={
+                    step.type === 'money'
+                      ? 'decimal'
+                      : step.type === 'number'
+                        ? 'numeric'
+                        : undefined
+                  }
                   value={
-                    currentValue === undefined || currentValue === null
+                    currentValue === undefined || currentValue === null || currentValue === ''
                       ? ''
-                      : String(currentValue)
+                      : step.type === 'money' && typeof currentValue === 'number'
+                        ? formatNairaInput(currentValue)
+                        : String(currentValue)
                   }
                   onChange={(event) => {
                     const raw = event.target.value;
-                    const next =
-                      step.type === 'number' || step.type === 'money'
-                        ? raw === ''
-                          ? ''
-                          : Number(raw)
-                        : raw;
+                    let next: unknown = raw;
+                    if (step.type === 'money') {
+                      next = raw === '' ? '' : (parseNairaInput(raw) ?? raw);
+                    } else if (step.type === 'number') {
+                      next = raw === '' ? '' : Number(raw);
+                    }
                     setAnswers((current) => ({ ...current, [step.key]: next }));
                     setError(null);
                   }}
-                  hint={step.unit ? `Unit: ${step.unit}` : undefined}
+                  hint={
+                    step.type === 'money'
+                      ? 'Enter the amount in Naira'
+                      : step.unit
+                        ? `Unit: ${step.unit}`
+                        : undefined
+                  }
                   error={error ?? undefined}
                 />
               )}

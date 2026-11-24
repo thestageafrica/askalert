@@ -66,7 +66,7 @@
       "type": "money",
       "required": true,
       "applies_to": "need",
-      "unit": "kobo",
+      "unit": "NGN",
       "validation": { "min": 2000000 }
     },
     {
@@ -75,7 +75,7 @@
       "type": "money",
       "required": true,
       "applies_to": "offer",
-      "unit": "kobo",
+      "unit": "NGN",
       "validation": { "min": 1500000 }
     }
   ],

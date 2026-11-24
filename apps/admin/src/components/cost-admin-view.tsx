@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { formatNaira } from '@askalert/payments';
+import { formatNaira, formatNairaInput, parseNairaInput } from '@askalert/payments';
 import { Button, Input } from '@askalert/ui';
 import { AccessibleBarChart } from './accessible-bar-chart';
 import { useBillingAdmin } from '../lib/billing-admin-store';
 import { useAdminStore } from '../lib/admin-store';
 import { canEditUnitCosts } from '../lib/roles';
-import { getPlanById } from '@askalert/core';
+import { getPlanById, type UnitCostSettings } from '@askalert/core';
+import type { CostAlertThresholds } from '../lib/billing-admin-store';
 
 const TYPE_GROUPS: Record<string, string[]> = {
   AI: ['ai_tokens', 'ai_suggestion'],
@@ -79,87 +80,15 @@ export function CostAdminView({ mode = 'dashboard' }: { mode?: 'dashboard' | 'se
 
   if (mode === 'settings') {
     return (
-      <div className="space-y-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">
-            Billing
-          </p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight">Unit cost settings</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Placeholder kobo costs used for estimates. WhatsApp, AI and SMS are editable here.
-          </p>
-        </div>
-        {!canEdit ? (
-          <p className="text-sm font-semibold text-orange-700">
-            Only Super admin or Operations can edit unit costs.
-          </p>
-        ) : null}
-        {message ? (
-          <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm font-medium text-navy-950">
-            {message}
-          </p>
-        ) : null}
-        <div className="grid gap-3 sm:grid-cols-3">
-          {(
-            [
-              ['wa_service', 'WhatsApp / message'],
-              ['ai_suggestion', 'AI / suggestion'],
-              ['sms', 'SMS / message'],
-            ] as const
-          ).map(([key, label]) => (
-            <Input
-              key={key}
-              label={`${label} (kobo)`}
-              type="number"
-              disabled={!canEdit}
-              value={String(unitCosts.costsMinor[key] ?? 0)}
-              onChange={(event) => {
-                const next = Number(event.target.value) || 0;
-                setUnitCosts({
-                  costsMinor: { ...unitCosts.costsMinor, [key]: next },
-                });
-              }}
-            />
-          ))}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input
-            label="Daily cost alert (kobo)"
-            type="number"
-            disabled={!canEdit}
-            value={String(thresholds.dailyCostMinor)}
-            onChange={(event) =>
-              setThresholds({
-                ...thresholds,
-                dailyCostMinor: Number(event.target.value) || 0,
-              })
-            }
-          />
-          <Input
-            label="Per-user cost alert (kobo)"
-            type="number"
-            disabled={!canEdit}
-            value={String(thresholds.userCostMinor)}
-            onChange={(event) =>
-              setThresholds({
-                ...thresholds,
-                userCostMinor: Number(event.target.value) || 0,
-              })
-            }
-          />
-        </div>
-        <Button
-          type="button"
-          className="min-h-11"
-          disabled={!canEdit}
-          onClick={() => setMessage('Unit costs and alert thresholds saved for this session.')}
-        >
-          Save settings
-        </Button>
-        <Button href="/cost" variant="secondary" className="min-h-11">
-          Back to cost dashboard
-        </Button>
-      </div>
+      <CostSettingsForm
+        canEdit={canEdit}
+        message={message}
+        onMessage={setMessage}
+        unitCosts={unitCosts}
+        setUnitCosts={setUnitCosts}
+        thresholds={thresholds}
+        setThresholds={setThresholds}
+      />
     );
   }
 
@@ -260,6 +189,133 @@ function Stat({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-2 text-xl font-extrabold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function CostSettingsForm({
+  canEdit,
+  message,
+  onMessage,
+  unitCosts,
+  setUnitCosts,
+  thresholds,
+  setThresholds,
+}: {
+  canEdit: boolean;
+  message: string | null;
+  onMessage: (value: string | null) => void;
+  unitCosts: UnitCostSettings;
+  setUnitCosts: (next: UnitCostSettings) => void;
+  thresholds: CostAlertThresholds;
+  setThresholds: (next: CostAlertThresholds) => void;
+}) {
+  const [wa, setWa] = useState(formatNairaInput(unitCosts.costsMinor.wa_service ?? 0));
+  const [ai, setAi] = useState(formatNairaInput(unitCosts.costsMinor.ai_suggestion ?? 0));
+  const [sms, setSms] = useState(formatNairaInput(unitCosts.costsMinor.sms ?? 0));
+  const [daily, setDaily] = useState(formatNairaInput(thresholds.dailyCostMinor));
+  const [perUser, setPerUser] = useState(formatNairaInput(thresholds.userCostMinor));
+
+  const onSave = () => {
+    const waKobo = parseNairaInput(wa);
+    const aiKobo = parseNairaInput(ai);
+    const smsKobo = parseNairaInput(sms);
+    const dailyKobo = parseNairaInput(daily);
+    const userKobo = parseNairaInput(perUser);
+    if (
+      waKobo === null ||
+      aiKobo === null ||
+      smsKobo === null ||
+      dailyKobo === null ||
+      userKobo === null
+    ) {
+      onMessage('Enter valid Naira amounts. Use up to two decimal places.');
+      return;
+    }
+    setUnitCosts({
+      costsMinor: {
+        ...unitCosts.costsMinor,
+        wa_service: waKobo,
+        ai_suggestion: aiKobo,
+        sms: smsKobo,
+      },
+    });
+    setThresholds({
+      dailyCostMinor: dailyKobo,
+      userCostMinor: userKobo,
+    });
+    onMessage('Unit costs and alert thresholds saved for this session.');
+  };
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">
+          Billing
+        </p>
+        <h1 className="mt-1 text-3xl font-extrabold tracking-tight">Unit cost settings</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Placeholder Naira costs used for estimates. WhatsApp, AI and SMS are editable here.
+        </p>
+      </div>
+      {!canEdit ? (
+        <p className="text-sm font-semibold text-orange-700">
+          Only Super admin or Operations can edit unit costs.
+        </p>
+      ) : null}
+      {message ? (
+        <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm font-medium text-navy-950">
+          {message}
+        </p>
+      ) : null}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Input
+          label="WhatsApp / message (₦)"
+          inputMode="decimal"
+          disabled={!canEdit}
+          value={wa}
+          onChange={(event) => setWa(event.target.value)}
+          hint="Example: 3.50"
+        />
+        <Input
+          label="AI / suggestion (₦)"
+          inputMode="decimal"
+          disabled={!canEdit}
+          value={ai}
+          onChange={(event) => setAi(event.target.value)}
+          hint="Example: 2"
+        />
+        <Input
+          label="SMS / message (₦)"
+          inputMode="decimal"
+          disabled={!canEdit}
+          value={sms}
+          onChange={(event) => setSms(event.target.value)}
+          hint="Example: 5"
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="Daily cost alert (₦)"
+          inputMode="decimal"
+          disabled={!canEdit}
+          value={daily}
+          onChange={(event) => setDaily(event.target.value)}
+        />
+        <Input
+          label="Per-user cost alert (₦)"
+          inputMode="decimal"
+          disabled={!canEdit}
+          value={perUser}
+          onChange={(event) => setPerUser(event.target.value)}
+        />
+      </div>
+      <Button type="button" className="min-h-11" disabled={!canEdit} onClick={onSave}>
+        Save settings
+      </Button>
+      <Button href="/cost" variant="secondary" className="min-h-11">
+        Back to cost dashboard
+      </Button>
     </div>
   );
 }

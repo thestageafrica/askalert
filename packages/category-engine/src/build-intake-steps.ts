@@ -30,6 +30,16 @@ function asNumber(value: unknown): number | null {
   return null;
 }
 
+/** Display helper — storage stays kobo; people see Naira. */
+function formatNairaLabel(amountKobo: number): string {
+  const negative = amountKobo < 0;
+  const absolute = Math.abs(amountKobo);
+  const major = Math.trunc(absolute / 100);
+  const minor = absolute % 100;
+  const grouped = major.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${negative ? '-' : ''}₦${grouped}.${minor.toString().padStart(2, '0')}`;
+}
+
 function createAttributeValidator(attribute: CategoryAttribute): (value: unknown) => string | null {
   return (value: unknown) => {
     if (isBlank(value)) {
@@ -65,12 +75,18 @@ function createAttributeValidator(attribute: CategoryAttribute): (value: unknown
           return `${attribute.label} must be a number.`;
         }
         if (attribute.type === 'money' && (!Number.isInteger(amount) || amount < 0)) {
-          return `${attribute.label} must be a whole amount in kobo.`;
+          return `${attribute.label} must be a valid Naira amount.`;
         }
         if (rules?.min !== undefined && amount < rules.min) {
+          if (attribute.type === 'money') {
+            return `${attribute.label} must be at least ${formatNairaLabel(rules.min)}.`;
+          }
           return `${attribute.label} must be at least ${rules.min}${attribute.unit ? ` ${attribute.unit}` : ''}.`;
         }
         if (rules?.max !== undefined && amount > rules.max) {
+          if (attribute.type === 'money') {
+            return `${attribute.label} must be at most ${formatNairaLabel(rules.max)}.`;
+          }
           return `${attribute.label} must be at most ${rules.max}${attribute.unit ? ` ${attribute.unit}` : ''}.`;
         }
         return null;

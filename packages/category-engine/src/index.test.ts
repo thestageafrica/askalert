@@ -158,12 +158,12 @@ describe('buildIntakeSteps', () => {
     expect(steps.every((step) => typeof step.validate === 'function')).toBe(true);
   });
 
-  it('validates money in kobo and select options', () => {
+  it('validates money in naira terms and select options', () => {
     const steps = buildIntakeSteps(shortlets!, 'need');
     const budget = steps.find((step) => step.key === 'budget_per_night');
     const guests = steps.find((step) => step.key === 'guests');
 
-    expect(budget?.validate(100000)).toMatch(/kobo|at least/i);
+    expect(budget?.validate(100_000)).toMatch(/₦|at least/i);
     expect(budget?.validate(2_000_000)).toBeNull();
     expect(guests?.validate(0)).toMatch(/at least/i);
     expect(guests?.validate(2)).toBeNull();

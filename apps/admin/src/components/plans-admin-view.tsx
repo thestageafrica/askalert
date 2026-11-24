@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatNaira } from '@askalert/payments';
+import { formatNaira, formatNairaInput, parseNairaInput } from '@askalert/payments';
 import { Button, Input, cn } from '@askalert/ui';
 import { useBillingAdmin } from '../lib/billing-admin-store';
 import {
@@ -24,12 +24,12 @@ export function PlansAdminView() {
   const livePriceMinor = live?.priceMinor ?? 0;
   const liveRequests = live?.limits.requestsPerMonth ?? 0;
   const [note, setNote] = useState('');
-  const [priceMinor, setPriceMinor] = useState(livePriceMinor);
+  const [priceNaira, setPriceNaira] = useState(formatNairaInput(livePriceMinor));
   const [requests, setRequests] = useState(liveRequests);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setPriceMinor(livePriceMinor);
+    setPriceNaira(formatNairaInput(livePriceMinor));
     setRequests(liveRequests);
   }, [selectedId, liveVersion, livePriceMinor, liveRequests]);
 
@@ -42,11 +42,16 @@ export function PlansAdminView() {
       setMessage('Only Super admin or Operations can edit plans.');
       return;
     }
+    const parsedPrice = parseNairaInput(priceNaira);
+    if (parsedPrice === null) {
+      setMessage('Enter a valid plan price in Naira.');
+      return;
+    }
     const draft: PlanDraftInput = {
       slug: selected.slug,
       audience: selected.audience,
       name: selected.name,
-      priceMinor,
+      priceMinor: parsedPrice,
       periodDays: live.periodDays,
       currency: 'NGN',
       limits: {
@@ -129,11 +134,12 @@ export function PlansAdminView() {
             <h2 className="text-sm font-bold text-foreground">Edit and publish</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Input
-                label="Price (kobo)"
-                type="number"
-                value={String(priceMinor)}
+                label="Price (₦)"
+                inputMode="decimal"
+                value={priceNaira}
                 disabled={!canEdit}
-                onChange={(event) => setPriceMinor(Number(event.target.value) || 0)}
+                onChange={(event) => setPriceNaira(event.target.value)}
+                hint="Enter Naira. Example: 3000 for ₦3,000."
               />
               <Input
                 label="Requests / month"

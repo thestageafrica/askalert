@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { formatNaira } from '@askalert/payments';
+import { formatNaira, parseNairaInput } from '@askalert/payments';
 import { getPlanById } from '@askalert/core';
 import { Button, Input } from '@askalert/ui';
 import { findPlanLabel, useBillingAdmin } from '../lib/billing-admin-store';
@@ -15,7 +15,7 @@ export function UsageAdminView() {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedId, setSelectedId] = useState(users[0]?.userId ?? '');
-  const [creditMinor, setCreditMinor] = useState('10000');
+  const [creditNaira, setCreditNaira] = useState('100');
   const [creditReason, setCreditReason] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -52,9 +52,14 @@ export function UsageAdminView() {
       setMessage('Only Super admin or Operations can grant credit.');
       return;
     }
+    const amountMinor = parseNairaInput(creditNaira);
+    if (amountMinor === null || amountMinor <= 0) {
+      setMessage('Enter a valid credit amount in Naira.');
+      return;
+    }
     const result = grantCredit({
       userId: selected.userId,
-      amountMinor: Number(creditMinor) || 0,
+      amountMinor,
       reason: creditReason,
       actorRole: role,
     });
@@ -170,10 +175,12 @@ export function UsageAdminView() {
             <h2 className="text-sm font-bold">Grant one-off credit</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Input
-                label="Amount (kobo)"
-                value={creditMinor}
+                label="Amount (₦)"
+                inputMode="decimal"
+                value={creditNaira}
                 disabled={!canGrant}
-                onChange={(event) => setCreditMinor(event.target.value)}
+                onChange={(event) => setCreditNaira(event.target.value)}
+                hint="Enter Naira. Example: 100 for ₦100."
               />
               <Input
                 label="Reason (required)"

@@ -36,6 +36,56 @@ export function createMoney(amountKobo: number, currency: Money['currency'] = 'N
   return { amountKobo, currency };
 }
 
+/**
+ * Convert whole Naira (no kobo fraction) to kobo for storage.
+ * People type 3000 for ₦3,000 — never ask them for kobo.
+ */
+export function nairaToKobo(nairaMajor: number): number {
+  if (!Number.isInteger(nairaMajor)) {
+    throw new Error('Naira amounts must be whole numbers when converting without kobo.');
+  }
+  return nairaMajor * 100;
+}
+
+/** Whole Naira major units from kobo (drops any kobo remainder). */
+export function koboToNairaMajor(amountKobo: number): number {
+  if (!Number.isInteger(amountKobo)) {
+    throw new Error('Money amounts must be integers in kobo.');
+  }
+  return Math.trunc(amountKobo / 100);
+}
+
+/**
+ * Parse a Naira amount typed by a person (e.g. "3,000" or "3.50") into kobo.
+ * Returns null when the text is empty or not a valid money amount.
+ */
+export function parseNairaInput(raw: string): number | null {
+  const cleaned = raw.trim().replace(/,/g, '');
+  if (cleaned === '') {
+    return null;
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) {
+    return null;
+  }
+  const [majorPart, minorPart = ''] = cleaned.split('.');
+  const major = Number(majorPart);
+  const minor = Number(`${minorPart}00`.slice(0, 2));
+  return major * 100 + minor;
+}
+
+/** Plain Naira text for form fields (no ₦ symbol). */
+export function formatNairaInput(amountKobo: number): string {
+  if (!Number.isInteger(amountKobo)) {
+    throw new Error('Money amounts must be integers in kobo.');
+  }
+  const negative = amountKobo < 0;
+  const absolute = Math.abs(amountKobo);
+  const major = Math.trunc(absolute / 100);
+  const minor = absolute % 100;
+  const body = minor === 0 ? String(major) : `${major}.${minor.toString().padStart(2, '0')}`;
+  return `${negative ? '-' : ''}${body}`;
+}
+
 export {
   computeEscrowSplit,
   computeEscrowSplitInputSchema,
