@@ -39,6 +39,12 @@ Thumbs.db
 # Vercel
 .vercel
 
+# Cloudflare Wrangler
+.wrangler
+.dev.vars
+apps/**/.dev.vars
+
+
 # Serwist generated service worker
 apps/web/public/sw*
 apps/web/public/swe-worker*

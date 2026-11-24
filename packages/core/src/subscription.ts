@@ -23,17 +23,25 @@ export function createFreeSubscription(options: {
   };
 }
 
+/** Default mock credit pack size (₦1,000.00). Paystack wired later. */
+export const MOCK_CREDIT_PACK_MINOR = 100_000;
+
 /** Mock purchase completion (Paystack wired later). */
 export function completeMockPurchase(options: {
   state: UserPlanState;
   kind: 'starter_pass' | 'credit_pack';
   creditPackMinor?: number;
+  walletBalanceMinor?: number;
   now?: Date;
-}): UserPlanState {
+}): { state: UserPlanState; walletBalanceMinor: number } {
   const now = options.now ?? new Date();
+  const walletBalanceMinor = options.walletBalanceMinor ?? 0;
   if (options.kind === 'credit_pack') {
-    // Credits are tracked separately in wallets; keep plan state unchanged here.
-    return { ...options.state };
+    const pack = options.creditPackMinor ?? MOCK_CREDIT_PACK_MINOR;
+    return {
+      state: { ...options.state },
+      walletBalanceMinor: walletBalanceMinor + pack,
+    };
   }
   const starter = getPlanBySlug('buyer_starter');
   if (!starter) {
@@ -42,14 +50,17 @@ export function completeMockPurchase(options: {
   const ends = new Date(now.getTime());
   ends.setUTCDate(ends.getUTCDate() + starter.periodDays);
   return {
-    ...options.state,
-    audience: 'buyer',
-    planId: starter.id,
-    planVersion: options.state.planVersion + 1,
-    status: 'active',
-    startsAt: now.toISOString(),
-    endsAt: ends.toISOString(),
-    usage: emptyUsage(),
+    state: {
+      ...options.state,
+      audience: 'buyer',
+      planId: starter.id,
+      planVersion: options.state.planVersion + 1,
+      status: 'active',
+      startsAt: now.toISOString(),
+      endsAt: ends.toISOString(),
+      usage: emptyUsage(),
+    },
+    walletBalanceMinor,
   };
 }
 

@@ -5,18 +5,27 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { maskContactDetails } from '@askalert/channels';
 import { seedChat, seedRequest } from './mock-data';
 import type {
   AccountSettings,
   AppRequest,
+  ChatMedia,
+  ChatMessage,
   ChatThread,
   InvolvementMode,
   Quote,
   RequestStatus,
 } from './types';
+
+type SendChatResult = {
+  message: ChatMessage;
+  masked: boolean;
+};
 
 type MockStore = {
   ready: boolean;
@@ -37,7 +46,14 @@ type MockStore = {
   setRequestStatus: (id: string, status: RequestStatus) => void;
   markBooked: (requestId: string, quote: Quote) => void;
   toggleAgentControl: (chatId: string) => void;
-  sendChatMessage: (chatId: string, text: string, from?: ChatThread['messages'][number]['from']) => void;
+  sendChatMessage: (
+    chatId: string,
+    text: string,
+    options?: { from?: ChatThread['messages'][number]['from']; media?: ChatMedia[] },
+  ) => SendChatResult | null;
+  markChatRead: (chatId: string) => void;
+  addSavedReply: (text: string) => void;
+  removeSavedReply: (text: string) => void;
   updateAccount: (patch: Partial<AccountSettings>) => void;
   addNotifyInterest: (slug: string) => void;
 };
@@ -50,7 +66,24 @@ const defaultAccount: AccountSettings = {
   notifyChat: true,
   notifyMarketing: false,
   language: 'en',
+  savedReplies: [
+    'Is Wi‑Fi included?',
+    'Can you do a better rate?',
+    'Send house rules',
+    'I want to book',
+  ],
 };
+
+function clock(): string {
+  return new Date().toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' });
+}
+
+const VENDOR_REPLIES = [
+  'Yes, that works on our side.',
+  'I can hold it for two hours if you are ready to book.',
+  'Wi‑Fi is included and self check-in is fine.',
+  'Thanks — send the booking when you are ready.',
+];
 
 export function MockStoreProvider({ children }: { children: ReactNode }) {
   const [ready] = useState(true);
@@ -58,6 +91,7 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
   const [chats, setChats] = useState<ChatThread[]>([seedChat]);
   const [account, setAccount] = useState<AccountSettings>(defaultAccount);
   const [notifyInterest, setNotifyInterest] = useState<string[]>([]);
+  const vendorTimers = useRef<Record<string, number>>({});
 
   const getRequest = useCallback(
     (id: string) => requests.find((request) => request.id === id),
@@ -69,9 +103,50 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
     [chats],
   );
 
+  const scheduleVendorReply = useCallback((chatId: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (process.env.NODE_ENV === 'production') {
+      // Still allow demo simulation in static export preview.
+    }
+    window.clearTimeout(vendorTimers.current[chatId]);
+    setChats((current) =>
+      current.map((chat) => (chat.id === chatId ? { ...chat, typing: true } : chat)),
+    );
+    vendorTimers.current[chatId] = window.setTimeout(() => {
+      const reply =
+        VENDOR_REPLIES[Math.floor(Math.random() * VENDOR_REPLIES.length)] ??
+        VENDOR_REPLIES[0]!;
+      const at = clock();
+      setChats((current) =>
+        current.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                typing: false,
+                unreadCount: chat.unreadCount + 1,
+                messages: [
+                  ...chat.messages,
+                  {
+                    id: `${chatId}_vendor_${Date.now()}`,
+                    from: 'vendor',
+                    text: reply,
+                    at,
+                    deliveredAt: at,
+                  },
+                ],
+              }
+            : chat,
+        ),
+      );
+    }, 900 + Math.floor(Math.random() * 900));
+  }, []);
+
   const createRequest: MockStore['createRequest'] = useCallback((input) => {
     const id = `req_${Date.now()}`;
     const chatId = `chat_${Date.now()}`;
+    const at = clock();
     const request: AppRequest = {
       id,
       categorySlug: input.categorySlug,
@@ -90,18 +165,21 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
       vendorAlias: 'Lagos Nest',
       missionTag: `${input.categoryName} · new ask`,
       agentInControl: input.involvement !== 'match',
+      unreadCount: 0,
       messages: [
         {
           id: `${chatId}_m1`,
           from: 'agent',
           text: 'Got it. I’m asking verified vendors now.',
-          at: new Date().toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' }),
+          at,
+          deliveredAt: at,
+          readAt: at,
         },
         {
           id: `${chatId}_m2`,
           from: 'system',
           text: 'Contact details are shared after booking.',
-          at: new Date().toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' }),
+          at,
         },
       ],
     };
@@ -115,6 +193,11 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
           item.id === id ? { ...item, status: 'quotes_ready' } : item,
         ),
       );
+      window.dispatchEvent(
+        new CustomEvent('askalert:notification', {
+          detail: { eventType: 'quotes_ready', url: `/app/request/${id}/` },
+        }),
+      );
     }, 1200);
 
     return request;
@@ -127,6 +210,7 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const markBooked = useCallback((requestId: string, quote: Quote) => {
+    const at = clock();
     setRequests((current) =>
       current.map((request) =>
         request.id === requestId ? { ...request, status: 'booked' } : request,
@@ -144,10 +228,7 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
                   id: `${chat.id}_booked`,
                   from: 'system',
                   text: `Booked with ${quote.vendorAlias}. Contact details unlock next.`,
-                  at: new Date().toLocaleTimeString('en-NG', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }),
+                  at,
                 },
               ],
             }
@@ -165,31 +246,94 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sendChatMessage: MockStore['sendChatMessage'] = useCallback(
-    (chatId, text, from = 'buyer') => {
+    (chatId, text, options = {}) => {
+      const from = options.from ?? 'buyer';
+      const mask = from === 'buyer' || from === 'vendor' ? maskContactDetails(text) : {
+        text,
+        masked: false,
+        reasons: [] as string[],
+      };
+      const at = clock();
+      const message: ChatMessage = {
+        id: `${chatId}_${Date.now()}`,
+        from,
+        text: mask.text,
+        at,
+        filtered: mask.masked,
+        deliveredAt: at,
+        media: options.media,
+      };
+
       setChats((current) =>
         current.map((chat) =>
           chat.id === chatId
             ? {
                 ...chat,
-                messages: [
-                  ...chat.messages,
-                  {
-                    id: `${chatId}_${Date.now()}`,
-                    from,
-                    text,
-                    at: new Date().toLocaleTimeString('en-NG', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    }),
-                  },
-                ],
+                messages: [...chat.messages, message],
               }
             : chat,
         ),
       );
+
+      if (from === 'buyer') {
+        window.setTimeout(() => {
+          setChats((current) =>
+            current.map((chat) =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    messages: chat.messages.map((item) =>
+                      item.id === message.id ? { ...item, readAt: clock() } : item,
+                    ),
+                  }
+                : chat,
+            ),
+          );
+        }, 700);
+        scheduleVendorReply(chatId);
+      }
+
+      return { message, masked: mask.masked };
     },
-    [],
+    [scheduleVendorReply],
   );
+
+  const markChatRead = useCallback((chatId: string) => {
+    setChats((current) =>
+      current.map((chat) =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              unreadCount: 0,
+              messages: chat.messages.map((message) =>
+                message.from !== 'buyer' && !message.readAt
+                  ? { ...message, readAt: clock(), deliveredAt: message.deliveredAt ?? clock() }
+                  : message,
+              ),
+            }
+          : chat,
+      ),
+    );
+  }, []);
+
+  const addSavedReply = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      return;
+    }
+    setAccount((current) =>
+      current.savedReplies.includes(trimmed)
+        ? current
+        : { ...current, savedReplies: [...current.savedReplies, trimmed].slice(0, 12) },
+    );
+  }, []);
+
+  const removeSavedReply = useCallback((text: string) => {
+    setAccount((current) => ({
+      ...current,
+      savedReplies: current.savedReplies.filter((item) => item !== text),
+    }));
+  }, []);
 
   const updateAccount = useCallback((patch: Partial<AccountSettings>) => {
     setAccount((current) => ({ ...current, ...patch }));
@@ -216,6 +360,9 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
       markBooked,
       toggleAgentControl,
       sendChatMessage,
+      markChatRead,
+      addSavedReply,
+      removeSavedReply,
       updateAccount,
       addNotifyInterest,
     }),
@@ -232,6 +379,9 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
       markBooked,
       toggleAgentControl,
       sendChatMessage,
+      markChatRead,
+      addSavedReply,
+      removeSavedReply,
       updateAccount,
       addNotifyInterest,
     ],

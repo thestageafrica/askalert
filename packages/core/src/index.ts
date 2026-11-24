@@ -23,6 +23,7 @@ export { DEFAULT_UNIT_COSTS, estimateCost } from './cost';
 export {
   completeMockPurchase,
   createFreeSubscription,
+  MOCK_CREDIT_PACK_MINOR,
   withUsageAt,
 } from './subscription';
 export {

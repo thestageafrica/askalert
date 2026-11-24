@@ -69,24 +69,30 @@ export const seedChat: ChatThread = {
   vendorAlias: 'Lagos Nest',
   missionTag: 'Shortlet · Lagos Island',
   agentInControl: true,
+  unreadCount: 1,
   messages: [
     {
       id: 'm1',
       from: 'agent',
       text: 'I asked three verified hosts for your Fri–Sun stay.',
       at: '09:12',
+      deliveredAt: '09:12',
+      readAt: '09:12',
     },
     {
       id: 'm2',
       from: 'vendor',
       text: 'We can do the 2-bed at ₦128,500 for the weekend, self check-in included.',
       at: '09:18',
+      deliveredAt: '09:18',
     },
     {
       id: 'm3',
       from: 'agent',
       text: 'Draft reply ready: “Thanks — can you hold it with Wi‑Fi confirmed?”',
       at: '09:19',
+      deliveredAt: '09:19',
+      readAt: '09:19',
     },
     {
       id: 'm4',
@@ -97,9 +103,3 @@ export const seedChat: ChatThread = {
   ],
 };
 
-export const quickReplies = [
-  'Is Wi‑Fi included?',
-  'Can you do a better rate?',
-  'Send house rules',
-  'I want to book',
-] as const;

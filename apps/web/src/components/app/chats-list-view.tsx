@@ -17,9 +17,7 @@ export function ChatsListView() {
           <EmptyState
             title="No chats yet"
             description="Chats open when AskAlert starts asking vendors."
-            action={
-              <Button href="/app">Start an ask</Button>
-            }
+            action={<Button href="/app">Start an ask</Button>}
           />
         ) : (
           chats.map((chat) => {
@@ -37,8 +35,13 @@ export function ChatsListView() {
                 href={`/app/chat/${chat.id}`}
                 className="flex gap-3 rounded-[1.4rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition hover:-translate-y-0.5"
               >
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-navy-950 text-xs font-extrabold text-orange-400">
+                <div className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-navy-950 text-xs font-extrabold text-orange-400">
                   {initials}
+                  {chat.unreadCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-navy-900">
+                      {chat.unreadCount > 9 ? '9+' : chat.unreadCount}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
@@ -46,7 +49,9 @@ export function ChatsListView() {
                     <p className="shrink-0 text-xs text-muted-foreground">{last?.at}</p>
                   </div>
                   <p className="mt-0.5 text-xs font-semibold text-orange-600">{chat.missionTag}</p>
-                  <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{last?.text}</p>
+                  <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
+                    {chat.typing ? `${chat.vendorAlias} is typing…` : last?.text}
+                  </p>
                 </div>
               </Link>
             );

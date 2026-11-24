@@ -10,11 +10,12 @@ import { usePlanStore } from '../../lib/app/plan-store';
 import type { InvolvementMode } from '../../lib/app/types';
 import { useCategory } from '../../lib/use-categories';
 import { AppHeader } from './app-header';
+import { notifyFirstRequestCreated } from './push-prompt';
 
 export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
   const router = useRouter();
   const { createRequest } = useMockStore();
-  const { consume } = usePlanStore();
+  const { check, consume } = usePlanStore();
   const { category, loading } = useCategory(categorySlug);
   const steps = useMemo(
     () => (category ? buildIntakeSteps(category, 'need') : []),
@@ -80,6 +81,22 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
   };
 
   const onSubmit = () => {
+    const vendorsToAsk = 3;
+    const startGate = check('start_request');
+    if (startGate.outcome === 'block') {
+      setError(`${startGate.reason} ${startGate.nextStep}`);
+      setPhase('summary');
+      return;
+    }
+    for (let i = 0; i < vendorsToAsk; i += 1) {
+      const vendorGate = check('contact_vendors', i);
+      if (vendorGate.outcome === 'block') {
+        setError(`${vendorGate.reason} ${vendorGate.nextStep}`);
+        setPhase('summary');
+        return;
+      }
+    }
+
     const entitlement = consume('start_request');
     if (entitlement.blocked) {
       setError(
@@ -92,6 +109,10 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
     }
     if (entitlement.decision.outcome === 'warn_at_80') {
       setError(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+    }
+
+    for (let i = 0; i < vendorsToAsk; i += 1) {
+      consume('contact_vendors', i);
     }
 
     const title =
@@ -108,6 +129,7 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
       involvement,
       answers,
     });
+    notifyFirstRequestCreated();
     router.push(`/app/request/${request.id}`);
   };
 

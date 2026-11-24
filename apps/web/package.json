@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@askalert/category-engine": "workspace:*",
+    "@askalert/channels": "workspace:*",
     "@askalert/core": "workspace:*",
     "@askalert/db": "workspace:*",
     "@askalert/payments": "workspace:*",

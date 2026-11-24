@@ -253,3 +253,197 @@ Here is the error and the steps I took: [paste]. Explain the cause in plain Engl
 ## What comes next (Phase 2 prompts, to be written when you are ready)
 
 Phone sign-in and OTP, vendor onboarding through WhatsApp, the WhatsApp webhook and message templates, the matching engine, quote parsing and the agent tools, the anti-leakage filter, Paystack checkout with the escrow ledger, and the mission queue with timers.
+
+## Update: zero-fixed-cost hosting (Prompts 12 to 15)
+
+The first designs are live. These prompts **replace the Vercel plan in Prompt 10** and **replace the pg-boss idea in Prompt 11**, so you do not pay a monthly platform bill before revenue. Vercel Hobby is for non-commercial use only, so move the launched product to Cloudflare Pages. Run them in this order.
+
+## Prompt 12: Fix the issues found on the live site
+
+```
+Fix these issues found on the live site, and verify each one in the production build.
+
+1. Canonical URL, og:url, the sitemap and metadataBase must all use NEXT_PUBLIC_SITE_URL (https://www.askalert.com). Nothing may point to a vercel.app address.
+2. The WhatsApp links use a placeholder number (2348000000000). Read the number only from NEXT_PUBLIC_WHATSAPP_NUMBER. If it is the placeholder, show a visible warning in development and fail the production build.
+3. The checkout mock must use computeEscrowSplit from packages/payments. For a total of ₦128,500 with a 40% hold, commission and processing fees must be applied before the hold. The slider demo on the landing page and the checkout mock must show consistent numbers.
+4. Create real /terms, /privacy and /contact pages with clearly marked DRAFT content. I will replace the text after legal review.
+5. Confirm that /app and /offline exist. Hide /design-system in production.
+
+Run lint, typecheck, tests and build. List every change.
+```
+
+**Checks:** share the site link on WhatsApp and confirm the preview shows `askalert.com`. Click every WhatsApp button and confirm your real number opens.
+
+## Prompt 13: Static export for free hosting on Cloudflare Pages
+
+```
+Prepare apps/web and apps/admin to be hosted for free on Cloudflare Pages as static sites, with no Vercel-specific features.
+
+- Configure Next.js with output: 'export' (and trailingSlash if needed).
+- Remove anything that needs a server at runtime: middleware, API routes, next/image optimisation (use unoptimized images or pre-optimised files) and dynamic Open Graph image routes (replace them with static PNG files in /public).
+- Replace the admin basic-auth middleware with a note that Cloudflare Access will protect the admin domain. Keep robots noindex on admin.
+- Add _headers and _redirects files for security headers, long caching of static assets, and the fallback for /app/* routes.
+- Keep the PWA service worker working under static export, and test offline mode.
+- Write DEPLOY.md with Cloudflare Pages settings: build command, output directory, root directory per app, and environment variables. Keep Vercel only as an optional note.
+- Run a production build for both apps and test the output with a local static server.
+```
+
+**Manual steps in Cloudflare (do these yourself):**
+
+1. Create a Cloudflare account and add your domain, or connect the domain you already use.
+2. In **Workers and Pages**, create a Pages project from your GitHub repository for `apps/web`. Use the build command and output folder from `DEPLOY.md`. Add `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_WHATSAPP_NUMBER`.
+3. Create a second Pages project for `apps/admin` on an `admin.` subdomain.
+4. Put the admin domain behind **Cloudflare Access** (check that the free plan covers your small team) so only your email addresses can open it.
+5. Point `askalert.com` to the web project, test on your phone, and only then switch off the Vercel deployment.
+
+Before you rely on any free tier for a commercial product, read each provider’s current terms.
+
+## Prompt 14: Webhook front door on a Cloudflare Worker
+
+```
+Create apps/edge-webhooks, a Cloudflare Worker (TypeScript, wrangler) that is the single front door for incoming webhooks.
+
+- GET /whatsapp: answer Meta's verification challenge using WHATSAPP_VERIFY_TOKEN.
+- POST /whatsapp: verify the X-Hub-Signature-256 header with WHATSAPP_APP_SECRET using a constant-time comparison. Reject invalid requests with 401. Parse the payload. DROP status events of type sent, delivered and read. KEEP incoming messages and failed statuses. Deduplicate by message id. Forward the kept events to SUPABASE_FUNCTION_URL with a shared-secret header, and return 200 quickly.
+- POST /paystack: verify x-paystack-signature (HMAC SHA512 with PAYSTACK_SECRET) and forward verified events only.
+- Never log message contents or phone numbers. Log only counts and error codes.
+- Add Vitest tests with fixture payloads: valid, invalid signature, status-only and duplicate.
+- Add wrangler.toml with placeholders. Document that secrets are set with wrangler secret put, and add the deployment steps to DEPLOY.md.
+```
+
+**Checks:** tests pass, and a status-only payload is dropped while a message payload is forwarded.
+
+## Prompt 15: Supabase on the free plan (replaces Prompt 11)
+
+Create your Supabase project first (choose the region deliberately). Then paste:
+
+```
+Add Supabase to the monorepo so the backend runs on the Supabase free plan with no always-on server.
+
+1. Use the Supabase CLI. Create migrations for: areas, categories, category_versions, category_attributes, category_areas, vendor_requirements and audit_log. Every table has created_at and updated_at.
+2. Row-level security: the public can read only Live categories and their published attributes. Only admin roles can write. Every admin write creates an audit_log row.
+3. Seed the nine categories from packages/category-engine and the Lekki area hierarchy (Lagos, Eti-Osa, Lekki Phase 1, Lekki, Victoria Island, Ikoyi, Ajah, Oniru).
+4. Queue: use pgmq and pg_cron, not pg-boss. Create the queue migrations, an enqueue function, and a cron job that runs every minute and calls a Supabase Edge Function to process pending jobs in small, idempotent batches with retries and a dead-letter table.
+5. Create the Edge Function that receives events forwarded by the Cloudflare Worker, checks the shared secret, stores event ids for deduplication, and enqueues jobs. Add a clear handler skeleton with tests. No business logic yet.
+6. Retention: a scheduled job that removes media references older than 30 days and archives message bodies older than 90 days, keeping summaries.
+7. Monitoring: a daily job that records database size and writes a warning row above 350 MB, and a small admin dashboard card that shows it.
+8. Backups: a GitHub Actions workflow that runs pg_dump nightly using a read-only connection string stored as a repository secret, encrypts the dump, and uploads it to private storage. Document how to restore it, and include a restore test.
+9. Keep-alive: a scheduled GitHub Action that calls a health endpoint daily so the free project is not paused.
+10. Generate TypeScript types and a typed client in packages/db. Connect the admin Category editor and the web request form to the database behind a feature flag, keeping mock data as a fallback for local development.
+11. Update .env.example and DEPLOY.md, including the upgrade triggers: the first real escrow hold means upgrading to Supabase Pro for daily backups and no pausing.
+```
+
+**Checks:** create and publish a category in admin and see it in the web app. Run the backup workflow once and restore it into a scratch project.
+
+## What to watch after launch
+
+- Database size, Worker requests per day, Edge Function invocations, and egress, in one weekly report.
+- Upgrade Supabase to Pro at the first real escrow hold.
+- Re-check free-tier limits and terms every quarter.
+
+## Phase 2 prompts (16 to 21): chat, push, plans, usage and cost
+
+Run these **after Prompt 15** (Supabase). WhatsApp stays **mocked** until your WhatsApp API account is ready, so nothing here can send a real WhatsApp message or cost money. All prices and limits are placeholders that the admin can change (they live in configuration, not code).
+
+## Prompt 16: Conversation store and in-app chat
+
+```
+Build the shared conversation store and the enhanced in-app chat in apps/web, using Supabase (Prompt 15) with the mock fallback.
+
+Database (migrations with RLS): threads (id, request_id, buyer_id, vendor_id, status), messages (id, thread_id, sender_role: buyer|vendor|agent|system|admin, channel: app|whatsapp|web_link, body, media jsonb, filtered boolean, delivered_at, read_at, created_at), saved_replies (user_id, text), message_budgets (request_id, relayed_count, ai_suggestion_count). Users can read only the threads they belong to.
+
+Chat UI under /app/chat: a thread list per request with unread badges; a thread view with message bubbles, delivery and read ticks, photo attachments (JPEG, PNG or WebP only, max 3 MB each, compressed on the device, max 5 per thread), saved quick replies, a typing indicator, a 'Compare quotes' side-by-side view for the vendors in one request, and a note 'Contact details are shared after booking'. Use Supabase Realtime for live updates, with a polling fallback.
+
+Channel adapter interface in packages/channels: ChannelAdapter { send(message, context), supportsRelay }. Implement AppAdapter now, and a WhatsAppAdapter STUB that writes an outbox row instead of sending. Every outbound relayed message must go through checkEntitlement (Prompt 18) before it is sent.
+
+Anti-leakage v1: a pure function maskContactDetails(text) that detects Nigerian phone formats (+234, 0803, 0701 and similar, with spaces, dots or dashes), emails, links, social handles, and phrases like 'call me' and 'DM me'. It returns the masked text and a flag. Show a friendly notice when masking happens. Add at least 25 test cases, including obfuscations such as 'o8o3' and digits spelled out in words.
+
+Add a development-only simulated vendor that replies after short delays, so the chat can be demonstrated without WhatsApp.
+
+Run lint, typecheck and tests.
+```
+
+**Checks:** open two browser windows (buyer and simulated vendor) and chat. Paste a phone number into a message and confirm it is masked.
+
+## Prompt 17: Web push notifications (no Firebase)
+
+```
+Add web push notifications to apps/web with a PushProvider interface (packages/channels) and a self-hosted VAPID implementation. Do not use Firebase.
+
+- Generate VAPID keys (document how; keep them in environment variables and never commit them). Table push_subscriptions (user_id, endpoint, keys, device_label, created_at, last_success_at, failed_count). RLS: users manage only their own rows.
+- Service worker: handle push and notificationclick (open the right in-app URL). Notification text must be generic (for example 'You have a new quote'), never names, prices, phone numbers or addresses.
+- UI: a 'Turn on notifications' button in Account, and a gentle prompt shown only after the user creates their first request. Never ask on first load. On iPhone Safari, explain that notifications need the app added to the Home Screen and then enabled from the Home Screen icon. On Android use the standard flow. Show clear states: not supported, blocked, enabled.
+- Sender: a Supabase Edge Function send-push that uses a Deno-compatible Web Push library (explain the choice), removes subscriptions that return 404 or 410, and records failures.
+- Notification centre in the app: a list with read state, stored in a notifications table. Push is only a delivery channel for the same record.
+- Email fallback for important events (quotes ready, booking confirmed) using a provider with a free tier (explain the choice and keep it behind an interface).
+- User notification preferences: channels per event type, and quiet hours (default 21:00 to 07:00).
+- Tests for payload building, subscription cleanup and preference rules.
+```
+
+**Checks:** on an Android phone, install the PWA, enable notifications, and trigger a test push with the app closed. On an iPhone (iOS 16.4 or newer), add to Home Screen, open from the icon, and enable.
+
+## Prompt 18: Plans, entitlements and the usage ledger
+
+```
+Build plans, entitlements and the usage ledger (packages/core and migrations).
+
+Tables: plans, plan_versions (price_minor, period_days, limits jsonb, features jsonb), subscriptions (user_id, plan_id, version, starts_at, ends_at, status), credit_wallets, credit_transactions, and usage_events (user_id, request_id, type: ai_tokens|wa_service|wa_utility|wa_template|sms|stt|places|push|email, units, est_cost_minor, created_at), plus a settings table for unit costs.
+
+Seed plans as configuration, not code:
+- buyer_free: 2 requests per month, 4 vendors per request, about 30 relayed messages, about 10 AI suggestions, 1 standing alert, WhatsApp off.
+- buyer_starter (placeholder price 300000 kobo per 30 days): 6 requests, 8 vendors per request, about 150 relayed messages, about 60 AI suggestions, 3 standing alerts, WhatsApp on, booking fee waived.
+- vendor_free: about 20 WhatsApp lead alerts per month, about 60 chat messages, earn 10 more lead alerts for each completed platform-paid booking, digest and push as fallback.
+- vendor_pro (disabled for now): unlimited lead alerts, verified badge, tools.
+
+Pure, tested functions: getActivePlan(user), checkEntitlement(user, action, context) returning allow, warn_at_80 or block with a plain-language reason and a suggested next step, recordUsage(event), getUsageSummary(user), applyEarnedCredits(vendor, booking), and estimateCost(event) using unit costs read from the settings table, so the WhatsApp price per message is editable and never hard-coded.
+
+In the app: a 'Your plan' screen that shows remaining requests, vendors per request and messages in plain language (never tokens or technical units), a warning at 80%, a clear block message at 100% with 'Top up' and 'Get Starter' buttons, and a purchase flow for prepaid passes and credit packs that currently completes with a mock payment (Paystack is added later).
+
+Every costly action in the code must call checkEntitlement first: starting a request, contacting vendors, relaying a message, requesting an AI suggestion, and sending a WhatsApp message.
+
+Write thorough tests, including exactly 80% and 100% limits, expired passes, and concurrent usage.
+```
+
+**Checks:** use up the free allowance in a test account and confirm the warning and the block messages read clearly.
+
+## Prompt 19: Notification router and vendor lead rules
+
+```
+Build the notification router and vendor lead delivery rules in packages/core.
+
+- Event priorities: critical (booking confirmed, payment issue), high (quotes ready, vendor replied), normal (reminders), low (tips).
+- routeNotification(event, user, context) chooses channels in this order: in-app, push, email, WhatsApp (only if the user's plan enables it and the budget allows), SMS (critical only, and only if allowed). Use cheaper channels first and escalate only if the event is still unread after a delay that depends on priority. Respect quiet hours and user preferences. Record every send in usage_events.
+- Vendor lead delivery: scoreVendorResponsiveness (response rate over the last 10 leads and median reply time). Throttle rules: a vendor who ignores 3 leads in a row moves to a digest plus push only until they respond; batch several leads into one message or a daily digest; never exceed the vendor's monthly lead allowance; apply a per-request message budget.
+- A DeliveryPlan object that explains in plain language why each channel was chosen or skipped (shown in the admin console).
+- Tests for routing, throttling, batching and quiet hours.
+```
+
+## Prompt 20: Admin pages for Plans, Usage and Cost
+
+```
+Add three sections to apps/admin using the Supabase data and the mock fallback.
+
+1. Plans: list plans, edit a plan with versioning (price, period, limits, features), preview what a user on that plan can do, publish with a change note, and roll back. Validate with Zod. Changing a plan must never affect the active period of existing subscribers.
+2. Usage: search a user and see their plan, remaining allowances, usage events and cost to date, with filters by type and date. Add a button to grant a one-off credit with a required reason, written to audit_log.
+3. Cost: a dashboard with estimated cost by day and by type (AI, WhatsApp, SMS, speech-to-text, maps), cost per request, cost per booking, the top 20 users by cost, vendors over their allowance, and a configurable alert threshold (for example when daily cost exceeds a set amount or a single user exceeds a set cost). Include a settings page for unit costs (WhatsApp price per message, AI cost per request, SMS price) so estimates can be corrected when prices change.
+
+Charts must be accessible and use the brand tokens. Only super admin and operations roles can edit plans and unit costs.
+```
+
+## Prompt 21: Plans section on the landing page
+
+```
+Add a Plans section to the landing page and a /plans page.
+
+Content: Free and Starter for buyers, and 'Free for vendors' with a short note about lead alerts. Explain in plain English what 'WhatsApp chat' means (messages and alerts on WhatsApp) and what the free in-app chat includes. Read prices from the plan configuration. Add a short FAQ: Why does WhatsApp cost extra? What happens when I reach my limit? Can I buy extra? What does 'hold' mean?
+
+Update the WhatsApp FAQ answer to: 'Message us on WhatsApp and we will send you a link to continue in the app. WhatsApp chat is part of Starter.'
+
+Keep the design consistent with the design system and keep Lighthouse scores at 90 or more.
+```
+
+## Suggested order and what to do while WhatsApp is not ready
+
+1. Run 18 first (plans and usage), because everything else checks it.
+2. Then 16 (chat), 17 (push), 19 (router), 20 (admin), and 21 (landing).
+3. Keep the WhatsApp adapter as a stub. When your WhatsApp API account is ready, the next prompt connects the real adapter, behind the same entitlement checks.

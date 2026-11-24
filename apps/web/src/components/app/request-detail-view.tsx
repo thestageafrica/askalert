@@ -7,6 +7,7 @@ import { Badge, Button, Skeleton, cn } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { CheckoutSheet } from './checkout-sheet';
 import { useMockStore } from '../../lib/app/mock-store';
+import { usePlanStore } from '../../lib/app/plan-store';
 import type { Quote, RequestStatus } from '../../lib/app/types';
 
 const timeline: Array<{ id: RequestStatus; label: string }> = [
@@ -16,16 +17,25 @@ const timeline: Array<{ id: RequestStatus; label: string }> = [
   { id: 'booked', label: 'Booked' },
 ];
 
+const AI_TIPS = [
+  'Pick the recommended host if dates and budget already fit.',
+  'Ask about early check-in before you book — many Lekki hosts can flex.',
+  'Compare rating and reason together, not price alone.',
+];
+
 function statusIndex(status: RequestStatus) {
   return timeline.findIndex((item) => item.id === status);
 }
 
 export function RequestDetailView({ requestId }: { requestId: string }) {
   const { getRequest } = useMockStore();
+  const { consume } = usePlanStore();
   const request = getRequest(requestId);
   const [compare, setCompare] = useState(false);
   const [selected, setSelected] = useState<Quote | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [aiTip, setAiTip] = useState<string | null>(null);
+  const [planNotice, setPlanNotice] = useState<string | null>(null);
 
   const sortedQuotes = useMemo(() => {
     if (!request) {
@@ -81,6 +91,63 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
 
       <div className="space-y-5 px-4 pt-5">
         <Timeline status={request.status} />
+
+        {planNotice ? (
+          <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm font-medium text-navy-950">
+            {planNotice}{' '}
+            <Link href="/app/plan" className="font-bold underline">
+              Your plan
+            </Link>
+          </p>
+        ) : null}
+
+        {aiTip ? (
+          <p className="rounded-2xl border border-border/70 bg-card px-3 py-3 text-sm text-foreground">
+            <span className="font-bold text-navy-950">AI tip: </span>
+            {aiTip}
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-11"
+            onClick={() => {
+              const entitlement = consume('ai_suggestion');
+              if (entitlement.blocked && entitlement.decision.outcome === 'block') {
+                setPlanNotice(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+                return;
+              }
+              if (entitlement.decision.outcome === 'warn_at_80') {
+                setPlanNotice(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+              } else {
+                setPlanNotice(null);
+              }
+              const hash = request.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+              const current = aiTip ? AI_TIPS.indexOf(aiTip) : -1;
+              const next = (current >= 0 ? current + 1 : hash) % AI_TIPS.length;
+              setAiTip(AI_TIPS[next] ?? AI_TIPS[0]!);
+            }}
+          >
+            Get AI tip
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11"
+            onClick={() => {
+              const entitlement = consume('send_whatsapp');
+              if (entitlement.blocked && entitlement.decision.outcome === 'block') {
+                setPlanNotice(`${entitlement.decision.reason} ${entitlement.decision.nextStep}`);
+                return;
+              }
+              setPlanNotice('WhatsApp chat is unlocked on your plan. Keep using in-app chat for now.');
+            }}
+          >
+            Continue on WhatsApp
+          </Button>
+        </div>
 
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-bold text-foreground">Quotes</h2>

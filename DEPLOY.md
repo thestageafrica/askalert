@@ -22,6 +22,7 @@ Set these on each Pages project (Production + Preview):
 | `NEXT_PUBLIC_USE_SUPABASE` | `false` | `true` only after Supabase is seeded. |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://….supabase.co` | Required when Supabase is on. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `…` | Public anon key (RLS-protected). |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `B…` | Public half of VAPID pair for web push. |
 
 ### Admin (`admin.askalert.com`)
 
@@ -100,8 +101,27 @@ Enable Dashboard extensions if a migration notices them missing: **pgmq**, **pg_
 ```powershell
 npx supabase functions deploy ingest-webhook
 npx supabase functions deploy process-jobs
+npx supabase functions deploy send-push
 npx supabase secrets set WEBHOOK_SHARED_SECRET=… CRON_SHARED_SECRET=…
 ```
+
+### Web push (Prompt 17)
+
+Generate VAPID keys locally (do not commit them):
+
+```powershell
+npx --yes web-push generate-vapid-keys
+```
+
+Set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` on Cloudflare Pages (web). Set Edge secrets:
+
+```powershell
+npx supabase secrets set VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=… VAPID_SUBJECT=mailto:ops@askalert.com
+```
+
+`send-push` uses the npm `web-push` library (via esm.sh) because it speaks the standard VAPID Web Push protocol without Firebase. Gone subscriptions (HTTP 404/410) are deleted; other failures increment `failed_count`.
+
+Email fallback for important events (`quotes_ready`, `booking_confirmed`) uses a **Resend** interface (`ResendEmailProvider`) — free tier, secret `RESEND_API_KEY` only on Edge.
 
 Point the Worker `SUPABASE_FUNCTION_URL` at:
 

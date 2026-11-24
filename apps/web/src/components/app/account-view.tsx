@@ -1,11 +1,49 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Button, Input, cn } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { useMockStore } from '../../lib/app/mock-store';
+import { useNotificationsStore } from '../../lib/app/notifications-store';
+import {
+  getPushPermissionState,
+  pushStateLabel,
+  subscribeToPush,
+  type PushPermissionState,
+} from '../../lib/app/push-client';
 
 export function AccountView() {
   const { account, updateAccount } = useMockStore();
+  const { unreadCount } = useNotificationsStore();
+  const [pushState, setPushState] = useState<PushPermissionState>('default');
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPushState(getPushPermissionState());
+  }, []);
+
+  const enablePush = async () => {
+    setPushBusy(true);
+    setPushMessage(null);
+    const result = await subscribeToPush();
+    setPushBusy(false);
+    if (result.ok) {
+      setPushState('enabled');
+      setPushMessage('Notifications are on for this device.');
+      return;
+    }
+    setPushState(result.state);
+    if (result.state === 'ios_needs_homescreen') {
+      setPushMessage(
+        'On iPhone, add AskAlert to Home Screen, open it from that icon, then try again.',
+      );
+    } else if (result.state === 'blocked') {
+      setPushMessage('Notifications are blocked in browser settings.');
+    } else if (result.state === 'unsupported') {
+      setPushMessage('Push is not supported on this browser.');
+    }
+  };
 
   return (
     <div>
@@ -27,7 +65,32 @@ export function AccountView() {
         </section>
 
         <section className="rounded-[1.5rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
-          <h2 className="text-sm font-bold text-foreground">Notifications</h2>
+          <h2 className="text-sm font-bold text-foreground">Push notifications</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Status: {pushStateLabel(pushState)}. Quiet hours default to 9pm–7am.
+          </p>
+          {pushMessage ? (
+            <p className="mt-2 text-sm font-medium text-navy-950">{pushMessage}</p>
+          ) : null}
+          <Button
+            type="button"
+            className="mt-4 w-full min-h-11"
+            disabled={pushBusy || pushState === 'enabled' || pushState === 'unsupported'}
+            onClick={() => void enablePush()}
+          >
+            {pushState === 'enabled'
+              ? 'Notifications enabled'
+              : pushBusy
+                ? 'Enabling…'
+                : 'Turn on notifications'}
+          </Button>
+          <Button href="/app/notifications" variant="secondary" className="mt-2 w-full min-h-11">
+            Notification centre{unreadCount > 0 ? ` (${unreadCount})` : ''}
+          </Button>
+        </section>
+
+        <section className="rounded-[1.5rem] border border-border/60 bg-card p-4 shadow-[0_10px_24px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
+          <h2 className="text-sm font-bold text-foreground">Notification preferences</h2>
           <div className="mt-3 space-y-1">
             {(
               [

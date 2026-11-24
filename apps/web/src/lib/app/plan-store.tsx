@@ -16,29 +16,56 @@ import {
   getPlanById,
   recordUsage,
   DEFAULT_UNIT_COSTS,
+  MOCK_CREDIT_PACK_MINOR,
   type EntitlementAction,
   type EntitlementDecision,
+  type PurchaseKind,
   type UserPlanState,
 } from '@askalert/core';
+
+type ConsumeResult = {
+  decision: EntitlementDecision;
+  blocked: boolean;
+};
 
 type PlanStore = {
   state: UserPlanState;
   planName: string;
+  walletBalanceMinor: number;
+  creditPackMinor: number;
   check: (action: EntitlementAction, vendorsOnRequest?: number) => EntitlementDecision;
-  consume: (
-    action: EntitlementAction,
-    vendorsOnRequest?: number,
-  ) => { decision: EntitlementDecision; blocked: boolean };
+  consume: (action: EntitlementAction, vendorsOnRequest?: number) => ConsumeResult;
   buyStarter: () => void;
   buyCreditPack: () => void;
+  completePurchase: (kind: PurchaseKind) => void;
 };
 
 const PlanStoreContext = createContext<PlanStore | null>(null);
+
+function usageTypeFor(action: EntitlementAction) {
+  switch (action) {
+    case 'start_request':
+      return 'request' as const;
+    case 'contact_vendors':
+      return 'vendor_contact' as const;
+    case 'relay_message':
+      return 'relay_message' as const;
+    case 'ai_suggestion':
+      return 'ai_suggestion' as const;
+    case 'send_whatsapp':
+      return 'wa_service' as const;
+    default: {
+      const _exhaustive: never = action;
+      return _exhaustive;
+    }
+  }
+}
 
 export function PlanStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<UserPlanState>(() =>
     createFreeSubscription({ userId: 'demo-buyer', audience: 'buyer' }),
   );
+  const [walletBalanceMinor, setWalletBalanceMinor] = useState(0);
 
   const plan = getActivePlan(state) ?? getPlanById(state.planId);
   const planName = plan?.name ?? 'Free';
@@ -50,24 +77,14 @@ export function PlanStoreProvider({ children }: { children: ReactNode }) {
   );
 
   const consume = useCallback(
-    (action: EntitlementAction, vendorsOnRequest?: number) => {
+    (action: EntitlementAction, vendorsOnRequest?: number): ConsumeResult => {
       const decision = checkEntitlement(state, action, { vendorsOnRequest });
       if (decision.outcome === 'block') {
         return { decision, blocked: true };
       }
-      const usageType =
-        action === 'start_request'
-          ? 'request'
-          : action === 'contact_vendors'
-            ? 'vendor_contact'
-            : action === 'relay_message'
-              ? 'relay_message'
-              : action === 'ai_suggestion'
-                ? 'ai_suggestion'
-                : 'wa_service';
       const { state: next } = recordUsage({
         state,
-        type: usageType,
+        type: usageTypeFor(action),
         settings: DEFAULT_UNIT_COSTS,
       });
       setState(next);
@@ -76,17 +93,51 @@ export function PlanStoreProvider({ children }: { children: ReactNode }) {
     [state],
   );
 
-  const buyStarter = useCallback(() => {
-    setState((current) => completeMockPurchase({ state: current, kind: 'starter_pass' }));
+  const completePurchase = useCallback((kind: PurchaseKind) => {
+    setState((current) => {
+      const result = completeMockPurchase({
+        state: current,
+        kind,
+        creditPackMinor: MOCK_CREDIT_PACK_MINOR,
+        walletBalanceMinor: 0,
+      });
+      return result.state;
+    });
+    if (kind === 'credit_pack') {
+      setWalletBalanceMinor((balance) => balance + MOCK_CREDIT_PACK_MINOR);
+    }
   }, []);
+
+  const buyStarter = useCallback(() => {
+    completePurchase('starter_pass');
+  }, [completePurchase]);
 
   const buyCreditPack = useCallback(() => {
-    setState((current) => completeMockPurchase({ state: current, kind: 'credit_pack' }));
-  }, []);
+    completePurchase('credit_pack');
+  }, [completePurchase]);
 
   const value = useMemo(
-    () => ({ state, planName, check, consume, buyStarter, buyCreditPack }),
-    [state, planName, check, consume, buyStarter, buyCreditPack],
+    () => ({
+      state,
+      planName,
+      walletBalanceMinor,
+      creditPackMinor: MOCK_CREDIT_PACK_MINOR,
+      check,
+      consume,
+      buyStarter,
+      buyCreditPack,
+      completePurchase,
+    }),
+    [
+      state,
+      planName,
+      walletBalanceMinor,
+      check,
+      consume,
+      buyStarter,
+      buyCreditPack,
+      completePurchase,
+    ],
   );
 
   return <PlanStoreContext.Provider value={value}>{children}</PlanStoreContext.Provider>;

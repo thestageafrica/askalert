@@ -4,3 +4,4 @@
 /app/request/*/success/ /app/request/req_shortlet_01/success/index.html 200
 /app/request/*/ /app/request/req_shortlet_01/index.html 200
 /app/chat/*/ /app/chat/chat_shortlet_01/index.html 200
+/app/notifications/ /app/notifications/index.html 200

@@ -17,7 +17,7 @@ describe('plans catalogue', () => {
 
   it('completes a mock Starter purchase and resets usage', () => {
     const free = createFreeSubscription({ userId: 'u1', audience: 'buyer', now });
-    const upgraded = completeMockPurchase({
+    const { state: upgraded } = completeMockPurchase({
       state: {
         ...free,
         usage: { ...free.usage, requests: 2 },
@@ -28,5 +28,18 @@ describe('plans catalogue', () => {
     expect(upgraded.planId).toContain('starter');
     expect(upgraded.usage.requests).toBe(0);
     expect(getActivePlan(upgraded, now)?.slug).toBe('buyer_starter');
+  });
+
+  it('adds credit pack balance without changing the plan', () => {
+    const free = createFreeSubscription({ userId: 'u1', audience: 'buyer', now });
+    const { state, walletBalanceMinor } = completeMockPurchase({
+      state: free,
+      kind: 'credit_pack',
+      creditPackMinor: 100_000,
+      walletBalanceMinor: 50_000,
+      now,
+    });
+    expect(state.planId).toBe(free.planId);
+    expect(walletBalanceMinor).toBe(150_000);
   });
 });

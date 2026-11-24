@@ -13,11 +13,22 @@ export type Quote = {
   recommended?: boolean;
 };
 
+export type ChatMedia = {
+  id: string;
+  mime: 'image/jpeg' | 'image/png' | 'image/webp';
+  url: string;
+  bytes: number;
+};
+
 export type ChatMessage = {
   id: string;
   from: 'buyer' | 'vendor' | 'system' | 'agent';
   text: string;
   at: string;
+  filtered?: boolean;
+  deliveredAt?: string;
+  readAt?: string;
+  media?: ChatMedia[];
 };
 
 export type AppRequest = {
@@ -39,6 +50,8 @@ export type ChatThread = {
   vendorAlias: string;
   missionTag: string;
   agentInControl: boolean;
+  unreadCount: number;
+  typing?: boolean;
   messages: ChatMessage[];
 };
 
@@ -48,4 +61,5 @@ export type AccountSettings = {
   notifyChat: boolean;
   notifyMarketing: boolean;
   language: 'en' | 'pidgin';
+  savedReplies: string[];
 };

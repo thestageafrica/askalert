@@ -80,4 +80,54 @@ describe('checkEntitlement', () => {
     });
     expect(decision.outcome).toBe('block');
   });
+
+  it('warns at exactly 80% of AI suggestions (10 → used 7 + 1 = 8 → 80%)', () => {
+    const state = withUsageAt(
+      createFreeSubscription({ userId: 'u1', audience: 'buyer', now }),
+      { aiSuggestions: 7 },
+    );
+    const decision = checkEntitlement(state, 'ai_suggestion', { now });
+    expect(decision.outcome).toBe('warn_at_80');
+    if (decision.outcome === 'warn_at_80') {
+      expect(decision.limit).toBe(10);
+      expect(decision.remaining).toBe(2);
+    }
+  });
+
+  it('blocks at 100% of AI suggestions', () => {
+    const state = withUsageAt(
+      createFreeSubscription({ userId: 'u1', audience: 'buyer', now }),
+      { aiSuggestions: 10 },
+    );
+    const decision = checkEntitlement(state, 'ai_suggestion', { now });
+    expect(decision.outcome).toBe('block');
+  });
+
+  it('allows WhatsApp on buyer starter', () => {
+    const free = createFreeSubscription({ userId: 'u1', audience: 'buyer', now });
+    const state = {
+      ...free,
+      planId: 'plan_buyer_starter',
+    };
+    const decision = checkEntitlement(state, 'send_whatsapp', { now });
+    expect(decision.outcome).toBe('allow');
+  });
+
+  it('allows contact_vendors under the free limit', () => {
+    const state = createFreeSubscription({ userId: 'u1', audience: 'buyer', now });
+    const decision = checkEntitlement(state, 'contact_vendors', {
+      now,
+      vendorsOnRequest: 2,
+    });
+    expect(decision.outcome).toBe('allow');
+  });
+
+  it('warns when the last free vendor slot is used (3 + 1 = 4 of 4)', () => {
+    const state = createFreeSubscription({ userId: 'u1', audience: 'buyer', now });
+    const decision = checkEntitlement(state, 'contact_vendors', {
+      now,
+      vendorsOnRequest: 3,
+    });
+    expect(decision.outcome).toBe('warn_at_80');
+  });
 });
