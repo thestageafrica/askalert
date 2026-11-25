@@ -109,9 +109,11 @@ Deno.serve(async (request) => {
 
   let sent = 0;
   for (const mail of mails) {
+    // Never ship the local send-test prefix in production subjects.
+    const subject = mail.subject.replace(/^\[AskAlert test\]\s*/i, '').trim() || mail.subject;
     const result = await mailer.send({
       to: mail.to,
-      subject: mail.subject,
+      subject,
       html: mail.html,
       text: mail.text,
       idempotencyKey: mail.idempotencyKey,

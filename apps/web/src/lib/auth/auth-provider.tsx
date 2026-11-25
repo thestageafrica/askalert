@@ -53,6 +53,8 @@ type AuthContextValue = {
   }) => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
+  /** Save WhatsApp phone on the profile (used after Google signup). */
+  completePhone: (phone: string) => Promise<{ error: string | null }>;
   signOut: (everywhere?: boolean) => Promise<void>;
   setLastMode: (mode: AppMode) => Promise<void>;
   requestDeletion: () => Promise<{ error: string | null }>;
@@ -275,12 +277,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { error: error.message };
         }
         const userId = data.user?.id;
-        if (userId) {
-          await client.from('profiles').upsert({
-            id: userId,
-            display_name: displayName,
-            phone_e164: phoneE164,
-          });
+        // Profile row is created by handle_new_user from user_metadata (phone_e164).
+        // Client upsert often has no session yet (email confirm on), so do not rely on it.
+        // If a session exists (confirmations off), refresh phone/name on the profile.
+        if (userId && data.session) {
+          await client
+            .from('profiles')
+            .update({
+              display_name: displayName,
+              phone_e164: phoneE164,
+            })
+            .eq('id', userId);
           const rows = buildConsentRows(consents).map((row) => ({
             ...row,
             user_id: userId,
@@ -306,6 +313,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const { error } = await client.auth.updateUser({ password });
         return { error: error?.message ?? null };
+      },
+      async completePhone(phone) {
+        if (!client) {
+          return fail('Supabase is not configured yet.');
+        }
+        if (!session?.user.id) {
+          return fail('Sign in first, then add your phone.');
+        }
+        const phoneE164 = toE164Phone(phone);
+        if (!phoneE164) {
+          return fail('Enter a valid Nigerian phone number.');
+        }
+        const { error: profileError } = await client
+          .from('profiles')
+          .update({ phone_e164: phoneE164 })
+          .eq('id', session.user.id);
+        if (profileError) {
+          return { error: profileError.message };
+        }
+        await client.auth.updateUser({
+          data: { phone_e164: phoneE164 },
+        });
+        await refreshAccount();
+        return { error: null };
       },
       async signOut(everywhere = false) {
         if (!client) {

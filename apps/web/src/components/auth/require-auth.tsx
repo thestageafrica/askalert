@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth/auth-provider';
 
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { ready, user, supabaseConfigured } = useAuth();
+  const { ready, user, profile, supabaseConfigured } = useAuth();
   const router = useRouter();
   const pathname = usePathname() || '/app/';
 
@@ -19,8 +19,13 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     if (!user) {
       const next = encodeURIComponent(pathname);
       router.replace(`/auth/sign-in/?next=${next}`);
+      return;
     }
-  }, [pathname, ready, router, supabaseConfigured, user]);
+    // Google (and any OAuth) signup skips the phone field — collect it before /app.
+    if (profile && !profile.phoneE164) {
+      router.replace('/auth/complete-profile/');
+    }
+  }, [pathname, profile, ready, router, supabaseConfigured, user]);
 
   if (!ready) {
     return (
@@ -31,6 +36,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   if (supabaseConfigured && !user) {
+    return null;
+  }
+
+  if (supabaseConfigured && profile && !profile.phoneE164) {
     return null;
   }
 
