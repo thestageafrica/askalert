@@ -7,6 +7,7 @@
 - Vendor profile/role is added later through onboarding (Prompt 26).
 - Mode is the URL: `/app` (buyer) and `/vendor` (vendor).
 - Phone is stored on `public.profiles.phone_e164` (and `user_metadata.phone_e164`), **not** on `auth.users.phone` (that column is for Supabase SMS OTP).
+- Each active phone number may belong to **one** AskAlert account only (`profiles_phone_e164_unique` + `is_phone_taken` RPC checked on signup and complete-profile).
 - Email/password signup collects phone on the form. Google OAuth does not — after Google, the app sends the user to `/auth/complete-profile/` to add WhatsApp before `/app`.
 - Signing up again with an email that already exists (e.g. after Google) is `user_repeated_signup`: Auth returns 200 and **does not** send another confirmation email. Use a new inbox, or sign in / magic link / reset instead.
 

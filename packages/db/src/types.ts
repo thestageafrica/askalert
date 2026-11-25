@@ -705,6 +705,10 @@ export type Database = {
         Args: { retention_note?: string };
         Returns: undefined;
       };
+      is_phone_taken: {
+        Args: { p_phone: string; p_except_user_id?: string | null };
+        Returns: boolean;
+      };
       enqueue_job: {
         Args: { p_payload: Json };
         Returns: number | null;

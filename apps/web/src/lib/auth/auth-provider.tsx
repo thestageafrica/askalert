@@ -17,7 +17,7 @@ import {
   type UserRoleRecord,
 } from '@askalert/db';
 import { authClient, authRedirectTo } from './supabase-auth';
-import { toE164Phone } from './phone';
+import { PHONE_TAKEN_MESSAGE, phoneUniqueErrorMessage, toE164Phone } from './phone';
 
 export type AccountProfile = {
   id: string;
@@ -262,6 +262,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!phoneE164) {
           return fail('Enter a valid Nigerian phone number.');
         }
+        const { data: phoneTaken, error: phoneCheckError } = await client.rpc('is_phone_taken', {
+          p_phone: phoneE164,
+          p_except_user_id: null,
+        });
+        if (phoneCheckError) {
+          return fail(phoneCheckError.message);
+        }
+        if (phoneTaken) {
+          return fail(PHONE_TAKEN_MESSAGE);
+        }
         const { data, error } = await client.auth.signUp({
           email,
           password,
@@ -274,7 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         if (error) {
-          return { error: error.message };
+          return { error: phoneUniqueErrorMessage(error.message) ?? error.message };
         }
         const userId = data.user?.id;
         // Profile row is created by handle_new_user from user_metadata (phone_e164).
@@ -325,12 +335,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!phoneE164) {
           return fail('Enter a valid Nigerian phone number.');
         }
+        const { data: phoneTaken, error: phoneCheckError } = await client.rpc('is_phone_taken', {
+          p_phone: phoneE164,
+          p_except_user_id: session.user.id,
+        });
+        if (phoneCheckError) {
+          return fail(phoneCheckError.message);
+        }
+        if (phoneTaken) {
+          return fail(PHONE_TAKEN_MESSAGE);
+        }
         const { error: profileError } = await client
           .from('profiles')
           .update({ phone_e164: phoneE164 })
           .eq('id', session.user.id);
         if (profileError) {
-          return { error: profileError.message };
+          return { error: phoneUniqueErrorMessage(profileError.message) ?? profileError.message };
         }
         await client.auth.updateUser({
           data: { phone_e164: phoneE164 },

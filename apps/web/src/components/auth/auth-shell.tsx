@@ -45,6 +45,9 @@ export function AuthShell({
   if (showFullIntro) {
     return (
       <div className="relative min-h-screen bg-navy-950">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
+          <Logo variant="reversed" className="h-10 w-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]" />
+        </div>
         <StorySlideshow className="min-h-screen" />
         <div className="absolute inset-x-0 bottom-0 z-20 flex gap-3 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
