@@ -40,6 +40,10 @@ type AuthContextValue = {
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithMagicLink: (email: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  resendAuthEmail: (input: {
+    email: string;
+    kind: 'signup' | 'magiclink' | 'recovery';
+  }) => Promise<{ error: string | null }>;
   signUp: (input: {
     email: string;
     password: string;
@@ -184,9 +188,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!client) {
           return fail('Supabase is not configured yet.');
         }
-        const { error } = await client.auth.signInWithOAuth({
+        const { data, error } = await client.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: authRedirectTo('/auth/callback/') },
+          options: {
+            redirectTo: authRedirectTo('/auth/callback/'),
+            // Force a fresh account picker; helps when Google hangs on a stale session.
+            queryParams: { prompt: 'select_account', access_type: 'online' },
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) {
+          return { error: error.message };
+        }
+        if (!data.url) {
+          return fail('Google sign-in did not return a redirect URL. Check the Google provider in Supabase.');
+        }
+        window.location.assign(data.url);
+        return { error: null };
+      },
+      async resendAuthEmail(input: {
+        email: string;
+        kind: 'signup' | 'magiclink' | 'recovery';
+      }) {
+        if (!client) {
+          return fail('Supabase is not configured yet.');
+        }
+        const email = input.email.trim();
+        if (!email) {
+          return fail('Enter your email first.');
+        }
+        if (input.kind === 'signup') {
+          const { error } = await client.auth.resend({
+            type: 'signup',
+            email,
+            options: { emailRedirectTo: authRedirectTo('/auth/callback/') },
+          });
+          return { error: error?.message ?? null };
+        }
+        if (input.kind === 'recovery') {
+          const { error } = await client.auth.resetPasswordForEmail(email, {
+            redirectTo: authRedirectTo('/auth/reset-password/'),
+          });
+          return { error: error?.message ?? null };
+        }
+        const { error } = await client.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: authRedirectTo('/auth/callback/') },
         });
         return { error: error?.message ?? null };
       },

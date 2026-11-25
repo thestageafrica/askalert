@@ -11,6 +11,8 @@ type SharedProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  /** Shown next to the spinner while loading. Defaults to the children. */
+  loadingText?: string;
   className?: string;
 };
 
@@ -66,10 +68,24 @@ function buttonClassName({
     'transition duration-200 ease-out',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
     'focus-visible:ring-offset-background',
-    disabled ? 'pointer-events-none cursor-not-allowed opacity-60' : null,
+    disabled ? 'pointer-events-none cursor-not-allowed opacity-70' : null,
     sizeClasses[size],
     variantClasses[variant],
     className,
+  );
+}
+
+function LoadingSpinner({ variant }: { variant: ButtonVariant }) {
+  return (
+    <span
+      className={cn(
+        'inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-r-transparent',
+        variant === 'primary'
+          ? 'border-navy-900/25 border-t-navy-900'
+          : 'border-current/25 border-t-current',
+      )}
+      aria-hidden
+    />
   );
 }
 
@@ -80,22 +96,20 @@ export function Button(props: ButtonProps) {
     variant = 'primary',
     size = 'md',
     loading = false,
+    loadingText,
     disabled,
     ...rest
   } = props;
   const isDisabled = Boolean(disabled || loading);
   const classes = buttonClassName({ className, variant, size, disabled: isDisabled });
 
-  const content = (
+  const content = loading ? (
     <>
-      {loading ? (
-        <span
-          className="inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent"
-          aria-hidden
-        />
-      ) : null}
-      {children}
+      <LoadingSpinner variant={variant} />
+      <span className="opacity-90">{loadingText ?? children}</span>
     </>
+  ) : (
+    children
   );
 
   if ('href' in props && props.href) {

@@ -40,7 +40,13 @@ export default function ForgotPasswordPage() {
         <Button
           className="w-full"
           loading={loading}
+          loadingText="Sending link…"
           onClick={() => {
+            setError(null);
+            if (!email.trim()) {
+              setError('Enter your email.');
+              return;
+            }
             setLoading(true);
             void resetPassword(email.trim()).then((result) => {
               setLoading(false);
@@ -48,7 +54,9 @@ export default function ForgotPasswordPage() {
                 setError(result.error);
                 return;
               }
-              router.push(`/auth/check-email/?email=${encodeURIComponent(email.trim())}&reason=reset`);
+              router.push(
+                `/auth/check-email/?email=${encodeURIComponent(email.trim())}&reason=reset`,
+              );
             });
           }}
         >

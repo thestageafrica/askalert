@@ -9,10 +9,13 @@ import {
 } from '@askalert/db';
 import { Button, Input } from '@askalert/ui';
 import { AuthShell } from '../../../components/auth/auth-shell';
+import { GoogleGlyph, MailGlyph } from '../../../components/auth/auth-icons';
 import { PasswordField } from '../../../components/auth/password-field';
 import { useAuth } from '../../../lib/auth/auth-provider';
 
 const ATTEMPTS_KEY = 'askalert.auth.signin.attempts';
+
+type Busy = 'password' | 'magic' | 'google' | null;
 
 function readAttempts(): number[] {
   if (typeof window === 'undefined') {
@@ -34,7 +37,7 @@ function SignInForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState<Busy>(null);
 
   const recordAttempt = () => {
     const nextAttempts = nextSignInAttempts(readAttempts());
@@ -47,10 +50,10 @@ function SignInForm() {
       setError('Too many tries. Wait a few minutes, then try again.');
       return;
     }
-    setLoading(true);
+    setBusy('password');
     recordAttempt();
     const result = await signInWithPassword(email.trim(), password);
-    setLoading(false);
+    setBusy(null);
     if (result.error) {
       setError(result.error);
       return;
@@ -64,14 +67,25 @@ function SignInForm() {
       setError('Enter your email for a magic link.');
       return;
     }
-    setLoading(true);
+    setBusy('magic');
     const result = await signInWithMagicLink(email.trim());
-    setLoading(false);
+    setBusy(null);
     if (result.error) {
       setError(result.error);
       return;
     }
-    router.push(`/auth/check-email/?email=${encodeURIComponent(email.trim())}`);
+    router.push(`/auth/check-email/?email=${encodeURIComponent(email.trim())}&reason=magiclink`);
+  };
+
+  const onGoogle = async () => {
+    setError(null);
+    setBusy('google');
+    const result = await signInWithGoogle();
+    if (result.error) {
+      setBusy(null);
+      setError(result.error);
+    }
+    // On success the browser navigates away; keep the spinner visible.
   };
 
   return (
@@ -101,27 +115,41 @@ function SignInForm() {
             {error}
           </p>
         ) : null}
-        <Button className="w-full" loading={loading} onClick={() => void onPasswordSignIn()}>
-          Sign in
-        </Button>
         <Button
           className="w-full"
+          loading={busy === 'password'}
+          loadingText="Signing in…"
+          disabled={busy !== null && busy !== 'password'}
+          onClick={() => void onPasswordSignIn()}
+        >
+          Sign in
+        </Button>
+
+        <div className="relative py-1 text-center text-xs font-semibold uppercase tracking-[0.16em] text-navy-900/40">
+          <span className="relative z-[1] bg-surface px-3">or</span>
+          <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-navy-900/10" aria-hidden />
+        </div>
+
+        <Button
+          className="w-full justify-center border-navy-900/15 bg-surface text-navy-900 shadow-sm"
           variant="secondary"
-          loading={loading}
+          loading={busy === 'magic'}
+          loadingText="Sending link…"
+          disabled={busy !== null && busy !== 'magic'}
           onClick={() => void onMagicLink()}
         >
+          <MailGlyph className="shrink-0" />
           Continue with email link
         </Button>
         <Button
-          className="w-full"
-          variant="ghost"
-          loading={loading}
-          onClick={() => void signInWithGoogle().then((result) => {
-            if (result.error) {
-              setError(result.error);
-            }
-          })}
+          className="w-full justify-center border-navy-900/15 bg-surface text-navy-900 shadow-sm"
+          variant="secondary"
+          loading={busy === 'google'}
+          loadingText="Opening Google…"
+          disabled={busy !== null && busy !== 'google'}
+          onClick={() => void onGoogle()}
         >
+          <GoogleGlyph className="shrink-0" />
           Continue with Google
         </Button>
         <p className="text-center text-sm">
