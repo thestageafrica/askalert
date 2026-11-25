@@ -55,14 +55,14 @@ export function MenuView() {
     {
       title: 'Work',
       items: [
-        { href: '/vendor/', label: 'Leads', badge: pendingActions || undefined },
-        { href: '/vendor/', label: 'Quotes' },
-        { href: '/vendor/', label: 'Bookings' },
-        { href: '/vendor/', label: 'Earnings' },
-        { href: '/vendor/onboarding/', label: 'Availability' },
-        { href: '/vendor/onboarding/', label: 'Rate cards' },
-        { href: '/vendor/', label: 'Reviews' },
-        { href: '/vendor/onboarding/', label: 'Verification status' },
+        { href: '/vendor/leads/', label: 'Leads', badge: pendingActions || undefined },
+        { href: '/vendor/leads/', label: 'Quotes' },
+        { href: '/vendor/bookings/', label: 'Bookings' },
+        { href: '/vendor/earnings/', label: 'Earnings' },
+        { href: '/vendor/availability/', label: 'Availability' },
+        { href: '/vendor/rate-cards/', label: 'Rate cards' },
+        { href: '/vendor/profile/', label: 'Reviews' },
+        { href: '/vendor/profile/', label: 'Verification status' },
       ],
     },
     {

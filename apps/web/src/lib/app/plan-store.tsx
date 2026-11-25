@@ -19,6 +19,7 @@ import {
   MOCK_CREDIT_PACK_MINOR,
   type EntitlementAction,
   type EntitlementDecision,
+  type PlanAudience,
   type PurchaseKind,
   type UserPlanState,
 } from '@askalert/core';
@@ -42,18 +43,18 @@ type PlanStore = {
 
 const PlanStoreContext = createContext<PlanStore | null>(null);
 
-function usageTypeFor(action: EntitlementAction) {
+function usageTypeFor(action: EntitlementAction, audience: PlanAudience) {
   switch (action) {
     case 'start_request':
       return 'request' as const;
     case 'contact_vendors':
       return 'vendor_contact' as const;
     case 'relay_message':
-      return 'relay_message' as const;
+      return audience === 'vendor' ? ('chat_message' as const) : ('relay_message' as const);
     case 'ai_suggestion':
       return 'ai_suggestion' as const;
     case 'send_whatsapp':
-      return 'wa_service' as const;
+      return audience === 'vendor' ? ('lead_alert' as const) : ('wa_service' as const);
     default: {
       const _exhaustive: never = action;
       return _exhaustive;
@@ -61,9 +62,18 @@ function usageTypeFor(action: EntitlementAction) {
   }
 }
 
-export function PlanStoreProvider({ children }: { children: ReactNode }) {
+export function PlanStoreProvider({
+  children,
+  audience = 'buyer',
+}: {
+  children: ReactNode;
+  audience?: PlanAudience;
+}) {
   const [state, setState] = useState<UserPlanState>(() =>
-    createFreeSubscription({ userId: 'demo-buyer', audience: 'buyer' }),
+    createFreeSubscription({
+      userId: audience === 'vendor' ? 'demo-vendor' : 'demo-buyer',
+      audience,
+    }),
   );
   const [walletBalanceMinor, setWalletBalanceMinor] = useState(0);
 
@@ -84,7 +94,7 @@ export function PlanStoreProvider({ children }: { children: ReactNode }) {
       }
       const { state: next } = recordUsage({
         state,
-        type: usageTypeFor(action),
+        type: usageTypeFor(action, state.audience),
         settings: DEFAULT_UNIT_COSTS,
       });
       setState(next);
