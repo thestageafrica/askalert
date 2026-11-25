@@ -16,8 +16,8 @@ import { useAuth } from '../../lib/auth/auth-provider';
 import { useMode } from '../../lib/auth/mode-provider';
 import { useNotificationsStore } from '../../lib/app/notifications-store';
 import { usePlanStore } from '../../lib/app/plan-store';
-import { AppModeBar } from '../auth/app-mode-bar';
 import { BottomNav } from './bottom-nav';
+import { MobileTopBar } from './mobile-top-bar';
 import { PushPrompt } from './push-prompt';
 
 const PRIMARY_LINKS = [
@@ -42,9 +42,9 @@ const PRIMARY_LINKS = [
 export function BuyerAppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-surface-subtle lg:bg-[radial-gradient(90%_50%_at_50%_-10%,_color-mix(in_srgb,var(--orange-500)_10%,transparent),_transparent_55%),linear-gradient(180deg,var(--surface-subtle)_0%,color-mix(in_srgb,var(--navy-950)_3%,var(--surface-subtle))_100%)]">
-      {/* Mobile / tablet: keep current chrome */}
+      {/* Mobile / tablet: slim top bar (menu lives on /app/menu) */}
       <div className="lg:hidden">
-        <AppModeBar />
+        <MobileTopBar />
       </div>
 
       {/* Desktop sticky header */}

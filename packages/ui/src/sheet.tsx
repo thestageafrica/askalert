@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type TouchEvent } from 'react';
 import { cn } from './lib/cn';
 
 export type SheetProps = {
@@ -11,15 +11,46 @@ export type SheetProps = {
   className?: string;
 };
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+
 export function Sheet({ open, onOpenChange, title, children, className }: SheetProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number | null>(null);
+
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    const panel = panelRef.current;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusables = panel?.querySelectorAll<HTMLElement>(FOCUSABLE);
+    focusables?.[0]?.focus();
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onOpenChange(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !panel) {
+        return;
+      }
+      const nodes = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (node) => !node.hasAttribute('disabled') && node.tabIndex !== -1,
+      );
+      if (nodes.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = nodes[0]!;
+      const last = nodes[nodes.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -30,12 +61,29 @@ export function Sheet({ open, onOpenChange, title, children, className }: SheetP
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
     };
   }, [open, onOpenChange]);
 
   if (!open) {
     return null;
   }
+
+  const onTouchStart = (event: TouchEvent) => {
+    touchStartY.current = event.touches[0]?.clientY ?? null;
+  };
+
+  const onTouchEnd = (event: TouchEvent) => {
+    const start = touchStartY.current;
+    const end = event.changedTouches[0]?.clientY;
+    touchStartY.current = null;
+    if (start == null || end == null) {
+      return;
+    }
+    if (end - start > 80) {
+      onOpenChange(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -46,9 +94,12 @@ export function Sheet({ open, onOpenChange, title, children, className }: SheetP
         onClick={() => onOpenChange(false)}
       />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         className={cn(
           'relative z-10 w-full max-w-lg rounded-t-2xl border border-border bg-card p-5 shadow-xl',
           'sm:rounded-2xl',
@@ -56,6 +107,10 @@ export function Sheet({ open, onOpenChange, title, children, className }: SheetP
           className,
         )}
       >
+        <div
+          className="mx-auto mb-3 h-1 w-10 rounded-full bg-border sm:hidden"
+          aria-hidden
+        />
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 className="text-lg font-bold text-foreground">{title}</h2>
           <button

@@ -1,129 +1,96 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
-import { Button, Sheet, cn } from '@askalert/ui';
-import { useCategories } from '../../lib/use-categories';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { cn } from '@askalert/ui';
+import { useMockStore } from '../../lib/app/mock-store';
 
 type NavItem = {
   href: string;
   label: string;
   match: (path: string) => boolean;
   icon: (active: boolean) => ReactNode;
+  badge?: number;
 };
 
-const items: NavItem[] = [
-  {
-    href: '/app',
-    label: 'Home',
-    match: (path) => path === '/app',
-    icon: (active) => <HomeIcon active={active} />,
-  },
-  {
-    href: '/app/requests',
-    label: 'Requests',
-    match: (path) => path.startsWith('/app/requests') || path.startsWith('/app/request'),
-    icon: (active) => <BellIcon active={active} />,
-  },
-  {
-    href: '/app/chats',
-    label: 'Chats',
-    match: (path) => path.startsWith('/app/chat'),
-    icon: (active) => <ChatIcon active={active} />,
-  },
-  {
-    href: '/app/account',
-    label: 'Account',
-    match: (path) => path.startsWith('/app/account'),
-    icon: (active) => <PersonIcon active={active} />,
-  },
-];
-
 export function BottomNav() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [askOpen, setAskOpen] = useState(false);
-  const { categories } = useCategories();
-  const liveCategories = askOpen
-    ? categories.filter(
-        (category) => category.status === 'pilot' || category.status === 'live',
-      )
-    : [];
+  const pathname = usePathname() || '/app/';
+  const { chats } = useMockStore();
+  const unreadMessages = chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
 
-  const left = items.slice(0, 2);
-  const right = items.slice(2);
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastY.current;
+      if (y < 24) {
+        setHidden(false);
+      } else if (delta > 8) {
+        setHidden(true);
+      } else if (delta < -8) {
+        setHidden(false);
+      }
+      lastY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const items: NavItem[] = [
+    {
+      href: '/app/',
+      label: 'Home',
+      match: (path) => path === '/app' || path === '/app/',
+      icon: (active) => <HomeIcon active={active} />,
+    },
+    {
+      href: '/app/requests/',
+      label: 'Requests',
+      match: (path) => path.startsWith('/app/requests') || path.startsWith('/app/request'),
+      icon: (active) => <RequestsIcon active={active} />,
+    },
+    {
+      href: '/app/chats/',
+      label: 'Messages',
+      match: (path) => path.startsWith('/app/chat'),
+      icon: (active) => <ChatIcon active={active} />,
+      badge: unreadMessages,
+    },
+    {
+      href: '/app/menu/',
+      label: 'Menu',
+      match: (path) =>
+        path.startsWith('/app/menu') ||
+        path.startsWith('/app/account') ||
+        path.startsWith('/app/invoices') ||
+        path.startsWith('/app/disputes') ||
+        path.startsWith('/app/help') ||
+        path.startsWith('/app/saved') ||
+        path.startsWith('/app/plan'),
+      icon: (active) => <MenuIcon active={active} />,
+    },
+  ];
 
   return (
-    <>
-      <nav
-        aria-label="App"
-        className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))]"
-      >
-        <div className="relative mx-auto max-w-lg">
-          <div className="flex items-end justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950 px-1.5 pb-2 pt-2 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)]">
-            {left.map((item) => (
-              <NavLink key={item.href} item={item} pathname={pathname} />
-            ))}
-
-            <button
-              type="button"
-              onClick={() => setAskOpen(true)}
-              className={cn(
-                'relative flex min-h-14 w-[5.25rem] shrink-0 flex-col items-center justify-end gap-1 px-1',
-                'text-[10px] font-semibold tracking-wide text-orange-400',
-                'focus-visible:outline-none',
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute -top-7 flex size-[3.85rem] items-center justify-center rounded-full',
-                  'bg-gradient-to-br from-orange-400 to-orange-500 text-navy-900',
-                  'shadow-[0_12px_28px_var(--glow-orange-strong)]',
-                  'ring-[6px] ring-navy-950/75',
-                  'transition hover:-translate-y-0.5 hover:brightness-105',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950',
-                )}
-              >
-                <AskIcon />
-              </span>
-              Start Ask
-            </button>
-
-            {right.map((item) => (
-              <NavLink key={item.href} item={item} pathname={pathname} />
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      <Sheet open={askOpen} onOpenChange={setAskOpen} title="What do you need?">
-        <p className="text-sm text-muted-foreground">
-          Pick a live category. AskAlert will chase verified vendors for you.
-        </p>
-        <div className="mt-5 space-y-2">
-          {liveCategories.map((category) => (
-            <button
-              key={category.slug}
-              type="button"
-              className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card px-4 text-left shadow-sm transition hover:border-orange-500/40 hover:bg-orange-500/5"
-              onClick={() => {
-                setAskOpen(false);
-                router.push(`/app/new/${category.slug}`);
-              }}
-            >
-              <span className="text-sm font-extrabold text-foreground">{category.name}</span>
-              <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-navy-900">
-                Start
-              </span>
-            </button>
+    <nav
+      aria-label="App"
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-40 px-3 transition-transform duration-300 ease-out',
+        'pb-[max(0.55rem,env(safe-area-inset-bottom))]',
+        hidden ? 'translate-y-[120%]' : 'translate-y-0',
+      )}
+    >
+      <div className="mx-auto max-w-lg">
+        <div className="flex items-stretch justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950 px-1.5 py-1.5 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)]">
+          {items.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
           ))}
         </div>
-        <Button variant="ghost" className="mt-4 w-full" onClick={() => setAskOpen(false)}>
-          Cancel
-        </Button>
-      </Sheet>
-    </>
+      </div>
+    </nav>
   );
 }
 
@@ -133,18 +100,23 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     <Link
       href={item.href}
       className={cn(
-        'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-semibold tracking-wide transition',
+        'relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-semibold tracking-wide transition',
         active ? 'text-orange-400' : 'text-surface/65 hover:text-surface',
       )}
       aria-current={active ? 'page' : undefined}
     >
       <span
         className={cn(
-          'flex size-9 items-center justify-center rounded-xl transition',
+          'relative flex size-9 items-center justify-center rounded-xl transition',
           active && 'bg-orange-500/15',
         )}
       >
         {item.icon(active)}
+        {item.badge && item.badge > 0 ? (
+          <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[9px] font-extrabold text-navy-900">
+            {item.badge > 9 ? '9+' : item.badge}
+          </span>
+        ) : null}
       </span>
       {item.label}
     </Link>
@@ -166,18 +138,17 @@ function HomeIcon({ active }: { active: boolean }) {
   );
 }
 
-function BellIcon({ active }: { active: boolean }) {
+function RequestsIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M6 9a6 6 0 1 1 12 0c0 3.5 1.5 5 2 6H4c.5-1 2-2.5 2-6Z"
+        d="M7 4h10a2 2 0 0 1 2 2v14l-3.5-2.2L12 20l-3.5-2.2L5 20V6a2 2 0 0 1 2-2Z"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinejoin="round"
         fill={active ? 'currentColor' : 'none'}
         fillOpacity={active ? 0.2 : 0}
       />
-      <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -197,38 +168,15 @@ function ChatIcon({ active }: { active: boolean }) {
   );
 }
 
-function PersonIcon({ active }: { active: boolean }) {
+function MenuIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle
-        cx="12"
-        cy="8"
-        r="3.25"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        fill={active ? 'currentColor' : 'none'}
-        fillOpacity={active ? 0.2 : 0}
-      />
       <path
-        d="M5.5 19.5c1.7-3 4-4.5 6.5-4.5s4.8 1.5 6.5 4.5"
+        d="M5 7h14M5 12h14M5 17h14"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Diagonal ask arrow — matches the elevated CTA in the mobile sample. */
-function AskIcon() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M7 17 17 7M10 7h7v7"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        opacity={active ? 1 : 0.95}
       />
     </svg>
   );

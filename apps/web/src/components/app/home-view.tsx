@@ -45,6 +45,7 @@ export function HomeView() {
         <AppHeader
           title="What do you need?"
           subtitle="AskAlert will chase verified vendors in Lagos Nigeria."
+          imageSrc="/brand/askalert-images-1.jpg"
           action={
             <Chip className="border-surface/15 bg-navy-900/50 text-surface" statusDot>
               Live
@@ -55,32 +56,33 @@ export function HomeView() {
 
       <div className="space-y-6 px-4 pt-2 lg:space-y-10 lg:px-0 lg:pt-2">
         {/* Desktop hero */}
-        <section className="relative hidden overflow-hidden rounded-[2rem] border border-border/50 bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 px-10 py-12 text-surface shadow-[0_28px_70px_color-mix(in_srgb,var(--navy-950)_22%,transparent)] lg:block">
-          <div
-            className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full bg-orange-500/20 blur-3xl"
+        <section className="relative hidden overflow-hidden rounded-[2rem] border border-border/50 bg-navy-950 px-10 py-12 text-surface shadow-[0_28px_70px_color-mix(in_srgb,var(--navy-950)_22%,transparent)] lg:block">
+          <img
+            src="/brand/askalert-images-1.jpg"
+            alt=""
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[78%_center]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -bottom-24 left-1/3 size-80 rounded-full bg-navy-700/50 blur-3xl"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-navy-950 from-[0%] via-navy-950/90 via-[48%] to-navy-950/25 to-[92%]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-              backgroundSize: '22px 22px',
-            }}
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-navy-950/75 via-transparent to-transparent"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_45%_55%_at_88%_30%,_var(--glow-orange-strong),_transparent_70%)]"
             aria-hidden
           />
           <div className="relative">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400">
               Lagos Nigeria · Verified vendors
             </p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-extrabold tracking-tight xl:text-5xl">
+            <h1 className="mt-4 max-w-2xl text-4xl font-extrabold tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] xl:text-5xl">
               What do you need?
             </h1>
-            <p className="mt-3 max-w-xl text-base leading-relaxed text-surface/72">
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-surface/80">
               AskAlert asks vendors, compares offers, and brings you the best ones.
             </p>
             <div className="mt-7 max-w-xl">
