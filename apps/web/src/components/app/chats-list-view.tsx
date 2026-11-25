@@ -11,8 +11,14 @@ export function ChatsListView() {
 
   return (
     <div>
-      <AppHeader title="Chat" subtitle="Private until you book." />
-      <div className="space-y-3 px-4 pt-2">
+      <div className="lg:hidden">
+        <AppHeader title="Chat" subtitle="Private until you book." />
+      </div>
+      <div className="hidden px-0 pb-4 pt-2 lg:block">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Messages</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Private until you book.</p>
+      </div>
+      <div className="space-y-3 px-4 pt-2 lg:mx-auto lg:max-w-2xl lg:px-0 lg:pt-0">
         {chats.length === 0 ? (
           <EmptyState
             title="No chats yet"

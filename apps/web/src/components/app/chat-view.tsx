@@ -8,10 +8,12 @@ import { AppHeader } from './app-header';
 import { countThreadImages, prepareChatImage } from '../../lib/app/chat-media';
 import { useMockStore } from '../../lib/app/mock-store';
 import { usePlanStore } from '../../lib/app/plan-store';
+import { requestHref } from '../../lib/app/static-nav';
 import { useChatLive } from '../../lib/app/use-chat-live';
 
 export function ChatView({ chatId }: { chatId: string }) {
   const {
+    chats,
     getChat,
     getRequest,
     toggleAgentControl,
@@ -110,7 +112,47 @@ export function ChatView({ chatId }: { chatId: string }) {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-5.5rem)] flex-col">
+    <div className="flex min-h-[calc(100vh-5.5rem)] flex-col lg:min-h-[calc(100vh-8rem)] lg:grid lg:grid-cols-[minmax(14rem,0.7fr)_minmax(0,1.4fr)_minmax(14rem,0.75fr)] lg:gap-4 lg:px-0">
+      <aside className="hidden overflow-hidden rounded-[1.5rem] border border-border/60 bg-card lg:block">
+        <div className="border-b border-border/70 px-4 py-3">
+          <p className="text-sm font-extrabold text-foreground">Messages</p>
+          <p className="text-xs text-muted-foreground">Private until you book</p>
+        </div>
+        <div className="max-h-[calc(100vh-12rem)] space-y-2 overflow-y-auto p-3">
+          {chats.map((item) => {
+            const active = item.id === chat.id;
+            const initials = item.vendorAlias
+              .split(' ')
+              .map((part) => part[0])
+              .join('')
+              .slice(0, 2)
+              .toUpperCase();
+            return (
+              <a
+                key={item.id}
+                href={`/app/chat/open/?id=${encodeURIComponent(item.id)}`}
+                className={cn(
+                  'flex min-h-14 items-center gap-3 rounded-2xl border px-3 transition',
+                  active
+                    ? 'border-orange-500/30 bg-orange-500/10'
+                    : 'border-transparent hover:border-border/70 hover:bg-card-muted',
+                )}
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-950 text-xs font-extrabold text-orange-400">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">{item.vendorAlias}</p>
+                  <p className="truncate text-xs text-muted-foreground">{item.missionTag}</p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </aside>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:rounded-[1.5rem] lg:border lg:border-border/60 lg:bg-card">
+      <div className="lg:hidden">
       <AppHeader
         title={chat.vendorAlias}
         subtitle={chat.missionTag}
@@ -135,8 +177,18 @@ export function ChatView({ chatId }: { chatId: string }) {
           </div>
         }
       />
+      </div>
+      <div className="hidden items-center justify-between gap-3 border-b border-border/70 px-4 py-3 lg:flex">
+        <div>
+          <p className="text-sm font-extrabold text-foreground">{chat.vendorAlias}</p>
+          <p className="text-xs text-muted-foreground">{chat.missionTag}</p>
+        </div>
+        <Button variant="secondary" className="min-h-10 text-xs" onClick={() => toggleAgentControl(chat.id)}>
+          {chat.agentInControl ? 'Take over' : 'Hand back'}
+        </Button>
+      </div>
 
-      <div className="flex-1 space-y-3 bg-[radial-gradient(90%_40%_at_50%_0%,_color-mix(in_srgb,var(--orange-500)_8%,transparent),_transparent_55%)] px-4 py-4">
+      <div className="flex-1 space-y-3 bg-[radial-gradient(90%_40%_at_50%_0%,_color-mix(in_srgb,var(--orange-500)_8%,transparent),_transparent_55%)] px-4 py-4 lg:overflow-y-auto">
         <p className="rounded-2xl border border-dashed border-border/80 bg-card/90 px-3 py-2 text-center text-xs font-medium text-muted-foreground shadow-sm backdrop-blur">
           Contact details are shared after booking
         </p>
@@ -329,6 +381,49 @@ export function ChatView({ chatId }: { chatId: string }) {
           </button>
         ) : null}
       </div>
+      </div>
+
+      <aside className="hidden space-y-4 overflow-y-auto rounded-[1.5rem] border border-border/60 bg-card p-4 lg:block">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Request</p>
+          <p className="mt-1 text-sm font-extrabold text-foreground">
+            {request?.title ?? chat.missionTag}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {request ? `${request.quotes.length} quotes · ${request.status}` : 'Linked request'}
+          </p>
+          {request ? (
+            <Button href={requestHref(request.id)} variant="secondary" className="mt-3 w-full min-h-10 text-xs">
+              Open request
+            </Button>
+          ) : null}
+        </div>
+        <div className="border-t border-border/70 pt-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Vendor</p>
+          <p className="mt-1 text-sm font-extrabold text-foreground">{chat.vendorAlias}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Contact details stay private until you book.
+          </p>
+        </div>
+        {request && request.quotes.length > 0 ? (
+          <div className="border-t border-border/70 pt-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Compare</p>
+            <ul className="mt-2 space-y-2">
+              {request.quotes.slice(0, 3).map((quote) => (
+                <li
+                  key={quote.id}
+                  className="rounded-xl border border-border/60 bg-card-muted px-3 py-2 text-xs"
+                >
+                  <span className="font-bold text-foreground">{quote.vendorAlias}</span>
+                  <span className="mt-0.5 block text-muted-foreground">
+                    {formatNaira(createMoney(quote.priceMinor))} · {quote.rating.toFixed(1)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </aside>
     </div>
   );
 }

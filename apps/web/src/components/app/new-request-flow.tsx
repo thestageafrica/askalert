@@ -136,11 +136,20 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
 
   return (
     <div>
-      <AppHeader
-        title={`New ${category.name.toLowerCase()} ask`}
-        subtitle="One clear question at a time."
-      />
-      <div className="space-y-5 px-4 pt-2">
+      <div className="lg:hidden">
+        <AppHeader
+          title={`New ${category.name.toLowerCase()} ask`}
+          subtitle="One clear question at a time."
+        />
+      </div>
+      <div className="hidden px-0 pb-4 pt-2 lg:block">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          New {category.name.toLowerCase()} ask
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">One clear question at a time.</p>
+      </div>
+      <div className="space-y-5 px-4 pt-2 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.75fr)] lg:items-start lg:gap-8 lg:space-y-0 lg:px-0">
+        <div className="space-y-5">
         <div
           className="h-2.5 overflow-hidden rounded-full bg-border/80 shadow-inner"
           role="progressbar"
@@ -156,7 +165,7 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
         </div>
 
         {phase === 'questions' && step ? (
-          <div className="rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-[0_12px_28px_color-mix(in_srgb,var(--navy-950)_6%,transparent)]">
+          <div className="rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-[0_12px_28px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] lg:p-7">
             <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
               Question {index + 1} of {steps.length}
             </p>
@@ -322,7 +331,7 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
         ) : null}
 
         {phase === 'summary' ? (
-          <div className="rounded-[1.5rem] border border-border/70 bg-card p-5 shadow-sm">
+          <div className="rounded-[1.5rem] border border-border/70 bg-card p-5 shadow-sm lg:p-7">
             <h2 className="text-xl font-extrabold tracking-tight">Summary</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Check this once. Then AskAlert starts asking vendors.
@@ -353,6 +362,36 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
             </div>
           </div>
         ) : null}
+        </div>
+
+        <aside className="hidden lg:sticky lg:top-24 lg:block">
+          <div className="rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Live summary</p>
+            <h2 className="mt-2 text-lg font-extrabold text-foreground">{category.name}</h2>
+            <dl className="mt-4 space-y-2 text-sm">
+              {Object.keys(answers).length === 0 ? (
+                <p className="text-muted-foreground">Answers appear here as you go.</p>
+              ) : (
+                steps
+                  .filter((item) => answers[item.key] !== undefined && answers[item.key] !== '')
+                  .map((item) => (
+                    <div key={item.key} className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">{item.label}</dt>
+                      <dd className="text-right font-semibold">{formatAnswer(answers[item.key])}</dd>
+                    </div>
+                  ))
+              )}
+            </dl>
+          </div>
+          <div className="mt-4 rounded-[1.5rem] border border-border/60 bg-navy-950 p-5 text-surface shadow-sm">
+            <p className="text-sm font-extrabold">What happens next</p>
+            <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-surface/75">
+              <li>We ask verified vendors that match.</li>
+              <li>Quotes land on your request page.</li>
+              <li>You compare, choose, and protect payment.</li>
+            </ol>
+          </div>
+        </aside>
       </div>
     </div>
   );

@@ -39,7 +39,7 @@ export default function ContactPage() {
                 or press, message the AskAlert WhatsApp line below.
               </p>
               <p>
-                Launch market: Lekki, Lagos, Nigeria. We reply during business hours when we can.
+                Launch market: Lagos Nigeria. We reply during business hours when we can.
                 Urgent booking issues should include your request ID if you have one.
               </p>
               {placeholder ? (

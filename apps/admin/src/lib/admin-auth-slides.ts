@@ -21,7 +21,7 @@ export const ADMIN_AUTH_SLIDES: AdminAuthSlide[] = [
     id: 'trust',
     kicker: 'Trust',
     headline: 'Verify vendors. Protect buyers.',
-    body: 'Keep Lekki quality high with clear checks and staged payouts.',
+    body: 'Keep Lagos quality high with clear checks and staged payouts.',
     imageSrc: '/brand/askalert-images-1.jpg',
     imageAlt: 'Verified marketplace activity',
   },

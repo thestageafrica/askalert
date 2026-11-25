@@ -19,7 +19,7 @@ const timeline: Array<{ id: RequestStatus; label: string }> = [
 
 const AI_TIPS = [
   'Pick the recommended host if dates and budget already fit.',
-  'Ask about early check-in before you book — many Lekki hosts can flex.',
+  'Ask about early check-in before you book — many Lagos hosts can flex.',
   'Compare rating and reason together, not price alone.',
 ];
 
@@ -89,8 +89,11 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
         }
       />
 
-      <div className="space-y-5 px-4 pt-5">
-        <Timeline status={request.status} />
+      <div className="space-y-5 px-4 pt-5 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(17rem,0.7fr)] lg:items-start lg:gap-8 lg:space-y-0 lg:px-0">
+        <div className="space-y-5">
+        <div className="lg:hidden">
+          <Timeline status={request.status} />
+        </div>
 
         {planNotice ? (
           <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm font-medium text-navy-950">
@@ -179,7 +182,7 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
           </div>
         ) : null}
 
-        <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
           {sortedQuotes.map((quote) => (
             <article
               key={quote.id}
@@ -224,6 +227,27 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
             </article>
           ))}
         </div>
+        </div>
+
+        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
+          <Timeline status={request.status} />
+          <div className="rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Checkout summary</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Pick a quote, then hold payment until the booking is confirmed.
+            </p>
+            <Button
+              className="mt-4 w-full"
+              disabled={!sortedQuotes[0] || request.status === 'booked'}
+              onClick={() => {
+                setSelected(sortedQuotes[0] ?? null);
+                setCheckoutOpen(true);
+              }}
+            >
+              {request.status === 'booked' ? 'Already booked' : 'Book recommended'}
+            </Button>
+          </div>
+        </aside>
       </div>
 
       <CheckoutSheet

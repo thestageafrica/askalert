@@ -110,7 +110,7 @@ export function AuthShell({
           </div>
 
           <p className="mt-6 hidden text-center text-xs text-surface/55 lg:block lg:max-w-md">
-            Ask. Alert. Delivered. · Lekki, Lagos
+            Ask. Alert. Delivered. · Lagos Nigeria
           </p>
         </div>
       </div>

@@ -79,7 +79,7 @@ const organizationJsonLd = {
   description: SITE_DESCRIPTION,
   areaServed: {
     '@type': 'Place',
-    name: 'Lagos, Nigeria',
+    name: 'Lagos Nigeria',
   },
   slogan: SITE_TAGLINE,
 };

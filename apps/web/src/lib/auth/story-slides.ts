@@ -15,7 +15,7 @@ export const AUTH_STORY_SLIDES: StorySlide[] = [
     id: 'ask',
     kicker: 'Ask',
     headline: 'Tell AskAlert what you need.',
-    body: 'Shortlets, events, home care and more, in Lekki.',
+    body: 'Shortlets, events, home care and more, in Lagos Nigeria.',
     imageSrc: '/brand/askalert-images-1.jpg',
     imageAlt: 'AskAlert marketplace scene',
   },

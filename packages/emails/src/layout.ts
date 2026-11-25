@@ -84,7 +84,7 @@ export function renderAuthEmailHtml(input: LayoutInput): string {
               <td style="padding:20px 28px 28px 28px;background:#f6f7fb;border-top:1px solid #e3e6f0;">
                 <p style="margin:0 0 6px 0;font-size:13px;font-weight:700;color:#0f1545;">AskAlert</p>
                 <p style="margin:0 0 10px 0;font-size:12px;line-height:1.5;color:#5b628a;">
-                  Lekki, Lagos · Verified vendors · Staged payouts
+                  Lagos Nigeria · Verified vendors · Staged payouts
                 </p>
                 <p style="margin:0;font-size:11px;line-height:1.5;color:#8a90b0;">
                   AskAlert Technologies Limited ·
@@ -117,6 +117,6 @@ export function renderAuthEmailText(input: LayoutInput): string {
   if (input.ctaUrl) {
     lines.push(`${input.ctaLabel ?? 'Continue'}: ${input.ctaUrl}`, '');
   }
-  lines.push(input.footerNote, '', 'AskAlert · Lekki, Lagos', input.siteUrl);
+  lines.push(input.footerNote, '', 'AskAlert · Lagos Nigeria', input.siteUrl);
   return lines.join('\n');
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button, Chip, Input, cn } from '@askalert/ui';
 import { AppHeader } from './app-header';
 import { CategoryGlyph } from './category-glyph';
@@ -15,9 +16,17 @@ function isLiveCategory(status: string) {
 }
 
 export function HomeView() {
+  const searchParams = useSearchParams();
   const { latestRequest, notifyInterest, addNotifyInterest, account } = useMockStore();
   const { categories: allCategories, loading } = useCategories();
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('q');
+    if (fromUrl) {
+      setQuery(fromUrl);
+    }
+  }, [searchParams]);
 
   const categories = allCategories.filter((category) =>
     query.trim()
@@ -25,20 +34,81 @@ export function HomeView() {
       : true,
   );
 
+  const liveChips = allCategories
+    .filter((category) => isLiveCategory(category.status))
+    .slice(0, 6);
+
   return (
     <div>
-      <AppHeader
-        title="What do you need?"
-        subtitle="AskAlert will chase verified vendors in Lagos."
-        action={
-          <Chip className="border-surface/15 bg-navy-900/50 text-surface" statusDot>
-            Live
-          </Chip>
-        }
-      />
+      {/* Mobile header */}
+      <div className="lg:hidden">
+        <AppHeader
+          title="What do you need?"
+          subtitle="AskAlert will chase verified vendors in Lagos Nigeria."
+          action={
+            <Chip className="border-surface/15 bg-navy-900/50 text-surface" statusDot>
+              Live
+            </Chip>
+          }
+        />
+      </div>
 
-      <div className="space-y-6 px-4 pt-2">
-        <div className="relative -mt-1">
+      <div className="space-y-6 px-4 pt-2 lg:space-y-10 lg:px-0 lg:pt-2">
+        {/* Desktop hero */}
+        <section className="relative hidden overflow-hidden rounded-[2rem] border border-border/50 bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 px-10 py-12 text-surface shadow-[0_28px_70px_color-mix(in_srgb,var(--navy-950)_22%,transparent)] lg:block">
+          <div
+            className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full bg-orange-500/20 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-24 left-1/3 size-80 rounded-full bg-navy-700/50 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
+              backgroundSize: '22px 22px',
+            }}
+            aria-hidden
+          />
+          <div className="relative">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400">
+              Lagos Nigeria · Verified vendors
+            </p>
+            <h1 className="mt-4 max-w-2xl text-4xl font-extrabold tracking-tight xl:text-5xl">
+              What do you need?
+            </h1>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-surface/72">
+              AskAlert asks vendors, compares offers, and brings you the best ones.
+            </p>
+            <div className="mt-7 max-w-xl">
+              <Input
+                name="category-search-desktop"
+                aria-label="Search categories"
+                placeholder="What do you need?"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                className="rounded-2xl border-surface/15 bg-surface py-4 text-navy-900 shadow-[0_16px_40px_rgba(0,0,0,0.25)] placeholder:text-navy-900/40"
+              />
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {liveChips.map((category) => (
+                <button
+                  key={category.slug}
+                  type="button"
+                  className="rounded-full border border-surface/20 bg-surface/10 px-3.5 py-2 text-xs font-bold text-surface transition duration-200 hover:-translate-y-0.5 hover:border-orange-400/50 hover:bg-orange-500 hover:text-navy-900"
+                  onClick={() => setQuery(category.name)}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="relative -mt-1 lg:hidden">
           <Input
             name="category-search"
             aria-label="Search categories"
@@ -52,8 +122,8 @@ export function HomeView() {
         {latestRequest ? (
           <section aria-labelledby="latest-request-heading">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 id="latest-request-heading" className="text-sm font-bold text-foreground">
-                Latest request
+              <h2 id="latest-request-heading" className="text-sm font-bold text-foreground lg:text-base">
+                Your latest requests
               </h2>
               <a
                 href={requestHref(latestRequest.id)}
@@ -64,14 +134,14 @@ export function HomeView() {
             </div>
             <a
               href={requestHref(latestRequest.id)}
-              className="block overflow-hidden rounded-[1.5rem] border border-orange-500/25 bg-gradient-to-br from-orange-500/15 via-card to-card p-4 shadow-sm transition hover:-translate-y-0.5"
+              className="block overflow-hidden rounded-[1.5rem] border border-orange-500/25 bg-gradient-to-br from-orange-500/15 via-card to-card p-4 shadow-sm transition hover:-translate-y-0.5 lg:p-6"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
                     {latestRequest.categoryName}
                   </p>
-                  <p className="mt-1 text-base font-extrabold text-foreground">
+                  <p className="mt-1 text-base font-extrabold text-foreground lg:text-xl">
                     {latestRequest.title}
                   </p>
                 </div>
@@ -95,7 +165,7 @@ export function HomeView() {
         <section aria-labelledby="categories-heading">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <h2 id="categories-heading" className="text-sm font-bold text-foreground">
+              <h2 id="categories-heading" className="text-sm font-bold text-foreground lg:text-base">
                 Categories
               </h2>
               <p className="mt-0.5 text-xs text-muted-foreground">Live now and coming soon</p>
@@ -103,8 +173,12 @@ export function HomeView() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-3" aria-busy="true" aria-label="Loading categories">
-              {[0, 1, 2, 3].map((slot) => (
+            <div
+              className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4"
+              aria-busy="true"
+              aria-label="Loading categories"
+            >
+              {[0, 1, 2, 3, 4, 5].map((slot) => (
                 <div
                   key={slot}
                   className="min-h-44 animate-pulse rounded-[1.4rem] border border-border/60 bg-card-muted/80"
@@ -122,7 +196,7 @@ export function HomeView() {
               }
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4 lg:gap-4">
               {categories.map((category) => {
                 const live = isLiveCategory(category.status);
                 const watching = notifyInterest.includes(category.slug);
@@ -147,7 +221,7 @@ export function HomeView() {
                       {category.name}
                     </p>
                     <p className="relative mt-1 text-xs text-muted-foreground">
-                      {live ? 'Live in Lagos' : 'Coming soon'}
+                      {live ? 'Live in Lagos Nigeria' : 'Coming soon'}
                     </p>
                     <div className="relative mt-auto pt-4">
                       {live ? (
@@ -172,7 +246,46 @@ export function HomeView() {
           )}
         </section>
 
-        <p className="pb-2 text-center text-xs text-muted-foreground">
+        <section className="hidden gap-5 lg:grid lg:grid-cols-3">
+          {[
+            { title: 'Verified', body: 'Vendors are checked before they quote.' },
+            { title: 'Protected', body: 'Staged payouts keep your money safe.' },
+            { title: 'Private', body: 'Your number stays off public listings.' },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="rounded-[1.5rem] border border-border/60 bg-card p-6 shadow-[0_12px_32px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] transition duration-200 hover:-translate-y-0.5"
+            >
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-orange-600">
+                {item.title}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="hidden overflow-hidden rounded-[1.75rem] border border-border/60 bg-card p-8 shadow-[0_12px_32px_color-mix(in_srgb,var(--navy-950)_6%,transparent)] lg:block">
+          <h2 className="text-xl font-extrabold tracking-tight text-foreground">How it works</h2>
+          <ol className="mt-5 grid gap-4 md:grid-cols-3">
+            {[
+              'Tell AskAlert what you need.',
+              'We ask verified vendors and compare offers.',
+              'You choose, then protect your payment.',
+            ].map((step, index) => (
+              <li
+                key={step}
+                className="rounded-2xl border border-border/50 bg-surface-subtle p-5 transition duration-200 hover:border-orange-500/30"
+              >
+                <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
+                  Step {index + 1}
+                </p>
+                <p className="mt-2 text-sm font-semibold leading-relaxed text-foreground">{step}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <p className="pb-2 text-center text-xs text-muted-foreground lg:hidden">
           Signed in as {account.phone}
         </p>
       </div>
