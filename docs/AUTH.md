@@ -345,14 +345,15 @@ Use only if Step 8 is needed. Prefer the hook path above for production.
 **Authentication → URL Configuration**
 
 - **Site URL** (production): `https://www.askalert.com`  
-  Never leave Site URL as `http://localhost:3000` in the hosted project. If a redirect is missing from the allow list, Auth falls back to Site URL and password-reset links open `/` (or a blank localhost page) instead of `/auth/reset-password/`.
-- **Redirect URLs** allow list:
-  - `https://www.askalert.com/auth/callback/`
-  - `https://www.askalert.com/auth/reset-password/`
-  - `http://localhost:3000/auth/callback/`
-  - `http://localhost:3000/auth/reset-password/`
+  Never use `http://localhost:3000` or `https://<project>.supabase.co` as Site URL.  
+  If a redirect is missing from **Redirect URLs**, Auth falls back to Site URL (homepage).
+- **Redirect URLs** (add these):
+  - `https://www.askalert.com/**`
+  - `https://askalert.com/**`
+  - `http://localhost:3000/**`
 
-The `https://<project>.supabase.co/auth/v1/verify?...` host in emails is normal. Auth verifies the token there, then redirects to your `redirect_to` URL.
+The `https://<project>.supabase.co/auth/v1/verify?...` host in emails is normal.  
+`redirect_to` inside that link must be `https://www.askalert.com/auth/reset-password/` (recovery) or `.../auth/callback/` (signup/magic link) — never `*.supabase.co/auth/...`.
 
 ## Google provider
 

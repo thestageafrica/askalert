@@ -1,4 +1,4 @@
-import { buildConfirmationUrl } from './confirmation-url.ts';
+import { buildConfirmationUrl, publicSiteUrl } from './confirmation-url.ts';
 import { renderAuthEmailHtml, renderAuthEmailText } from './layout.ts';
 import type { AuthEmailHookPayload, RenderedEmail } from './types.ts';
 
@@ -10,32 +10,12 @@ export type RenderOptions = {
   variant?: 'default' | 'email_change_current' | 'email_change_new';
 };
 
-function siteFromPayload(payload: AuthEmailHookPayload, fallback: string): string {
-  const fallbackClean = fallback.replace(/\/$/, '') || 'https://www.askalert.com';
-  // Prefer real public hosts. Ignore localhost redirect_to from local testing.
-  for (const raw of [payload.email_data.site_url, payload.email_data.redirect_to, fallbackClean]) {
-    if (!raw) {
-      continue;
-    }
-    try {
-      const url = new URL(raw);
-      const host = url.host.toLowerCase();
-      if (host === 'localhost' || host.startsWith('127.') || host.endsWith('.local')) {
-        continue;
-      }
-      return `${url.protocol}//${url.host}`;
-    } catch {
-      continue;
-    }
-  }
-  return fallbackClean;
-}
-
 export function renderAuthEmails(
   payload: AuthEmailHookPayload,
   options: RenderOptions,
 ): RenderedEmail[] {
-  const siteUrl = siteFromPayload(payload, options.siteUrl);
+  // Never trust Auth payload site_url/redirect_to for public links (often *.supabase.co).
+  const siteUrl = publicSiteUrl(options.siteUrl);
   const logoUrl = options.logoUrl;
   const action = payload.email_data.email_action_type;
   const shared = { logoUrl, siteUrl };

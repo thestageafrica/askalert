@@ -1,6 +1,8 @@
 export {
+  PUBLIC_SITE_URL,
   buildConfirmationUrl,
   mapActionToTemplate,
+  publicSiteUrl,
   resolveAuthRedirectTo,
 } from './confirmation-url';
 export { renderAuthEmailHtml, renderAuthEmailText } from './layout';

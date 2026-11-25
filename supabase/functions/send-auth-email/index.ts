@@ -75,10 +75,8 @@ Deno.serve(async (request) => {
   }
 
   const supabaseUrl = (Deno.env.get('SUPABASE_URL') ?? '').replace(/\/$/, '');
-  const siteUrl = (Deno.env.get('EMAIL_SITE_URL') ?? Deno.env.get('SITE_URL') ?? 'https://www.askalert.com').replace(
-    /\/$/,
-    '',
-  );
+  // Never use SITE_URL / Auth payload hosts — they are often *.supabase.co.
+  const siteUrl = 'https://www.askalert.com';
   const logoUrl =
     Deno.env.get('EMAIL_LOGO_URL') ??
     Deno.env.get('NEXT_PUBLIC_EMAIL_LOGO_URL') ??

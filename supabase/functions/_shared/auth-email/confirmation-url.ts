@@ -1,14 +1,35 @@
 import type { AuthEmailHookPayload } from './types.ts';
 
+export const PUBLIC_SITE_URL = 'https://www.askalert.com';
+
 /**
- * Always send users to a real auth page. Auth often falls back to bare Site URL
- * (`https://www.askalert.com`), which opens the homepage instead of reset/callback.
+ * Only www.askalert.com (or askalert.com) may be used in email redirect_to.
+ * Auth payloads often send localhost or the *.supabase.co API host — never use those.
+ */
+export function publicSiteUrl(candidate?: string): string {
+  const raw = (candidate || '').trim();
+  if (raw) {
+    try {
+      const url = new URL(raw);
+      const host = url.host.toLowerCase();
+      if (host === 'www.askalert.com' || host === 'askalert.com') {
+        return 'https://www.askalert.com';
+      }
+    } catch {
+      // fall through
+    }
+  }
+  return PUBLIC_SITE_URL;
+}
+
+/**
+ * Always send users to a real auth page on askalert.com.
  */
 export function resolveAuthRedirectTo(
   emailData: AuthEmailHookPayload['email_data'],
-  siteUrl: string,
+  siteUrl?: string,
 ): string {
-  const base = siteUrl.replace(/\/$/, '') || 'https://www.askalert.com';
+  const base = publicSiteUrl(siteUrl);
   const action = emailData.email_action_type;
 
   if (action === 'recovery') {
@@ -20,8 +41,19 @@ export function resolveAuthRedirectTo(
   }
 
   const fromAuth = (emailData.redirect_to || '').trim();
-  if (fromAuth.includes('/auth/')) {
-    return fromAuth;
+  try {
+    if (fromAuth) {
+      const url = new URL(fromAuth);
+      const host = url.host.toLowerCase();
+      if (
+        (host === 'www.askalert.com' || host === 'askalert.com') &&
+        url.pathname.includes('/auth/')
+      ) {
+        return `${url.origin}${url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`}`;
+      }
+    }
+  } catch {
+    // fall through
   }
 
   return `${base}/auth/callback/`;
@@ -38,11 +70,10 @@ export function buildConfirmationUrl(
 ): string {
   const base = supabaseUrl.replace(/\/$/, '');
   const tokenHash = options?.tokenHash ?? emailData.token_hash;
-  const siteUrl = options?.siteUrl || emailData.site_url || 'https://www.askalert.com';
   const params = new URLSearchParams({
     token: tokenHash,
     type: emailData.email_action_type,
-    redirect_to: resolveAuthRedirectTo(emailData, siteUrl),
+    redirect_to: resolveAuthRedirectTo(emailData, options?.siteUrl),
   });
   return `${base}/auth/v1/verify?${params.toString()}`;
 }
