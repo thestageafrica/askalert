@@ -269,6 +269,9 @@ importers:
 
   packages/emails:
     dependencies:
+      standardwebhooks:
+        specifier: ^1.3.0
+        version: 1.3.0
       zod:
         specifier: ^3.24.4
         version: 3.25.76
@@ -279,9 +282,6 @@ importers:
       '@types/node':
         specifier: ^22.15.3
         version: 22.20.5
-      standardwebhooks:
-        specifier: ^1.3.0
-        version: 1.3.0
       tsx:
         specifier: ^4.19.4
         version: 4.23.15
