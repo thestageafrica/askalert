@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { cn } from '@askalert/ui';
+import { Button, Sheet, cn } from '@askalert/ui';
 import { useMockStore } from '../../lib/app/mock-store';
+import { useCategories } from '../../lib/use-categories';
 
 type NavItem = {
   href: string;
@@ -16,10 +17,18 @@ type NavItem = {
 
 export function BottomNav() {
   const pathname = usePathname() || '/app/';
+  const router = useRouter();
   const { chats } = useMockStore();
   const unreadMessages = chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+  const [askOpen, setAskOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
+  const { categories } = useCategories();
+  const liveCategories = askOpen
+    ? categories.filter(
+        (category) => category.status === 'pilot' || category.status === 'live',
+      )
+    : [];
 
   useEffect(() => {
     lastY.current = window.scrollY;
@@ -39,7 +48,7 @@ export function BottomNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const items: NavItem[] = [
+  const left: NavItem[] = [
     {
       href: '/app/',
       label: 'Home',
@@ -52,6 +61,9 @@ export function BottomNav() {
       match: (path) => path.startsWith('/app/requests') || path.startsWith('/app/request'),
       icon: (active) => <RequestsIcon active={active} />,
     },
+  ];
+
+  const right: NavItem[] = [
     {
       href: '/app/chats/',
       label: 'Messages',
@@ -75,22 +87,79 @@ export function BottomNav() {
   ];
 
   return (
-    <nav
-      aria-label="App"
-      className={cn(
-        'fixed inset-x-0 bottom-0 z-40 px-3 transition-transform duration-300 ease-out',
-        'pb-[max(0.55rem,env(safe-area-inset-bottom))]',
-        hidden ? 'translate-y-[120%]' : 'translate-y-0',
-      )}
-    >
-      <div className="mx-auto max-w-lg">
-        <div className="flex items-stretch justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950 px-1.5 py-1.5 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)]">
-          {items.map((item) => (
-            <NavLink key={item.href} item={item} pathname={pathname} />
+    <>
+      <nav
+        aria-label="App"
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-40 px-3 transition-transform duration-300 ease-out',
+          'pb-[max(0.55rem,env(safe-area-inset-bottom))]',
+          hidden ? 'translate-y-[120%]' : 'translate-y-0',
+        )}
+      >
+        <div className="relative mx-auto max-w-lg">
+          <div className="flex items-end justify-between rounded-[1.75rem] border border-surface/10 bg-navy-950 px-1.5 pb-2 pt-2 shadow-[0_-8px_32px_color-mix(in_srgb,var(--navy-950)_35%,transparent)]">
+            {left.map((item) => (
+              <NavLink key={item.href} item={item} pathname={pathname} />
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setAskOpen(true)}
+              className={cn(
+                'relative flex min-h-14 w-[5.25rem] shrink-0 flex-col items-center justify-end gap-1 px-1',
+                'text-[10px] font-semibold tracking-wide text-orange-400',
+                'focus-visible:outline-none',
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute -top-7 flex size-[3.85rem] items-center justify-center rounded-full',
+                  'bg-gradient-to-br from-orange-400 to-orange-500 text-navy-900',
+                  'shadow-[0_12px_28px_var(--glow-orange-strong)]',
+                  'ring-[6px] ring-navy-950/75',
+                  'transition hover:-translate-y-0.5 hover:brightness-105',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950',
+                )}
+              >
+                <AskIcon />
+              </span>
+              Start Ask
+            </button>
+
+            {right.map((item) => (
+              <NavLink key={item.href + item.label} item={item} pathname={pathname} />
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      <Sheet open={askOpen} onOpenChange={setAskOpen} title="What do you need?">
+        <p className="text-sm text-muted-foreground">
+          Pick a live category. AskAlert will chase verified vendors for you.
+        </p>
+        <div className="mt-5 space-y-2">
+          {liveCategories.map((category) => (
+            <button
+              key={category.slug}
+              type="button"
+              className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card px-4 text-left shadow-sm transition hover:border-orange-500/40 hover:bg-orange-500/5"
+              onClick={() => {
+                setAskOpen(false);
+                router.push(`/app/new/${category.slug}`);
+              }}
+            >
+              <span className="text-sm font-extrabold text-foreground">{category.name}</span>
+              <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-navy-900">
+                Start
+              </span>
+            </button>
           ))}
         </div>
-      </div>
-    </nav>
+        <Button variant="ghost" className="mt-4 w-full" onClick={() => setAskOpen(false)}>
+          Cancel
+        </Button>
+      </Sheet>
+    </>
   );
 }
 
@@ -100,7 +169,7 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     <Link
       href={item.href}
       className={cn(
-        'relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-semibold tracking-wide transition',
+        'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-semibold tracking-wide transition',
         active ? 'text-orange-400' : 'text-surface/65 hover:text-surface',
       )}
       aria-current={active ? 'page' : undefined}
@@ -177,6 +246,20 @@ function MenuIcon({ active }: { active: boolean }) {
         strokeWidth="1.8"
         strokeLinecap="round"
         opacity={active ? 1 : 0.95}
+      />
+    </svg>
+  );
+}
+
+function AskIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7 17 17 7M10 7h7v7"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
