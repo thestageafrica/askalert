@@ -53,7 +53,7 @@ if (!mail) {
 const provider = new ResendEmailProvider(apiKey, from);
 const result = await provider.send({
   to: mail.to,
-  subject: `[AskAlert test] ${mail.subject}`,
+  subject: mail.subject,
   html: mail.html,
   text: mail.text,
   idempotencyKey: mail.idempotencyKey,

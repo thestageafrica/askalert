@@ -126,19 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     async function boot() {
-      // PKCE email links land with ?code= on whatever redirect_to Auth used
-      // (sometimes Site URL `/` instead of /auth/reset-password/). Exchange here.
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        if (code) {
-          const { error } = await auth.auth.exchangeCodeForSession(code);
-          if (error && !error.message.toLowerCase().includes('already')) {
-            console.warn('auth code exchange failed', error.message);
-          }
-        }
-      }
-
+      // detectSessionInUrl exchanges ?code= once during client init.
+      // Do not call exchangeCodeForSession here — that races the callback page
+      // and burns the one-time PKCE code (signup / magic link / Google).
       if (!mounted) {
         return;
       }
