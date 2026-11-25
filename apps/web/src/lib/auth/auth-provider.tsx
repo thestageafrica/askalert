@@ -122,25 +122,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const auth = client;
     let mounted = true;
-    client.auth.getSession().then(({ data }) => {
+
+    async function boot() {
+      // PKCE email links land with ?code= on whatever redirect_to Auth used
+      // (sometimes Site URL `/` instead of /auth/reset-password/). Exchange here.
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code) {
+          const { error } = await auth.auth.exchangeCodeForSession(code);
+          if (error && !error.message.toLowerCase().includes('already')) {
+            console.warn('auth code exchange failed', error.message);
+          }
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+      const { data } = await auth.auth.getSession();
       if (!mounted) {
         return;
       }
       setSession(data.session);
       if (data.session?.user.id) {
-        void loadAccount(data.session.user.id).finally(() => {
-          if (mounted) {
-            setReady(true);
-          }
-        });
-      } else {
+        await loadAccount(data.session.user.id);
+      }
+      if (mounted) {
         setReady(true);
       }
-    });
+    }
 
-    const { data: sub } = client.auth.onAuthStateChange((_event, next) => {
+    void boot();
+
+    const { data: sub } = auth.auth.onAuthStateChange((event, next) => {
       setSession(next);
+      if (event === 'PASSWORD_RECOVERY' && typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (!path.includes('/auth/reset-password')) {
+          window.location.replace('/auth/reset-password/');
+          return;
+        }
+      }
       if (next?.user.id) {
         void loadAccount(next.user.id);
       } else {

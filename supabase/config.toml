@@ -26,5 +26,33 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000", "http://localhost:3001"]
-enable_signup = false
+additional_redirect_urls = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3000/auth/callback/", "http://localhost:3000/auth/reset-password/"]
+# Invitation-led admin / controlled signup locally. Hosted project settings win in production.
+enable_signup = true
+
+# Raise above the built-in "2 / hour" so local + hooked Resend sending is usable.
+# Hosted: also set Authentication → Rate Limits → Email after enabling the Send Email hook.
+# Do not lower this without checking the provider plan.
+[auth.rate_limit]
+email_sent = 30
+sms_sent = 30
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+# Align with the in-app resend cooldown (60s).
+max_frequency = "60s"
+# Do not configure [auth.email.smtp] here when using the Send Email hook.
+# SMTP in config would fight the hook-based Resend path.
+
+# Local hook URI points at the Functions gateway. For hosted projects, configure the
+# HTTPS hook in Dashboard → Authentication → Hooks (see docs/AUTH.md).
+[auth.hook.send_email]
+enabled = false
+uri = "http://127.0.0.1:54321/functions/v1/send-auth-email"
+# secrets = "env(SEND_EMAIL_HOOK_SECRET)"
+
+# Auth Hooks do not send a JWT. Keep verify_jwt off or Auth maps gateway 401s to
+# "Hook requires authorization token".
+[functions.send-auth-email]
+verify_jwt = false

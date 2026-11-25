@@ -14,6 +14,10 @@ out
 .env.local
 .env.*.local
 !.env.example
+supabase/functions/.env
+
+# Email previews (generated)
+packages/emails/preview/
 
 # Logs and debug
 npm-debug.log*

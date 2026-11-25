@@ -22,8 +22,23 @@ Set these on each Pages project (Production + Preview):
 | `NEXT_PUBLIC_USE_SUPABASE` | `false` | `true` only after Supabase is seeded. |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://….supabase.co` | Required when Supabase is on. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `…` | Public anon key (RLS-protected). |
-| Auth emails | Resend SMTP | Configure in Supabase Auth — see `docs/AUTH.md`. |
+| `NEXT_PUBLIC_EMAIL_LOGO_URL` | `https://www.askalert.com/brand/askalert-logo-email.png` | Absolute HTTPS logo for transactional mail. |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `B…` | Public half of VAPID pair for web push. |
+
+### Auth emails (Supabase Edge — not Pages env)
+
+Do **not** put Resend / hook secrets on Cloudflare Pages. Set them with `supabase secrets set` (see `docs/AUTH.md` and `supabase/functions/.env.example`):
+
+| Secret | Purpose |
+| --- | --- |
+| `RESEND_API_KEY` | Primary send via Resend HTTP API |
+| `SEND_EMAIL_HOOK_SECRET` | `v1,whsec_…` from Authentication → Hooks → Send Email |
+| `EMAIL_FROM` | e.g. `AskAlert <auth@askalert.com>` |
+| `EMAIL_LOGO_URL` / `EMAIL_SITE_URL` | Branding in hook-rendered templates |
+| `BREVO_API_KEY` | Optional HTTP fallback (not SMTP) |
+
+Deploy: `pnpm emails:sync-edge && supabase functions deploy send-auth-email --no-verify-jwt`  
+Enable the hook under **Authentication → Hooks**. Raise **Authentication → Rate Limits → Email** after the hook is on (local `config.toml` uses `email_sent = 30`; do not reset it to 2).
 
 ### Admin (`admin.askalert.com`)
 
