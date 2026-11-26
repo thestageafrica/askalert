@@ -53,47 +53,68 @@ function persistLocal(nodes: AreaNode[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
 }
 
-async function syncUpsert(node: AreaNode) {
+function upsertOrder(nodes: AreaNode[]): AreaNode[] {
+  const states = nodes.filter((node) => node.parentId == null);
+  const locations = nodes.filter((node) => node.parentId != null);
+  return [...states, ...locations];
+}
+
+async function syncUpsert(node: AreaNode): Promise<string | null> {
   if (!adminSupabaseEnabled()) {
-    return;
+    return 'Supabase is not configured on admin.';
   }
   const client = adminBrowserClient();
   if (!client) {
-    return;
+    return 'Could not create Supabase client.';
   }
-  await client.from('areas').upsert({
+  const { error } = await client.from('areas').upsert({
     id: node.id,
     slug: node.slug,
     name: node.name,
     parent_id: node.parentId,
     sort_order: node.sortOrder,
   });
+  return error?.message ?? null;
 }
 
-async function syncDelete(id: string) {
+async function syncDelete(id: string): Promise<string | null> {
   if (!adminSupabaseEnabled()) {
-    return;
+    return null;
   }
   const client = adminBrowserClient();
   if (!client) {
-    return;
+    return 'Could not create Supabase client.';
   }
-  await client.from('areas').delete().eq('id', id);
+  const { error } = await client.from('areas').delete().eq('id', id);
+  return error?.message ?? null;
+}
+
+async function pushAllToRemote(nodes: AreaNode[]): Promise<string | null> {
+  for (const node of upsertOrder(nodes)) {
+    const error = await syncUpsert(node);
+    if (error) {
+      return error;
+    }
+  }
+  return null;
 }
 
 type AreasAdminStore = {
   nodes: AreaNode[];
   ready: boolean;
+  syncError: string | null;
+  lastSyncedAt: string | null;
   states: AreaNode[];
   locationsFor: (stateSlug: string) => AreaNode[];
-  addState: (name: string) => { ok: true } | { ok: false; error: string };
+  addState: (name: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   addLocation: (
     stateSlug: string,
     name: string,
     options?: { statewide?: boolean },
-  ) => { ok: true } | { ok: false; error: string };
-  renameNode: (slug: string, name: string) => { ok: true } | { ok: false; error: string };
-  removeLocation: (slug: string) => { ok: true } | { ok: false; error: string };
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  renameNode: (slug: string, name: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  removeLocation: (slug: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  publishToServer: () => Promise<{ ok: true } | { ok: false; error: string }>;
   resetToSeed: () => void;
 };
 
@@ -102,6 +123,8 @@ const AreasAdminContext = createContext<AreasAdminStore | null>(null);
 export function AreasAdminProvider({ children }: { children: ReactNode }) {
   const [nodes, setNodes] = useState<AreaNode[]>(() => mergeAreaCatalogues([], AREA_CATALOGUE));
   const [ready, setReady] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,24 +144,39 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
         return;
       }
       const { data, error } = await client.from('areas').select('*').order('sort_order');
-      if (cancelled || error || !data?.length) {
+      if (cancelled) {
         return;
       }
-      const remote = normalizeRemoteAreas(
-        data.map((row) => ({
-          id: String(row.id),
-          slug: String(row.slug),
-          name: String(row.name),
-          parent_id: (row.parent_id as string | null) ?? null,
-          sort_order: Number(row.sort_order ?? 0),
-        })),
-      );
-      // Keep local/admin additions; fill gaps from remote + seed.
-      next = mergeAreaCatalogues(next, remote);
-      if (!cancelled) {
-        setNodes(next);
-        persistLocal(next);
+      if (!error && data?.length) {
+        const remote = normalizeRemoteAreas(
+          data.map((row) => ({
+            id: String(row.id),
+            slug: String(row.slug),
+            name: String(row.name),
+            parent_id: (row.parent_id as string | null) ?? null,
+            sort_order: Number(row.sort_order ?? 0),
+          })),
+        );
+        next = mergeAreaCatalogues(next, remote);
+        if (!cancelled) {
+          setNodes(next);
+          persistLocal(next);
+        }
       }
+
+      // Push local/admin catalogue to Supabase so vendor onboarding can read it.
+      const pushError = await pushAllToRemote(next);
+      if (cancelled) {
+        return;
+      }
+      if (pushError) {
+        setSyncError(
+          `Could not sync areas to the server: ${pushError}. Vendor onboarding will not see new states until this works.`,
+        );
+        return;
+      }
+      setSyncError(null);
+      setLastSyncedAt(new Date().toISOString());
     };
     void boot();
     return () => {
@@ -150,10 +188,11 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
     const merged = mergeAreaCatalogues(next, AREA_CATALOGUE);
     setNodes(merged);
     persistLocal(merged);
+    return merged;
   }, []);
 
   const addState = useCallback(
-    (name: string) => {
+    async (name: string) => {
       const trimmed = name.trim();
       if (trimmed.length < 2) {
         return { ok: false as const, error: 'Enter a state name.' };
@@ -184,15 +223,31 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
           1,
       };
       commit([...nodes, state, statewide]);
-      void syncUpsert(state);
-      void syncUpsert(statewide);
+      const stateError = await syncUpsert(state);
+      if (stateError) {
+        setSyncError(stateError);
+        return {
+          ok: false as const,
+          error: `Saved in admin only. Server sync failed: ${stateError}`,
+        };
+      }
+      const statewideError = await syncUpsert(statewide);
+      if (statewideError) {
+        setSyncError(statewideError);
+        return {
+          ok: false as const,
+          error: `Saved in admin only. Server sync failed: ${statewideError}`,
+        };
+      }
+      setSyncError(null);
+      setLastSyncedAt(new Date().toISOString());
       return { ok: true as const };
     },
     [commit, nodes],
   );
 
   const addLocation = useCallback(
-    (stateSlug: string, name: string, options?: { statewide?: boolean }) => {
+    async (stateSlug: string, name: string, options?: { statewide?: boolean }) => {
       const state = nodes.find((node) => node.slug === stateSlug && node.parentId == null);
       if (!state) {
         return { ok: false as const, error: 'Pick a state first.' };
@@ -220,14 +275,23 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
         statewide: Boolean(options?.statewide),
       };
       commit([...nodes, location]);
-      void syncUpsert(location);
+      const error = await syncUpsert(location);
+      if (error) {
+        setSyncError(error);
+        return {
+          ok: false as const,
+          error: `Saved in admin only. Server sync failed: ${error}`,
+        };
+      }
+      setSyncError(null);
+      setLastSyncedAt(new Date().toISOString());
       return { ok: true as const };
     },
     [commit, nodes],
   );
 
   const renameNode = useCallback(
-    (slug: string, name: string) => {
+    async (slug: string, name: string) => {
       const trimmed = name.trim();
       if (trimmed.length < 2) {
         return { ok: false as const, error: 'Enter a name.' };
@@ -238,14 +302,20 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
       }
       const updated = { ...existing, name: trimmed };
       commit(nodes.map((node) => (node.slug === slug ? updated : node)));
-      void syncUpsert(updated);
+      const error = await syncUpsert(updated);
+      if (error) {
+        setSyncError(error);
+        return { ok: false as const, error: `Rename saved locally only: ${error}` };
+      }
+      setSyncError(null);
+      setLastSyncedAt(new Date().toISOString());
       return { ok: true as const };
     },
     [commit, nodes],
   );
 
   const removeLocation = useCallback(
-    (slug: string) => {
+    async (slug: string) => {
       const existing = nodes.find((node) => node.slug === slug);
       if (!existing) {
         return { ok: false as const, error: 'Location not found.' };
@@ -254,11 +324,28 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
         return { ok: false as const, error: 'Remove locations, not the state itself.' };
       }
       commit(nodes.filter((node) => node.slug !== slug));
-      void syncDelete(existing.id);
+      const error = await syncDelete(existing.id);
+      if (error) {
+        setSyncError(error);
+        return { ok: false as const, error: `Removed locally only: ${error}` };
+      }
+      setSyncError(null);
+      setLastSyncedAt(new Date().toISOString());
       return { ok: true as const };
     },
     [commit, nodes],
   );
+
+  const publishToServer = useCallback(async () => {
+    const error = await pushAllToRemote(nodes);
+    if (error) {
+      setSyncError(error);
+      return { ok: false as const, error };
+    }
+    setSyncError(null);
+    setLastSyncedAt(new Date().toISOString());
+    return { ok: true as const };
+  }, [nodes]);
 
   const resetToSeed = useCallback(() => {
     const seeded = mergeAreaCatalogues([], AREA_CATALOGUE);
@@ -270,15 +357,29 @@ export function AreasAdminProvider({ children }: { children: ReactNode }) {
     () => ({
       nodes,
       ready,
+      syncError,
+      lastSyncedAt,
       states: listSeedStates(nodes),
       locationsFor: (stateSlug: string) => listSeedLocationsForState(stateSlug, nodes),
       addState,
       addLocation,
       renameNode,
       removeLocation,
+      publishToServer,
       resetToSeed,
     }),
-    [addLocation, addState, nodes, ready, removeLocation, renameNode, resetToSeed],
+    [
+      addLocation,
+      addState,
+      lastSyncedAt,
+      nodes,
+      ready,
+      removeLocation,
+      renameNode,
+      publishToServer,
+      resetToSeed,
+      syncError,
+    ],
   );
 
   return <AreasAdminContext.Provider value={value}>{children}</AreasAdminContext.Provider>;

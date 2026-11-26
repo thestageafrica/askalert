@@ -17,12 +17,16 @@ export default function AreasPage() {
     addLocation,
     renameNode,
     removeLocation,
+    publishToServer,
     resetToSeed,
+    syncError,
+    lastSyncedAt,
   } = useAreasAdmin();
   const [selectedState, setSelectedState] = useState('lagos');
   const [stateName, setStateName] = useState('');
   const [locationName, setLocationName] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (!ready) {
     return (
@@ -46,22 +50,42 @@ export default function AreasPage() {
           </p>
           <h1 className="mt-1 text-3xl font-extrabold tracking-tight">Areas</h1>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            Seed states and their locations for vendor coverage. Lagos ships first; add more states
-            when you expand.
+            Seed states and their locations for vendor coverage. Changes must sync to Supabase so
+            the vendor app can read them.
           </p>
         </div>
         {canEdit ? (
-          <Button
-            variant="secondary"
-            className="min-h-11"
-            onClick={() => {
-              resetToSeed();
-              setSelectedState('lagos');
-              setMessage('Reset to Lagos seed catalogue.');
-            }}
-          >
-            Reset to seed
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              className="min-h-11"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void publishToServer().then((result) => {
+                  setBusy(false);
+                  setMessage(
+                    result.ok
+                      ? 'Synced all states and locations to the server for vendor onboarding.'
+                      : result.error,
+                  );
+                });
+              }}
+            >
+              Sync to server
+            </Button>
+            <Button
+              variant="secondary"
+              className="min-h-11"
+              onClick={() => {
+                resetToSeed();
+                setSelectedState('lagos');
+                setMessage('Reset to Lagos seed catalogue.');
+              }}
+            >
+              Reset to seed
+            </Button>
+          </div>
         ) : null}
       </div>
 
@@ -70,9 +94,19 @@ export default function AreasPage() {
           View only for your role. Switch to Super admin or Operations to edit.
         </p>
       ) : null}
+      {syncError ? (
+        <p className="rounded-2xl border border-danger/40 bg-danger/15 px-3 py-2 text-sm font-medium text-navy-950">
+          {syncError}
+        </p>
+      ) : null}
       {message ? (
         <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm font-medium text-navy-950">
           {message}
+        </p>
+      ) : null}
+      {lastSyncedAt && !syncError ? (
+        <p className="text-xs text-muted-foreground">
+          Last server sync: {new Date(lastSyncedAt).toLocaleString()}
         </p>
       ) : null}
 
@@ -112,20 +146,24 @@ export default function AreasPage() {
               <Button
                 type="button"
                 className="min-h-11 w-full"
+                disabled={busy}
                 onClick={() => {
-                  const result = addState(stateName);
-                  if (!result.ok) {
-                    setMessage(result.error);
-                    return;
-                  }
-                  const slug = stateName
-                    .trim()
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-+|-+$/g, '');
-                  setSelectedState(slug);
-                  setStateName('');
-                  setMessage(`Added ${stateName.trim()} with an All-of-state option.`);
+                  const label = stateName.trim();
+                  setBusy(true);
+                  void addState(stateName).then((result) => {
+                    setBusy(false);
+                    if (!result.ok) {
+                      setMessage(result.error);
+                      return;
+                    }
+                    const slug = label
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/^-+|-+$/g, '');
+                    setSelectedState(slug);
+                    setStateName('');
+                    setMessage(`Added ${label} and synced to the server.`);
+                  });
                 }}
               >
                 Add state
@@ -165,13 +203,17 @@ export default function AreasPage() {
                         type="button"
                         variant="ghost"
                         className="min-h-11"
+                        disabled={busy}
                         onClick={() => {
                           const next = window.prompt('Rename location', location.name);
                           if (!next) {
                             return;
                           }
-                          const result = renameNode(location.slug, next);
-                          setMessage(result.ok ? 'Location renamed.' : result.error);
+                          setBusy(true);
+                          void renameNode(location.slug, next).then((result) => {
+                            setBusy(false);
+                            setMessage(result.ok ? 'Location renamed and synced.' : result.error);
+                          });
                         }}
                       >
                         Rename
@@ -181,6 +223,7 @@ export default function AreasPage() {
                       type="button"
                       variant="ghost"
                       className="min-h-11 text-danger"
+                      disabled={busy}
                       onClick={() => {
                         const confirmed = window.confirm(
                           `Remove ${location.name} from ${activeState?.name ?? 'this state'}?`,
@@ -188,8 +231,13 @@ export default function AreasPage() {
                         if (!confirmed) {
                           return;
                         }
-                        const result = removeLocation(location.slug);
-                        setMessage(result.ok ? `${location.name} removed.` : result.error);
+                        setBusy(true);
+                        void removeLocation(location.slug).then((result) => {
+                          setBusy(false);
+                          setMessage(
+                            result.ok ? `${location.name} removed and synced.` : result.error,
+                          );
+                        });
                       }}
                     >
                       Remove
@@ -217,14 +265,19 @@ export default function AreasPage() {
                 <Button
                   type="button"
                   className="min-h-11 w-full sm:w-auto"
+                  disabled={busy}
                   onClick={() => {
-                    const result = addLocation(activeState.slug, locationName);
-                    if (!result.ok) {
-                      setMessage(result.error);
-                      return;
-                    }
-                    setLocationName('');
-                    setMessage(`Added ${locationName.trim()} under ${activeState.name}.`);
+                    const label = locationName.trim();
+                    setBusy(true);
+                    void addLocation(activeState.slug, locationName).then((result) => {
+                      setBusy(false);
+                      if (!result.ok) {
+                        setMessage(result.error);
+                        return;
+                      }
+                      setLocationName('');
+                      setMessage(`Added ${label} under ${activeState.name} and synced.`);
+                    });
                   }}
                 >
                   Add location
