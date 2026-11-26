@@ -91,6 +91,33 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
     patch({ agent: { ...draft.agent, ...partial } });
   };
 
+  const updateRequirement = (index: number, value: string) => {
+    const next = [...draft.vendor_requirements];
+    next[index] = value;
+    patch({ vendor_requirements: next });
+  };
+
+  const addRequirement = () => {
+    patch({ vendor_requirements: [...draft.vendor_requirements, ''] });
+  };
+
+  const removeRequirement = (index: number) => {
+    patch({
+      vendor_requirements: draft.vendor_requirements.filter((_, i) => i !== index),
+    });
+  };
+
+  const moveRequirement = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= draft.vendor_requirements.length) {
+      return;
+    }
+    const next = [...draft.vendor_requirements];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item!);
+    patch({ vendor_requirements: next });
+  };
+
   const updateAttribute = (index: number, next: CategoryAttribute) => {
     const attributes = draft.attributes.map((item, i) => (i === index ? next : item));
     patch({ attributes });
@@ -194,12 +221,79 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
         <TabsList className="flex h-auto flex-wrap gap-1">
           <TabsTrigger value="basics">Basics</TabsTrigger>
           <TabsTrigger value="attributes">Attributes</TabsTrigger>
+          <TabsTrigger value="requirements">Vendor requirements</TabsTrigger>
           <TabsTrigger value="rules">Rules and escrow</TabsTrigger>
           <TabsTrigger value="agent">Agent text</TabsTrigger>
           <TabsTrigger value="readiness">Areas and readiness</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="versions">Versions</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="requirements" className="mt-4 space-y-4 rounded-2xl border border-border bg-card p-4">
+          <div>
+            <h2 className="text-sm font-extrabold text-foreground">Vendor requirements</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Shown to vendors during onboarding for this category. Edit a line, add more, reorder, or
+              remove. Publish from the Versions tab to go live.
+            </p>
+          </div>
+          <ul className="space-y-2">
+            {draft.vendor_requirements.map((requirement, index) => (
+              <li
+                key={`req_${index}`}
+                className="flex flex-wrap items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/60 p-2 sm:flex-nowrap"
+              >
+                <span className="mt-2.5 w-6 shrink-0 text-center text-xs font-bold text-muted-foreground">
+                  {index + 1}
+                </span>
+                <Input
+                  aria-label={`Requirement ${index + 1}`}
+                  value={requirement}
+                  disabled={!canEdit}
+                  placeholder="e.g. ID verification"
+                  onChange={(event) => updateRequirement(index, event.target.value)}
+                />
+                <div className="flex shrink-0 gap-1">
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-border bg-card text-xs font-bold disabled:opacity-40"
+                    disabled={!canEdit || index === 0}
+                    aria-label="Move up"
+                    onClick={() => moveRequirement(index, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-border bg-card text-xs font-bold disabled:opacity-40"
+                    disabled={!canEdit || index >= draft.vendor_requirements.length - 1}
+                    aria-label="Move down"
+                    onClick={() => moveRequirement(index, 1)}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-border bg-card text-xs font-bold text-danger disabled:opacity-40"
+                    disabled={!canEdit || draft.vendor_requirements.length <= 1}
+                    aria-label="Remove requirement"
+                    onClick={() => removeRequirement(index)}
+                  >
+                    ×
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {canEdit ? (
+            <Button type="button" variant="secondary" onClick={addRequirement}>
+              Add requirement
+            </Button>
+          ) : null}
+          <p className="text-xs text-muted-foreground">
+            At least one requirement is required to publish. Empty lines are removed on publish.
+          </p>
+        </TabsContent>
 
         <TabsContent value="basics" className="mt-4 space-y-3 rounded-2xl border border-border bg-card p-4">
           <Input
@@ -444,19 +538,11 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
               }
             />
           </div>
-          <Input
-            label="Vendor requirements (one per line)"
-            value={draft.vendor_requirements.join('\n')}
-            disabled={!canEdit}
-            onChange={(event) =>
-              patch({
-                vendor_requirements: event.target.value
-                  .split('\n')
-                  .map((line) => line.trim())
-                  .filter(Boolean),
-              })
-            }
-          />
+          <p className="rounded-2xl border border-dashed border-border bg-card-muted/50 px-3 py-3 text-sm text-muted-foreground">
+            Vendor onboarding requirement lines are edited in the{' '}
+            <span className="font-semibold text-foreground">Vendor requirements</span> tab
+            ({draft.vendor_requirements.length} listed).
+          </p>
         </TabsContent>
 
         <TabsContent value="agent" className="mt-4 space-y-3 rounded-2xl border border-border bg-card p-4">

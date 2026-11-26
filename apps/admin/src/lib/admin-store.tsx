@@ -223,6 +223,9 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       const candidate: CategoryConfig = {
         ...managed.draft,
         status: nextStatus,
+        vendor_requirements: managed.draft.vendor_requirements
+          .map((line) => line.trim())
+          .filter(Boolean),
       };
       const result = validateConfig(candidate);
       if (!result.ok) {
