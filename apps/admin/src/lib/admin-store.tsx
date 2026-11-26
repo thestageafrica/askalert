@@ -21,6 +21,7 @@ import {
   publishCategoryVersion,
 } from '@askalert/db';
 import { createBlankCategory } from './blank-category';
+import { useAdminAuth } from './admin-auth';
 import type { AdminRole } from './roles';
 import { adminBrowserClient, adminSupabaseEnabled } from './supabase-browser';
 
@@ -134,11 +135,18 @@ function fromSupabaseRows(
 
 export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const useRemote = supabaseEnabledOnClient();
+  const { role: authRole, supabaseConfigured } = useAdminAuth();
   const [role, setRole] = useState<AdminRole>('super_admin');
   const [categories, setCategories] = useState<ManagedCategory[]>(() =>
     useRemote ? [] : seedManaged(),
   );
   const [categoriesLoading, setCategoriesLoading] = useState(useRemote);
+
+  useEffect(() => {
+    if (supabaseConfigured && authRole) {
+      setRole(authRole);
+    }
+  }, [authRole, supabaseConfigured]);
 
   useEffect(() => {
     if (!useRemote) {

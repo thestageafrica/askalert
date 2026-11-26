@@ -74,3 +74,17 @@ export type {
   Database,
   Json,
 } from './types';
+export {
+  adminUiRoleSchema,
+  canApproveVendors,
+  canInviteAdmins,
+  canManageUsers,
+  canReviewVendors,
+  canSuspendUsers,
+  canViewAuditLog,
+  dbRoleToUi,
+  isAdminDbRole,
+  pickPrimaryAdminRole,
+  uiRoleToDb,
+  type AdminUiRole,
+} from './admin-roles';

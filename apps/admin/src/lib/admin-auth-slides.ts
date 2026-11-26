@@ -45,7 +45,7 @@ export const ADMIN_AUTH_SLIDES: AdminAuthSlide[] = [
     id: 'secure',
     kicker: 'Secure',
     headline: 'Invitation-only access.',
-    body: 'No public sign-up. Two-factor authentication arrives in Prompt 27.',
+    body: 'No public sign-up. Email, password and TOTP keep the console locked down.',
     imageSrc: '/brand/askalert-images-4.jpg',
     imageWebpSrc: '/brand/askalert-images-4.webp',
     imageAlt: 'Secure admin access',

@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { Button, Logo, cn } from '@askalert/ui';
 import { useAdminAuth } from '../lib/admin-auth';
 import { useAdminStore } from '../lib/admin-store';
-import { roleLabels, type AdminRole } from '../lib/roles';
+import { roleLabels } from '../lib/roles';
 
 type NavItem = {
   href: string;
@@ -22,6 +22,8 @@ const marketplace: NavItem[] = [
 ];
 
 const operations: NavItem[] = [
+  { href: '/users', label: 'Users', icon: <PersonIcon /> },
+  { href: '/audit', label: 'Audit log', icon: <AuditIcon /> },
   { href: '/requests', label: 'Requests', icon: <BellIcon /> },
   { href: '/disputes', label: 'Disputes', icon: <AlertIcon /> },
   { href: '/payouts', label: 'Payouts', icon: <CashIcon /> },
@@ -39,7 +41,7 @@ function isActive(pathname: string, href: string) {
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { role, setRole } = useAdminStore();
+  const { role } = useAdminStore();
   const { user, signOut, supabaseConfigured } = useAdminAuth();
   const emailLabel = user?.email?.split('@')[0] ?? 'Admin';
   const initials = emailLabel.slice(0, 2).toUpperCase();
@@ -72,41 +74,45 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </p>
             <p className="text-sm text-muted-foreground">Lagos operations console</p>
           </div>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Role</span>
-              <select
-                className="min-h-11 rounded-xl border border-border bg-surface px-3 text-sm font-semibold shadow-sm"
-                value={role}
-                onChange={(event) => setRole(event.target.value as AdminRole)}
-              >
-                {(Object.keys(roleLabels) as AdminRole[]).map((value) => (
-                  <option key={value} value={value}>
-                    {roleLabels[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1.5 shadow-sm">
               <span className="flex size-8 items-center justify-center rounded-full bg-navy-950 text-[11px] font-extrabold text-orange-400">
                 {initials}
               </span>
-              <span className="max-w-[9rem] truncate pr-1 text-xs font-bold text-foreground">
-                {user?.email ?? roleLabels[role]}
-              </span>
+              <div className="pr-1">
+                <p className="max-w-[10rem] truncate text-xs font-bold text-foreground">
+                  {user?.email ?? 'Local admin'}
+                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-600">
+                  {roleLabels[role]}
+                </p>
+              </div>
             </div>
             {supabaseConfigured ? (
-              <Button
-                variant="secondary"
-                className="min-h-11"
-                onClick={() => {
-                  void signOut().then(() => {
-                    window.location.href = '/sign-in/';
-                  });
-                }}
-              >
-                Sign out
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  className="min-h-11"
+                  onClick={() => {
+                    void signOut(false).then(() => {
+                      window.location.href = '/sign-in/';
+                    });
+                  }}
+                >
+                  Sign out
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="min-h-11"
+                  onClick={() => {
+                    void signOut(true).then(() => {
+                      window.location.href = '/sign-in/';
+                    });
+                  }}
+                >
+                  Sign out everywhere
+                </Button>
+              </>
             ) : null}
           </div>
         </header>
@@ -255,6 +261,24 @@ function CostIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" />
       <path d="M12 7v10M9.5 9.5c.6-1 1.5-1.5 2.5-1.5 1.4 0 2.5.8 2.5 2s-1.1 2-2.5 2h-1c-1.4 0-2.5.8-2.5 2s1.1 2 2.5 2c1 0 1.9-.5 2.5-1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5 19c1.6-3 3.8-4.5 7-4.5s5.4 1.5 7 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AuditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M7 4h10a2 2 0 0 1 2 2v14l-3.5-2L12 20l-3.5-2L5 20V6a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M9 9h6M9 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

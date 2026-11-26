@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAdminAuth } from '../lib/admin-auth';
 
 export function RequireAdminAuth({ children }: { children: ReactNode }) {
-  const { ready, user } = useAdminAuth();
+  const { ready, user, role, mfaRequired, mfaVerified, supabaseConfigured } = useAdminAuth();
   const router = useRouter();
   const pathname = usePathname() || '/';
 
@@ -13,11 +13,20 @@ export function RequireAdminAuth({ children }: { children: ReactNode }) {
     if (!ready) {
       return;
     }
-    if (!user) {
+    if (!supabaseConfigured) {
+      // Local/mock mode: allow shell without Supabase (role defaults in store).
+      return;
+    }
+    if (!user || !role) {
+      const next = encodeURIComponent(pathname);
+      router.replace(`/sign-in/?next=${next}`);
+      return;
+    }
+    if (mfaRequired && !mfaVerified) {
       const next = encodeURIComponent(pathname);
       router.replace(`/sign-in/?next=${next}`);
     }
-  }, [pathname, ready, router, user]);
+  }, [mfaRequired, mfaVerified, pathname, ready, role, router, supabaseConfigured, user]);
 
   if (!ready) {
     return (
@@ -27,7 +36,7 @@ export function RequireAdminAuth({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (supabaseConfigured && (!user || !role || (mfaRequired && !mfaVerified))) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-navy-950 text-sm text-surface/70">
         Redirecting to sign in…

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { AdminAuthProvider } from '../lib/admin-auth';
 import { AdminStoreProvider } from '../lib/admin-store';
 import { BillingAdminProvider } from '../lib/billing-admin-store';
+import { OpsStoreProvider } from '../lib/ops-store';
 import { AdminShell } from './admin-shell';
 import { RequireAdminAuth } from './require-admin-auth';
 
@@ -36,7 +37,9 @@ export function Providers({
             <RequireAdminAuth>
               <AdminStoreProvider>
                 <BillingAdminProvider>
-                  <AdminShell>{children}</AdminShell>
+                  <OpsStoreProvider>
+                    <AdminShell>{children}</AdminShell>
+                  </OpsStoreProvider>
                 </BillingAdminProvider>
               </AdminStoreProvider>
             </RequireAdminAuth>

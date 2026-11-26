@@ -53,14 +53,28 @@ Enable the hook under **Authentication → Hooks**. Raise **Authentication → R
 
 ## Cloudflare Access (admin)
 
-HTTP Basic Auth middleware is removed. Protect the admin hostname with **Cloudflare Access** (Zero Trust):
+HTTP Basic Auth middleware is removed. Protect the admin hostname with **Cloudflare Access** (Zero Trust) as **defence in depth** on top of app login:
 
 1. Zero Trust → Access → Applications → Add application → Self-hosted
 2. Application domain: `admin.askalert.com`
 3. Policy: allow your team email addresses (Google / one-time PIN / etc.)
 4. Confirm the free plan covers your small team before relying on it commercially
 
+App login (Prompt 27) already requires an active `admin_*` role plus TOTP when MFA is enabled. Access is still recommended so the sign-in page itself is not on the open internet.
+
 Admin `robots.txt` still disallows all crawlers. `_headers` also sends `X-Robots-Tag: noindex, nofollow`.
+
+### Admin security checklist
+
+- [ ] `admin.askalert.com` custom domain on the Admin Pages project
+- [ ] Admin Pages env: `NEXT_PUBLIC_USE_SUPABASE=true`, Supabase URL + anon key, `NEXT_PUBLIC_SITE_URL=https://admin.askalert.com`
+- [ ] Migration `20260330000001_admin_ops.sql` applied (`pnpm db:push` / remote)
+- [ ] First super admin: Auth user created + `user_roles` row `admin_super` / `active`
+- [ ] Supabase Auth → MFA (TOTP) enabled for the project
+- [ ] Staff invited only via Settings → Invite (or SQL), never public sign-up
+- [ ] Cloudflare Access policy on `admin.askalert.com` (optional but recommended)
+- [ ] No `SUPABASE_SERVICE_ROLE_KEY` in Pages environment variables
+- [ ] Idle timeout (30 minutes) and “Sign out everywhere” verified on a staff laptop
 
 ## Domains
 
