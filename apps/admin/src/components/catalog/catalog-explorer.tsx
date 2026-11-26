@@ -65,11 +65,13 @@ export function CatalogExplorer() {
     category?.services[0] ??
     null;
 
+  const selectedServiceSlug = selectedService?.slug;
   useEffect(() => {
-    if (selectedService) {
-      setPreviewQty(defaultPreviewQty(selectedService));
+    const service = category?.services.find((item) => item.slug === selectedServiceSlug);
+    if (service) {
+      setPreviewQty(defaultPreviewQty(service));
     }
-  }, [selectedService?.slug]);
+  }, [category?.services, selectedServiceSlug]);
 
   const filteredServices = useMemo(() => {
     if (!category) return [];
@@ -123,6 +125,14 @@ export function CatalogExplorer() {
     return buildRequestSchema(snapshot, typeSlug, [selectedService.slug]);
   }, [selectedService, snapshot, typeFilter]);
 
+  const typeNameBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const type of category?.types ?? []) {
+      map.set(type.slug, type.name);
+    }
+    return map;
+  }, [category?.types]);
+
   if (!category || !tree) {
     return (
       <p className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
@@ -158,14 +168,6 @@ export function CatalogExplorer() {
       setMobilePanel('browse');
     }
   };
-
-  const typeNameBySlug = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const type of category.types) {
-      map.set(type.slug, type.name);
-    }
-    return map;
-  }, [category.types]);
 
   return (
     <div className="space-y-5 pb-24 lg:pb-0">
