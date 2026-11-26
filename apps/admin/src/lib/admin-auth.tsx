@@ -240,27 +240,33 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       if (!client) {
         return { error: 'Supabase is not configured for admin yet.' };
       }
-      const { data, error } = await client.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (error || !data.user) {
-        return { error: error?.message ?? 'Sign in failed.' };
+      try {
+        const { data, error } = await client.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+        if (error || !data.user) {
+          return { error: error?.message ?? 'Sign in failed.' };
+        }
+        setUser({ id: data.user.id, email: data.user.email });
+        touchAdminActivity();
+        await adminRpc(client, 'admin_accept_invitation');
+        const nextRole = await refreshRoles();
+        if (!nextRole) {
+          await client.auth.signOut();
+          setUser(null);
+          return {
+            error:
+              'This account is not an AskAlert admin. Ask a super admin to invite you, then try again.',
+          };
+        }
+        await evaluateMfa();
+        return { error: null };
+      } catch (caught) {
+        const message =
+          caught instanceof Error ? caught.message : 'Sign in failed unexpectedly.';
+        return { error: message };
       }
-      setUser({ id: data.user.id, email: data.user.email });
-      touchAdminActivity();
-      await adminRpc(client, 'admin_accept_invitation');
-      const nextRole = await refreshRoles();
-      if (!nextRole) {
-        await client.auth.signOut();
-        setUser(null);
-        return {
-          error:
-            'This account is not an AskAlert admin. Ask a super admin to invite you, then try again.',
-        };
-      }
-      await evaluateMfa();
-      return { error: null };
     },
     [client, evaluateMfa, refreshRoles],
   );

@@ -11,9 +11,14 @@ export async function adminRpc<T = unknown>(
   fn: string,
   args?: Record<string, unknown>,
 ): Promise<RpcResult<T>> {
-  const runner = client.rpc as unknown as (
-    name: string,
-    params?: Record<string, unknown>,
-  ) => Promise<RpcResult<T>>;
-  return runner(fn, args);
+  // Must call through the client so `this` stays bound (rpc uses this.rest).
+  const result = await (
+    client as unknown as {
+      rpc: (
+        name: string,
+        params?: Record<string, unknown>,
+      ) => Promise<RpcResult<T>>;
+    }
+  ).rpc(fn, args);
+  return result;
 }

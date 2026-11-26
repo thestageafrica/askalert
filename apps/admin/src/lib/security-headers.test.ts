@@ -15,9 +15,10 @@ describe('admin security headers', () => {
     );
   });
 
-  it('builds a CSP that blocks framing', () => {
+  it('builds a CSP that blocks framing and allows Supabase HTTPS', () => {
     const csp = buildContentSecurityPolicy();
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("connect-src 'self' https:");
   });
 });

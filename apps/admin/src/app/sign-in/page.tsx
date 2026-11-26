@@ -145,28 +145,38 @@ function AdminSignInForm() {
                 JSON.stringify(nextSignInAttempts(attempts)),
               );
               setLoading(true);
-              void signInWithPassword(email, password).then(({ error: signError }) => {
-                setLoading(false);
-                if (signError) {
-                  setError(signError);
-                }
-                // MFA / redirect handled by session effect.
-              });
+              void signInWithPassword(email, password)
+                .then(({ error: signError }) => {
+                  setLoading(false);
+                  if (signError) {
+                    setError(signError);
+                  }
+                  // MFA / redirect handled by session effect.
+                })
+                .catch(() => {
+                  setLoading(false);
+                  setError('Sign in failed. Check your connection and try again.');
+                });
               return;
             }
             setLoading(true);
             const run = pendingMfaFactorId
               ? verifyMfaChallenge(code)
               : verifyMfaEnroll(code);
-            void run.then(({ error: mfaError }) => {
-              setLoading(false);
-              if (mfaError) {
-                setError(mfaError);
-                return;
-              }
-              window.localStorage.removeItem(ADMIN_SIGNIN_ATTEMPTS_KEY);
-              router.replace(next);
-            });
+            void run
+              .then(({ error: mfaError }) => {
+                setLoading(false);
+                if (mfaError) {
+                  setError(mfaError);
+                  return;
+                }
+                window.localStorage.removeItem(ADMIN_SIGNIN_ATTEMPTS_KEY);
+                router.replace(next);
+              })
+              .catch(() => {
+                setLoading(false);
+                setError('Verification failed. Try again.');
+              });
           }}
         >
           {step === 'password' ? 'Continue' : 'Verify and enter'}
