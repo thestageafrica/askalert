@@ -56,6 +56,7 @@ export {
   statewideSlugForState,
   type AreaNode,
 } from './areas-catalogue';
+export { mergeAreaCatalogues, normalizeRemoteAreas } from './areas-normalize';
 export { ensureCategoryId, resolveCategoryId } from './resolve-category-id';
 export { isSupabaseEnabled, requireSupabaseEnv } from './feature-flag';
 export { publicSupabaseEnv } from './public-env';

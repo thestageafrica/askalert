@@ -9,8 +9,16 @@ import { canEditCategories } from '../../lib/roles';
 export default function AreasPage() {
   const { role } = useAdminStore();
   const canEdit = canEditCategories(role);
-  const { ready, states, locationsFor, addState, addLocation, renameNode, resetToSeed } =
-    useAreasAdmin();
+  const {
+    ready,
+    states,
+    locationsFor,
+    addState,
+    addLocation,
+    renameNode,
+    removeLocation,
+    resetToSeed,
+  } = useAreasAdmin();
   const [selectedState, setSelectedState] = useState('lagos');
   const [stateName, setStateName] = useState('');
   const [locationName, setLocationName] = useState('');
@@ -150,22 +158,43 @@ export default function AreasPage() {
                     {location.statewide ? ' · statewide' : ''}
                   </p>
                 </div>
-                {canEdit && !location.statewide ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="min-h-11"
-                    onClick={() => {
-                      const next = window.prompt('Rename location', location.name);
-                      if (!next) {
-                        return;
-                      }
-                      const result = renameNode(location.slug, next);
-                      setMessage(result.ok ? 'Location renamed.' : result.error);
-                    }}
-                  >
-                    Rename
-                  </Button>
+                {canEdit ? (
+                  <div className="flex flex-wrap gap-2">
+                    {!location.statewide ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="min-h-11"
+                        onClick={() => {
+                          const next = window.prompt('Rename location', location.name);
+                          if (!next) {
+                            return;
+                          }
+                          const result = renameNode(location.slug, next);
+                          setMessage(result.ok ? 'Location renamed.' : result.error);
+                        }}
+                      >
+                        Rename
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="min-h-11 text-danger"
+                      onClick={() => {
+                        const confirmed = window.confirm(
+                          `Remove ${location.name} from ${activeState?.name ?? 'this state'}?`,
+                        );
+                        if (!confirmed) {
+                          return;
+                        }
+                        const result = removeLocation(location.slug);
+                        setMessage(result.ok ? `${location.name} removed.` : result.error);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 ) : null}
               </li>
             ))}

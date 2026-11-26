@@ -66,7 +66,7 @@ export function validateCoverageRows(
   const seen = new Set<string>();
   for (const row of filled) {
     if (seen.has(row.locationSlug)) {
-      return 'You already added that location.';
+      return 'This location is already added. Choose another location.';
     }
     seen.add(row.locationSlug);
     if (row.locationSlug.endsWith('-all')) {

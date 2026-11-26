@@ -46,6 +46,15 @@ describe('vendor onboarding validation', () => {
     expect(
       validateCoverageRows(
         [
+          { stateSlug: 'lagos', locationSlug: 'lekki' },
+          { stateSlug: 'lagos', locationSlug: 'lekki' },
+        ],
+        2,
+      ),
+    ).toMatch(/already added/i);
+    expect(
+      validateCoverageRows(
+        [
           { stateSlug: 'lagos', locationSlug: 'lagos-all' },
           { stateSlug: 'lagos', locationSlug: 'lekki' },
         ],

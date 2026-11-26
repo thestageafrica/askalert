@@ -1,15 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import {
-  areaSlugsFromRows,
-  isStatewideLocation,
-  listSeedLocationsForState,
-  listSeedStates,
-  rowsFromAreaSlugs,
-  statewideSlugForState,
-} from '@askalert/db';
+import { useEffect, useMemo, useState } from 'react';
+import { areaSlugsFromRows, isStatewideLocation, rowsFromAreaSlugs } from '@askalert/db';
 import { Button, Select } from '@askalert/ui';
+import { useServiceAreas } from '../../lib/vendor/use-service-areas';
 
 type CoverageRow = {
   key: string;
@@ -25,13 +19,17 @@ function newRow(stateSlug = 'lagos'): CoverageRow {
   };
 }
 
-function rowsFromSlugs(areaSlugs: string[], fallbackState: string): CoverageRow[] {
-  const existing = rowsFromAreaSlugs(areaSlugs);
+function initialRows(
+  areaSlugs: string[],
+  fallbackState: string,
+  maxServiceAreas: number,
+): CoverageRow[] {
+  const existing = rowsFromAreaSlugs(areaSlugs).slice(0, maxServiceAreas);
   if (existing.length === 0) {
     return [newRow(fallbackState)];
   }
-  return existing.map((row) => ({
-    key: `row-${row.locationSlug}`,
+  return existing.map((row, index) => ({
+    key: `row-${row.locationSlug}-${index}`,
     ...row,
   }));
 }
@@ -45,9 +43,20 @@ export function ServiceAreasStep({
   maxServiceAreas: number;
   onChange: (slugs: string[]) => void;
 }) {
-  const states = useMemo(() => listSeedStates(), []);
+  const { states, locationsFor } = useServiceAreas();
   const defaultState = states[0]?.slug ?? 'lagos';
-  const [rows, setRows] = useState<CoverageRow[]>(() => rowsFromSlugs(areaSlugs, defaultState));
+  const [rows, setRows] = useState<CoverageRow[]>(() =>
+    initialRows(areaSlugs, defaultState, maxServiceAreas),
+  );
+
+  // Cap legacy drafts that still carry many old multi-select slugs.
+  useEffect(() => {
+    if (areaSlugs.length > maxServiceAreas) {
+      onChange(areaSlugs.slice(0, maxServiceAreas));
+    }
+    // Only on mount / when plan cap changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxServiceAreas]);
 
   const commit = (next: CoverageRow[]) => {
     setRows(next);
@@ -57,6 +66,23 @@ export function ServiceAreasStep({
   const filledCount = rows.filter((row) => row.locationSlug).length;
   const atCap = filledCount >= maxServiceAreas;
   const hasStatewide = rows.some((row) => isStatewideLocation(row.locationSlug));
+
+  const duplicateKeys = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of rows) {
+      if (!row.locationSlug) {
+        continue;
+      }
+      counts.set(row.locationSlug, (counts.get(row.locationSlug) ?? 0) + 1);
+    }
+    const dupes = new Set<string>();
+    for (const row of rows) {
+      if (row.locationSlug && (counts.get(row.locationSlug) ?? 0) > 1) {
+        dupes.add(row.key);
+      }
+    }
+    return dupes;
+  }, [rows]);
 
   const updateRow = (key: string, patch: Partial<CoverageRow>) => {
     commit(
@@ -74,7 +100,7 @@ export function ServiceAreasStep({
   };
 
   const addRow = () => {
-    if (atCap || hasStatewide) {
+    if (rows.length >= maxServiceAreas || hasStatewide) {
       return;
     }
     commit([...rows, newRow(defaultState)]);
@@ -88,41 +114,13 @@ export function ServiceAreasStep({
     commit(rows.filter((row) => row.key !== key));
   };
 
-  const locationOptionsFor = (row: CoverageRow) => {
-    const locations = listSeedLocationsForState(row.stateSlug);
-    const selectedElsewhere = new Set(
-      rows
-        .filter((item) => item.key !== row.key && item.locationSlug)
-        .map((item) => item.locationSlug),
-    );
-    const statewideTaken = selectedElsewhere.has(statewideSlugForState(row.stateSlug));
-    return [
-      { value: '', label: 'Select location' },
-      ...locations
-        .filter((loc) => {
-          if (statewideTaken && !loc.statewide) {
-            return false;
-          }
-          if (selectedElsewhere.has(loc.slug)) {
-            return false;
-          }
-          if (
-            loc.statewide &&
-            rows.some(
-              (item) =>
-                item.key !== row.key &&
-                item.stateSlug === row.stateSlug &&
-                item.locationSlug &&
-                !isStatewideLocation(item.locationSlug),
-            )
-          ) {
-            return false;
-          }
-          return true;
-        })
-        .map((loc) => ({ value: loc.slug, label: loc.name })),
-    ];
-  };
+  const locationOptions = (stateSlug: string) => [
+    { value: '', label: 'Select location' },
+    ...locationsFor(stateSlug).map((loc) => ({
+      value: loc.slug,
+      label: loc.name,
+    })),
+  ];
 
   return (
     <div className="space-y-4">
@@ -136,49 +134,57 @@ export function ServiceAreasStep({
       </p>
 
       <div className="space-y-3">
-        {rows.map((row, index) => (
-          <div
-            key={row.key}
-            className="rounded-2xl border border-border/70 bg-card-muted/40 p-3 transition-all duration-300 ease-out"
-          >
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                Location {index + 1}
-              </p>
-              {rows.length > 1 ? (
-                <button
-                  type="button"
-                  className="min-h-11 min-w-11 rounded-xl text-sm font-semibold text-danger"
-                  onClick={() => removeRow(row.key)}
-                  aria-label={`Remove location ${index + 1}`}
-                >
-                  Remove
-                </button>
+        {rows.map((row, index) => {
+          const isDuplicate = duplicateKeys.has(row.key);
+          return (
+            <div
+              key={row.key}
+              className="rounded-2xl border border-border/70 bg-card-muted/40 p-3 transition-all duration-300 ease-out"
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  Location {index + 1}
+                </p>
+                {rows.length > 1 ? (
+                  <button
+                    type="button"
+                    className="min-h-11 min-w-11 rounded-xl text-sm font-semibold text-danger"
+                    onClick={() => removeRow(row.key)}
+                    aria-label={`Remove location ${index + 1}`}
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Select
+                  label="State"
+                  value={row.stateSlug}
+                  options={states.map((state) => ({ value: state.slug, label: state.name }))}
+                  onChange={(event) => updateRow(row.key, { stateSlug: event.target.value })}
+                />
+                <Select
+                  label="Location"
+                  value={row.locationSlug}
+                  options={locationOptions(row.stateSlug)}
+                  onChange={(event) => updateRow(row.key, { locationSlug: event.target.value })}
+                />
+              </div>
+              {isDuplicate ? (
+                <p className="mt-2 text-sm font-semibold text-danger" role="alert">
+                  This location is already added. Choose another location.
+                </p>
               ) : null}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Select
-                label="State"
-                value={row.stateSlug}
-                options={states.map((state) => ({ value: state.slug, label: state.name }))}
-                onChange={(event) => updateRow(row.key, { stateSlug: event.target.value })}
-              />
-              <Select
-                label="Location"
-                value={row.locationSlug}
-                options={locationOptionsFor(row)}
-                onChange={(event) => updateRow(row.key, { locationSlug: event.target.value })}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Button
         type="button"
         variant="secondary"
         className="min-h-11 w-full sm:w-auto"
-        disabled={atCap || hasStatewide}
+        disabled={rows.length >= maxServiceAreas || hasStatewide}
         onClick={addRow}
       >
         + Add another location
@@ -188,7 +194,7 @@ export function ServiceAreasStep({
           All of Lagos already covers every location in Lagos.
         </p>
       ) : null}
-      {atCap && !hasStatewide ? (
+      {rows.length >= maxServiceAreas && !hasStatewide ? (
         <p className="text-xs text-muted-foreground">
           Free plans include {maxServiceAreas} locations. Upgrade later for more.
         </p>
