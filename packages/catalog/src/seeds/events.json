@@ -1,0 +1,773 @@
+{
+  "category_slug": "events",
+  "category_name": "Events",
+  "type_label": "Event type",
+  "types": [
+    {
+      "slug": "birthday",
+      "name": "Birthday",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "wedding",
+      "name": "Wedding",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "corporate",
+      "name": "Corporate",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    },
+    {
+      "slug": "naming-ceremony",
+      "name": "Naming ceremony",
+      "aliases": [],
+      "status": "active",
+      "sort": 3,
+      "attributes": []
+    },
+    {
+      "slug": "burial-funeral",
+      "name": "Burial / funeral",
+      "aliases": [],
+      "status": "active",
+      "sort": 4,
+      "attributes": []
+    },
+    {
+      "slug": "anniversary",
+      "name": "Anniversary",
+      "aliases": [],
+      "status": "active",
+      "sort": 5,
+      "attributes": []
+    },
+    {
+      "slug": "graduation",
+      "name": "Graduation",
+      "aliases": [],
+      "status": "active",
+      "sort": 6,
+      "attributes": []
+    },
+    {
+      "slug": "religious",
+      "name": "Religious",
+      "aliases": [],
+      "status": "active",
+      "sort": 7,
+      "attributes": []
+    },
+    {
+      "slug": "product-launch",
+      "name": "Product launch",
+      "aliases": [],
+      "status": "active",
+      "sort": 8,
+      "attributes": []
+    },
+    {
+      "slug": "private-party",
+      "name": "Private party",
+      "aliases": [],
+      "status": "active",
+      "sort": 9,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "catering",
+      "name": "Catering",
+      "description": "",
+      "status": "active",
+      "sort": 1,
+      "pricing_model": "banded",
+      "dimension": "guests",
+      "min_value": 50,
+      "max_value": 250,
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 50,
+          "dimMax": 99,
+          "basis": "per_unit",
+          "priceMinor": 650000,
+          "currency": "NGN",
+          "label": "50-99 guests"
+        },
+        {
+          "dimMin": 100,
+          "dimMax": 150,
+          "basis": "per_unit",
+          "priceMinor": 600000,
+          "currency": "NGN",
+          "label": "100-150 guests"
+        },
+        {
+          "dimMin": 151,
+          "dimMax": 250,
+          "basis": "per_unit",
+          "priceMinor": 550000,
+          "currency": "NGN",
+          "label": "151-250 guests"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "jollof",
+          "language": "pcm"
+        },
+        {
+          "alias": "jollof rice",
+          "language": "en"
+        }
+      ],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "small-chops",
+      "name": "Small chops",
+      "description": "",
+      "status": "active",
+      "sort": 2,
+      "pricing_model": "banded",
+      "dimension": "guests",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 100,
+          "dimMax": 150,
+          "basis": "total",
+          "priceMinor": 35000000,
+          "currency": "NGN",
+          "label": "100-150 guests"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "small chops",
+          "language": "en"
+        },
+        {
+          "alias": "smallchops",
+          "language": "pcm"
+        }
+      ],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "cakes",
+      "name": "Cakes",
+      "description": "",
+      "status": "active",
+      "sort": 3,
+      "pricing_model": "per_unit",
+      "dimension": "items",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 500,
+          "basis": "per_unit",
+          "priceMinor": 2500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "drinks-bar",
+      "name": "Drinks & bar",
+      "description": "",
+      "status": "active",
+      "sort": 4,
+      "pricing_model": "banded",
+      "dimension": "guests",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 50,
+          "dimMax": 9999,
+          "basis": "per_unit",
+          "priceMinor": 350000,
+          "currency": "NGN",
+          "label": "Per guest"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "photography",
+      "name": "Photography",
+      "description": "",
+      "status": "active",
+      "sort": 5,
+      "pricing_model": "package",
+      "dimension": "none",
+      "step": 1,
+      "default_bands": [],
+      "packages": [
+        {
+          "slug": "silver",
+          "name": "Silver",
+          "priceMinor": 18000000,
+          "currency": "NGN",
+          "inclusions": ["4 hours", "200 edited photos"]
+        },
+        {
+          "slug": "gold",
+          "name": "Gold",
+          "priceMinor": 32000000,
+          "currency": "NGN",
+          "inclusions": ["8 hours", "400 edited photos"]
+        }
+      ],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "videography",
+      "name": "Videography",
+      "description": "",
+      "status": "active",
+      "sort": 6,
+      "pricing_model": "flat",
+      "dimension": "none",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 25000000,
+          "currency": "NGN",
+          "label": "Full day"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "mc",
+      "name": "MC / compere",
+      "description": "",
+      "status": "active",
+      "sort": 7,
+      "pricing_model": "flat",
+      "dimension": "hours",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 8,
+          "basis": "total",
+          "priceMinor": 15000000,
+          "currency": "NGN",
+          "label": "Up to 8 hours"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "dj",
+      "name": "DJ",
+      "description": "",
+      "status": "active",
+      "sort": 8,
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "min_value": 4,
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 24,
+          "basis": "per_unit",
+          "priceMinor": 6000000,
+          "currency": "NGN",
+          "label": "Per hour"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "live-band",
+      "name": "Live band",
+      "description": "",
+      "status": "active",
+      "sort": 9,
+      "pricing_model": "quote_only",
+      "dimension": "hours",
+      "step": 1,
+      "default_bands": [],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "decor",
+      "name": "Decor",
+      "description": "",
+      "status": "active",
+      "sort": 10,
+      "pricing_model": "banded",
+      "dimension": "guests",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 50,
+          "dimMax": 150,
+          "basis": "total",
+          "priceMinor": 45000000,
+          "currency": "NGN",
+          "label": "50-150 guests"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "makeup-gele",
+      "name": "Makeup & gele",
+      "description": "",
+      "status": "active",
+      "sort": 11,
+      "pricing_model": "per_unit",
+      "dimension": "items",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 20,
+          "basis": "per_unit",
+          "priceMinor": 4500000,
+          "currency": "NGN",
+          "label": "Per person"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "gele",
+          "language": "yo"
+        },
+        {
+          "alias": "makeup",
+          "language": "en"
+        }
+      ],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "canopy-chairs-tables",
+      "name": "Canopy, chairs & tables",
+      "description": "",
+      "status": "active",
+      "sort": 12,
+      "pricing_model": "banded",
+      "dimension": "guests",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 50,
+          "dimMax": 200,
+          "basis": "per_unit",
+          "priceMinor": 800000,
+          "currency": "NGN",
+          "label": "Per guest capacity"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "event-planning",
+      "name": "Event planning",
+      "description": "",
+      "status": "active",
+      "sort": 13,
+      "pricing_model": "quote_only",
+      "dimension": "none",
+      "step": 1,
+      "default_bands": [],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "ushers",
+      "name": "Ushers",
+      "description": "",
+      "status": "active",
+      "sort": 14,
+      "pricing_model": "per_unit",
+      "dimension": "guards",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 2,
+          "dimMax": 50,
+          "basis": "per_unit",
+          "priceMinor": 2500000,
+          "currency": "NGN",
+          "label": "Per usher"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "sound-lighting",
+      "name": "Sound & lighting",
+      "description": "",
+      "status": "active",
+      "sort": 15,
+      "pricing_model": "flat",
+      "dimension": "none",
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 12000000,
+          "currency": "NGN",
+          "label": "Standard package"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "venue",
+      "name": "Venue",
+      "description": "",
+      "status": "active",
+      "sort": 16,
+      "pricing_model": "quote_only",
+      "dimension": "guests",
+      "step": 1,
+      "default_bands": [],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "birthday",
+        "wedding",
+        "corporate",
+        "naming-ceremony",
+        "burial-funeral",
+        "anniversary",
+        "graduation",
+        "religious",
+        "product-launch",
+        "private-party"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [
+    {
+      "key": "event_date",
+      "label": "Event date",
+      "type": "date",
+      "required": true,
+      "applies_to": "need",
+      "sort": 0
+    }
+  ],
+  "aliases": [
+    {
+      "alias": "owambe",
+      "language": "yo"
+    },
+    {
+      "alias": "party",
+      "language": "en"
+    }
+  ]
+}

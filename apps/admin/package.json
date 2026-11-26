@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@askalert/catalog": "workspace:*",
     "@askalert/category-engine": "workspace:*",
     "@askalert/core": "workspace:*",
     "@askalert/db": "workspace:*",

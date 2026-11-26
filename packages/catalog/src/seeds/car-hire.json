@@ -1,0 +1,171 @@
+{
+  "category_slug": "car-hire",
+  "category_name": "Car hire",
+  "type_label": "Vehicle type",
+  "types": [
+    {
+      "slug": "sedan",
+      "name": "Sedan",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "suv",
+      "name": "SUV",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "luxury",
+      "name": "Luxury",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    },
+    {
+      "slug": "van-bus",
+      "name": "Van / bus",
+      "aliases": [],
+      "status": "active",
+      "sort": 3,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "hourly-with-driver",
+      "name": "Hourly with driver",
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "min_value": 2,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 24,
+          "basis": "per_unit",
+          "priceMinor": 8000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 1,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "sedan",
+        "suv",
+        "luxury",
+        "van-bus"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "daily-with-driver",
+      "name": "Daily with driver",
+      "pricing_model": "flat",
+      "dimension": "hours",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 45000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 2,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "sedan",
+        "suv",
+        "luxury",
+        "van-bus"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "airport-transfer",
+      "name": "Airport transfer",
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 2800000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 3,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 6,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "pickup",
+          "language": "en"
+        }
+      ],
+      "type_slugs": [
+        "sedan",
+        "suv",
+        "luxury",
+        "van-bus"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "wedding-car",
+      "name": "Wedding car",
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 65000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 4,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "luxury",
+        "sedan"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [],
+  "aliases": []
+}

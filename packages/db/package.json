@@ -18,6 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@askalert/catalog": "workspace:*",
     "@askalert/category-engine": "workspace:*",
     "@supabase/supabase-js": "^2.119.2",
     "zod": "^3.24.4"

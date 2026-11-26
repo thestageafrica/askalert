@@ -663,3 +663,225 @@ Add quality gates.
 **Still waiting on external approvals:** the real WhatsApp adapter, WhatsApp number verification, WhatsApp vendor outreach, and live Paystack money. Everything above works without them.
 
 **Tips for working with Cursor:** after each prompt, run the Review prompt from Phase 1, test on a real phone and a desktop, and commit. If a prompt is too big, ask Cursor to split it into steps and do them one at a time.
+
+## IMPORTANT UPDATE: payments model changed (Prompts 35 to 37 replace 7, 30 and 31)
+
+Paystack confirmed it cannot support holding or releasing customer funds based on service completion or dispute outcomes. AskAlert therefore launches with **standard split payments and staged payments as two separate real payments** (a deposit, then a balance after the job). There is no escrow, hold, or release anywhere in the product. See section 39 of the Product Spec.
+
+**What to do with the earlier prompts:**
+
+- **Do not run Prompts 30 and 31 as written.** Use Prompts 36 and 37 below instead.
+- **Prompt 7 (escrow split) and the hold slider in Prompts 3, 4, 8, 21, and 23** are replaced by Prompt 35, which refactors what already exists.
+- Prompts 32 to 34 still apply. Read “completed, platform-paid booking” as “a booking with both payments made on AskAlert.”
+
+## Prompt 35: Replace escrow with staged payments everywhere
+
+```
+Replace escrow with staged payments across the whole codebase. AskAlert does NOT hold customer funds and does NOT release funds on completion or dispute outcomes. Every payment is a standard Paystack payment that settles normally, split between the vendor and AskAlert's commission.
+
+1. Search the whole repository (web, admin, packages, seed data, docs, tests, metadata, Open Graph text, sitemap, FAQ, emails) for these words and concepts: escrow, hold, held, holds, protected funds, release, released, safekeeping, 'Protected by AskAlert', 'Direct payment, no protection', 'stage payouts', 'later release', 'AskAlert holds'. Remove or rewrite every user-facing use.
+2. New wording: 'Pay in stages', 'deposit', 'balance', 'pay after the job is done', 'verified vendors', 'Paid on AskAlert', 'Secure checkout by Paystack'. Rewrite the landing hero chip, the trust cards, the slider section (now 'Pay in stages, your choice': a Deposit slider with a live summary 'Pay N now. Pay M after the job is done. Each payment goes straight to the vendor, minus AskAlert's fee.' with real naira amounts), the sign-in slide 4, the FAQ ('What does pay in stages mean?'), the checkout, badges, plan descriptions, and the terms and privacy drafts. Do not describe anything as held, protected or released.
+3. Replace computeEscrowSplit with computeStagedPayments in packages/payments. Input: totalMinor, depositPct, bounds (minDepositPct, maxDepositPct), commissionPct (applied to each payment), the processing fee rule (1.5% plus 10000 kobo, the flat part waived under 250000 kobo, total capped at 200000 kobo; keep these as configurable settings), and feeBearer. Output the deposit payment and the balance payment, each with commission, fee and vendor share, plus totals, the effective deposit percentage and warnings. Integers only; rounding differences go to the balance payment. Required test: total 10,000,000 kobo, 40% deposit, 12% commission, fee borne by the vendor. Deposit 4,000,000 kobo: commission 480,000, fee 70,000, vendor 3,450,000. Balance 6,000,000 kobo: commission 720,000, fee 100,000, vendor 5,180,000. Also test 100% deposit, bounds clamping, the fee waiver under 250000 kobo, and the fee cap.
+4. Category config: replace the escrow block with payment_terms { mode: single|staged, default_deposit_pct, min_deposit_pct, max_deposit_pct, balance_due_hours, commission_on: each_payment, fee_bearer }. Update the Zod schema, the seed configs, the admin editor (a 'Rules and payments' tab) and the preview.
+5. Database: remove or deprecate escrow_held, release jobs and auto-release columns, using a reversible migration.
+6. Add a copy-lint script (scripts/copy-lint.ts) with a banned-terms list for user-facing text (escrow, held funds, protected funds, release funds, safekeeping) and run it in CI. Allow exceptions only in a clearly marked internal docs folder.
+7. Update the checkout UI: a Deposit slider within the category bounds, showing both payments and their due dates, with a note that the balance is paid after the job is done.
+Run lint, typecheck, tests, copy-lint and build. List every file changed and every phrase rewritten.
+```
+
+**Checks:** search the live site and the app for the banned words. The slider shows two real payments, not a held amount.
+
+## Prompt 36: Paystack standard split payments (test mode only)
+
+```
+Integrate Paystack standard payments in TEST MODE only. Never enable live keys in this task. AskAlert does not hold or conditionally release customer funds.
+
+- Vendor subaccounts: after a vendor is approved and adds bank details, resolve the account name with Paystack's resolve endpoint, create a subaccount, and store its code (never log full account numbers). Handle failures with clear messages to the vendor.
+- Deposit payment: initialise a transaction at booking with the deposit amount and a split that sends the vendor share to the vendor's subaccount and keeps AskAlert's commission, so the amounts match computeStagedPayments. Store references and metadata.
+- Balance payment: when the buyer taps 'Job done' (or the vendor marks the job completed), create a balance request with a due time (balance_due_hours), send an in-app notification, push and email with a secure payment link, and a reminder before it is due. Initialise the balance transaction with the same split logic. States: balance_pending, balance_paid, balance_overdue, balance_waived (admin only, with a reason), claim_open.
+- Overdue handling: restrict a buyer's new requests after repeated overdue balances, show the vendor a clear 'unpaid balance' state, and add admin tools. Never describe any of this as holding funds.
+- Webhooks: the Worker verifies signatures and forwards. An Edge Function is idempotent by event id, verifies each transaction with Paystack's verify endpoint before marking it paid, and writes simple ledger entries (payment, commission, fee, vendor_share, refund, goodwill_credit). Debits must equal credits.
+- Refunds: implement refund requests through Paystack's refund endpoint behind a PaymentProvider method, mark the exact mechanics for split transactions as 'needs confirmation from Paystack' in DEPLOY.md, and keep the refund flow admin-approved.
+- A reconciliation job comparing the ledger with Paystack records, and an admin Payments page showing payments, splits, overdue balances, failures and a manual review queue.
+- Keep a PaymentProvider interface so Flutterwave can be added. All amounts are integers in kobo.
+- Add a warning in DEPLOY.md that live keys require Paystack's approval of the final flow and wording.
+Tests for ledger balance, idempotency, overdue transitions and permission rules.
+```
+
+**Checks:** complete a test deposit and a test balance payment with Paystack test cards. The ledger balances, and an overdue balance changes state on schedule.
+
+## Prompt 37: Bookings, invoices and claims (replaces the old disputes design)
+
+```
+Build bookings, invoices and claims for both modes.
+
+- Booking detail: a timeline (booked, deposit paid, scheduled, in progress, completed, balance due, balance paid), the two payments with dates and amounts, the category's cancellation rules, a 'Job done' button for the buyer and 'Mark completed' for the vendor (optional proof photo), and a clear balance reminder.
+- Invoices and receipts: printable pages per booking (HTML with print styles and 'Save as PDF' through the browser) showing AskAlert Technologies Limited details, the parties, items, each payment, commission and fee lines on the vendor copy, a reference number and amounts in naira. List pages for both modes.
+- Claims (mediation, not fund release): reasons (no-show, not as described, poor quality, overcharge, safety, unpaid balance, other); evidence upload; a message thread among buyer, vendor and admin; response deadlines; admin outcomes: recommend a vendor-approved refund (processed through the payment provider), grant a goodwill credit within a configurable cap funded from AskAlert's own budget, apply reputation penalties, restrict or suspend an account, or close with no action. No outcome freezes or releases customer funds.
+- Admin: a Claims queue with filters and SLA timers, and a monthly goodwill budget setting.
+- Notifications at every step. Rename the mobile menu item from 'Disputes' to 'Claims and support'.
+- Tests for state transitions, deadlines and permissions.
+```
+
+## Updated order for the payment-related prompts
+
+1. **35** first (refactor the existing code and copy).
+2. **36** (Paystack test mode), then **37** (bookings, invoices, claims).
+3. Then **32** (reviews), **33** (settings), and **34** (quality), with the wording above.
+
+Do not send Paystack your updated website wording until Prompt 35 has actually been run and the live site has been checked for the banned words.
+
+## UPDATE: licensed escrow partner route (Prompts 35 to 37 are on hold; run Prompt 38)
+
+The founder has decided to pursue a **licensed escrow partner** (see section 40 of the Product Spec). **Do not run Prompts 35, 36 and 37** unless the staged-payment fallback (section 39) is chosen later. Run Prompt 38 now. It lets the product be built and tested while the partner contract is being arranged.
+
+**Interim copy rule:** until a licensed partner is signed and live, no page, screen, email or message may say or suggest that AskAlert or anyone holds, protects or releases customer funds. The checkout should say 'Protected payments are coming soon'.
+
+## Prompt 38: Provider-agnostic escrow layer with a sandbox mock
+
+```
+Create a provider-agnostic escrow layer in packages/payments, with a sandbox mock, so AskAlert never touches customer funds directly and any licensed escrow partner can be plugged in later.
+
+- Define an EscrowProvider interface: createEscrow(booking, parties, amountMinor, currency, milestones[]), getFundingInstructions(escrowId) (a virtual account or payment link supplied by the partner), an onFunded webhook handler, releaseMilestone(escrowId, milestoneId), releaseAll, refund(escrowId, amountMinor, reason), openDispute(escrowId, evidence), getStatus, and webhook signature verification. All amounts are integers in kobo.
+- Map the buyer's chosen share to milestones: a 'pay now' share that is released to the vendor when funding is confirmed, and a 'confirm later' share released when the buyer confirms the job, or automatically after the category's auto_release_hours unless a claim is open. A claim pauses the release. Keep the split maths from Prompt 7 but compute commission and fees according to a configurable partner fee model.
+- Implement MockEscrowProvider that simulates funding, releases, refunds and disputes with realistic delays. Show a visible SANDBOX label everywhere it appears.
+- Implement a PartnerEscrowProvider skeleton with clear TODOs for the chosen partner, and environment variables for its API key and webhook secret.
+- Add a feature flag escrow_enabled that is off by default in production. When it is off, the checkout shows 'Protected payments are coming soon' and takes no payment. When it is on in sandbox, show a SANDBOX banner.
+- Configuration for the partner's legal name, licence details and the licensed institution's name, so the site and the terms can display them once they are known.
+- Copy rules: no user-facing claim that funds are held or protected unless the flag is on in production AND the partner details above are set. Add a copy-lint check that fails the production build if escrow wording appears while the flag is off.
+- AskAlert's own ledger must never show customer funds as AskAlert's money. Ledger entries mirror the partner's events.
+- Tests for state transitions, webhook idempotency, milestone mapping and the copy-lint rule.
+```
+
+**Checks:** the sandbox flow runs end to end with a clear SANDBOX label, and production shows 'coming soon'.
+
+## Phase 4 prompts (39 to 46): auth fixes, catalog, rate cards, geography, buyer flow, and WhatsApp capture
+
+These prompts add the **service catalog** (Category, Types, Services, rate cards), the **State and Location geography**, the rebuilt **vendor onboarding and My Services**, the rebuilt **buyer request flow**, the **admin managers**, and the **WhatsApp-ready request capture**. See sections 41 to 43 of the Product Spec. Prompts 41 to 44 **replace** the category, area and rate-card steps of Prompt 26 and the request creation parts of Prompts 8 and 28.
+
+## Prompt 39: Fix the password reset redirect
+
+```
+Fix the password reset flow. The reset email link currently sends people to the site homepage, because redirect_to is set to https://<project>.supabase.co/auth/reset-password/ (the Supabase project URL) instead of our site.
+
+Diagnose first and show me the exact lines you change.
+1. Find every call to resetPasswordForEmail, signInWithOtp (magic link), signUp (email confirmation), inviteUserByEmail, and every emailRedirectTo or redirectTo option. Build every redirect URL from NEXT_PUBLIC_SITE_URL (https://www.askalert.com in production, http://localhost:3000 in development), never from the Supabase URL. Add one helper getSiteUrl() and use it everywhere.
+2. Make sure these pages exist in the static export with trailing slashes: /auth/reset-password/, /auth/callback/ and /auth/confirm/. Check the Cloudflare Pages _redirects file so that /auth/* is NOT redirected to the homepage.
+3. Build /auth/reset-password/ as a client page. Handle the PKCE ?code= parameter (exchangeCodeForSession) and the older #access_token hash. Show a 'Choose a new password' form (strength meter and a confirm field) that calls supabase.auth.updateUser({ password }), then show success and send the user to sign in. If the link is invalid, expired, or opened in a different browser (PKCE needs the same browser that requested it), show a clear message and a 'Request a new link' button.
+4. Add a cross-device-safe option: a link to /auth/confirm/?token_hash=...&type=recovery that calls supabase.auth.verifyOtp({ type: 'recovery', token_hash }). Prepare the code so the Send Email Hook (Prompt 40) can use this link format, so emails link to askalert.com and not to supabase.co.
+5. Add tests for getSiteUrl and for the reset page states (valid, expired, missing code).
+6. List the Supabase dashboard settings I must set: Site URL and the Redirect URLs allow list (https://www.askalert.com/**, https://askalert.com/**, http://localhost:3000/**).
+```
+
+**Checks:** request a reset, open the link in the same browser, and land on the new-password form on askalert.com.
+
+## Prompt 40: Auth emails through the Send Email Hook
+
+```
+Replace SMTP-based auth emails with the Supabase Send Email Hook, so credentials live in environment secrets and templates live in our repository.
+
+- Create a Supabase Edge Function send-auth-email that verifies the hook signature (standardwebhooks) using SEND_EMAIL_HOOK_SECRET, maps email_action_type (signup, magiclink, recovery, invite, email_change, reauthentication) to a template, and sends through the Resend API. Put sending behind an EmailProvider interface so Brevo or Amazon SES can be swapped in. Do not use SMTP from the Edge Function.
+- Keep all secrets (RESEND_API_KEY, SEND_EMAIL_HOOK_SECRET) in Supabase function secrets and local .env files, never in the repository. Update .env.example and DEPLOY.md.
+- Build branded, accessible, responsive HTML templates in packages/emails (logo, brand colours, plain-text versions, short copy) for each email type, with a local preview. Keep the template files in the repository. Links must point to https://www.askalert.com/auth/confirm/ with token_hash and type, not to supabase.co.
+- Respond within 5 seconds, be idempotent, log only counts and error codes (never email addresses or tokens), and support a fallback provider.
+- Tests for signature verification, template mapping and error handling, plus a script that sends a test email to an address that is not on the Supabase team.
+- Document how to enable the hook (Authentication, Hooks) and how to roll back to custom SMTP. Raise the Auth email rate limit to match the provider plan, and make sure no config file resets it to a low value.
+```
+
+## Prompt 41: Service catalog engine (types, services, pricing models)
+
+```
+Build the service catalog engine (packages/catalog, migrations, seed data). Categories become a tree of Types and Services with pricing models, and everything is admin-editable (no code deploys). Follow section 41 of the Product Spec.
+
+Tables (with RLS: public read of active items, admin write with audit_log): category_types, services, service_types, catalog_attributes (scope: category|type|service), catalog_aliases (entity, text, language: en|pcm|yo|ig|ha), catalog_versions (snapshots), and vendor tables: vendor_categories, vendor_types, vendor_services, vendor_service_types, vendor_rates, vendor_addons. Archive instead of delete. Every request and quote stores the catalog_version it used.
+
+Services have a pricing_model (banded, per_unit, flat, package, quote_only) and a dimension (guests, hours, nights, units, guards, items, none) with min, max and step, plus default_bands and allow_custom_bands.
+
+Pure, tested functions in packages/catalog:
+- validateRateCard(bands): ascending, non-overlapping, min below max, positive whole-kobo prices, warnings for gaps and large price jumps, enforce the service min and max, optional minimum charge.
+- computeQuote(vendorService, requestItem): pick the band for the quantity, apply basis per_unit or total, the minimum charge and selected add-ons; return the amount, a breakdown, and a flag instant_quote or custom_quote_needed.
+- resolveCatalogTree(version) and buildRequestSchema(category, type, services), which return the ordered questions, merging attributes from category, type and service scopes and removing duplicate keys.
+- matchAlias(text): map free text (including Pidgin, Yoruba, Igbo and Hausa aliases) to catalog entities with a confidence score.
+
+Seed JSON for all nine categories with realistic types, services, dimensions and default bands. Events: types birthday, wedding, corporate, naming ceremony, burial or funeral, anniversary, graduation, religious, product launch, private party; services catering, small chops, cakes, drinks and bar, photography, videography, MC, DJ, live band, decor, makeup and gele, canopy chairs and tables, event planning, ushers, sound and lighting, venue. Shortlets: types by property (studio, 1-bed, 2-bed, 3-bed, 4+ bed, duplex, penthouse); nightly, weekly and monthly stays; add-ons airport pickup and cleaning. Security: types event, residential, corporate, construction site, VIP; services guards, bouncers, CCTV monitoring, patrol. Also car hire, beauty at home, home care, auto services, professional services and tutors. Mark regulated services (for example armed escort) as requiring documents.
+Tests for validation, quote computation (include 120 guests against bands of 100 to 150), alias matching, and the seeds.
+```
+
+## Prompt 42: Geography (State and Location) with plan-capped coverage
+
+```
+Build the geography system (packages/geo, migrations, seed, UI components). Follow section 42 of the Product Spec.
+
+- Table geo_nodes (id, parent_id, level: country|state|area|neighbourhood, slug, name, aliases[], lat, lng, is_statewide, status, sort). For every state, automatically create a statewide node named 'All of <State>' with slug '<state>-all' (for example lagos-all). Seed Nigeria, Lagos (Eti-Osa, Lekki, Lekki Phase 1, Victoria Island, Ikoyi, Oniru, Ajah, Ikeja, Yaba, Surulere, Maryland, Magodo, Gbagada) and the FCT (Maitama, Wuse, Garki, Asokoro, Gwarinpa). Add aliases such as 'Lekki Ph1' and 'VI'. Provide a CSV import script and an admin-friendly seed format.
+- Pure, tested helpers: coversLocation(vendorNode, requestNode), true when they are the same node, the vendor node is an ancestor of the request node, or it is the statewide node of that state; plus duplicate detection.
+- CoveragePicker for vendors: each row has a State dropdown (left) and a Location dropdown (right). The location list for a state is identical in every row. Start with ONE empty row (never prefill from old drafts). '+ Add another location' adds a row, up to the plan cap. Picking a location already added shows the red notice 'This location is already added. Choose another location.' The first option for a state is 'All of <State>'. Choosing it counts as one location, clears the other rows for that state after a confirmation, and blocks adding more rows for that state.
+- Plan caps in the plan configuration: max_coverage_locations, allow_statewide, max_states. Defaults: vendor_free 3 locations, no statewide; vendor_pro 15 locations and statewide allowed. All editable in admin.
+- LocationSelect for buyers: State then Location, a searchable combobox with alias matching for long lists, and the statewide option hidden unless the category's location_rule allows it. Add to the category config: location_rule (specific|state|none) and location_role (at_buyer|at_venue|at_vendor).
+- Migrate any existing coverage data into the new table without creating blank or duplicate rows.
+- Tests for coverage, duplicates, statewide blocking, plan caps and alias search.
+```
+
+## Prompt 43: Vendor onboarding rebuild and My Services
+
+```
+Rebuild the vendor onboarding and add the 'My Services' area, using the catalog (Prompt 41) and geography (Prompt 42). This replaces the category, area and rate-card steps of Prompt 26. Follow section 41.5 of the Product Spec.
+
+Wizard (resumable, with a polished progress header and step panel): 1 Who you are; 2 Categories; 3 For each chosen category: 'Which types do you cover?' (checkboxes, for example birthday, wedding, corporate, naming and burial for Events; property types for Shortlets); 4 'Which services do you offer?' (checkboxes per category, with search); 5 A rate card for each chosen service; 6 Coverage areas (CoveragePicker); 7 Availability; 8 Documents (extra documents for regulated services); 9 Payout details; 10 Review and submit.
+
+Rate card editor (one per service), driven by the service's pricing_model:
+- banded: a table of rows 'From, To, Price, Basis (per guest or total)', for example 100 to 150 guests at a price per guest. Offer the admin's default bands as a starting template, allow adding, removing and editing bands (if allow_custom_bands), validate with validateRateCard, show a live example ('For 120 guests you would quote N...'), and a 'Custom quote for larger numbers' toggle.
+- per_unit and flat: a single price with a unit and a minimum charge. package: named packages with inclusions and a price. quote_only: no price.
+- 'Applies to': all my types, or choose types, so a wedding rate can differ from a birthday rate.
+- Add-ons (extra hour, travel, overtime), minimum notice, deposit percentage, inclusions, exclusions and notes.
+- Helpers: copy a rate card from another service, duplicate for another type, 'Adjust all prices by %' (for inflation), and 'Reset to template'.
+
+My Services (vendor mode, after onboarding): list services with status (active, paused, draft), completeness and last updated. The vendor can add or remove types and services, edit rate cards, pause a service, and add coverage areas within the plan cap at any time. Changes apply to NEW quotes only; quotes already sent and bookings keep their prices. Adding a regulated service requires the extra documents and admin review before it goes live.
+Instant quote preview: 'A buyer asking for 120 guests of catering in Lekki Phase 1 would see N...'.
+Tests for validation, plan caps, editing after onboarding, and quote stability.
+```
+
+## Prompt 44: Buyer request flow rebuild (catalog and geography)
+
+```
+Rebuild the buyer request flow using the catalog and geography. This replaces the request-creation parts of Prompts 8 and 28. Follow section 43 of the Product Spec.
+
+Steps (generated from the catalog; mobile and desktop): Category, Type (for example wedding or burial), Services (multi-select), details for each selected service (the service's dimension such as guests, with band hints, plus merged attributes), date and time (or stay dates), Location (State then Location from the geography; an optional venue or address text that stays private until booking), Budget (optional), How involved AskAlert should be (Match, Relay, Assist, Autopilot), and Review. One request can contain several services as items.
+Before submitting, show an anonymous 'Typical price' range and 'N vendors cover this', only when at least 3 vendors match, computed from rate cards.
+Matching: eligible vendors offer the service, cover the type, cover the location (coversLocation), are available on the date, and fit the quantity; compute each vendor's price with computeQuote and mark it 'instant quote' or 'custom quote needed'; rank with the category weights and plan caps; log unmet demand with category, type, service and location.
+Requests store the catalog_version and structured items. Quotes link back to the request item.
+Save drafts and resume. Everything must work with the keyboard, at 360px mobile and 1280px desktop widths.
+Tests for the schema builder, multi-service requests, matching by location and type, and unmet-demand logging.
+```
+
+## Prompt 45: Admin Catalog and Geography managers
+
+```
+Build the admin Catalog and Geography managers (apps/admin).
+
+Catalog manager: a tree editor (Category, Types, Services) with drag-and-drop ordering. Per category: the label for 'type' (for example Event type, Property type), location_rule and location_role. Per type: name, aliases, status. Per service: pricing model, dimension, min, max, step, default bands, whether custom bands are allowed, inspection requirement, lead time, regulated flag with required documents, aliases (including Pidgin and Yoruba), and attributes at category, type and service level; link services to types. Bulk import and export (CSV or JSON). A live preview of the buyer flow and the vendor rate-card editor before publishing. Versioned publish with a change note, rollback, an audit trail, and archive instead of delete. A 'Catalog gaps' report (searches and WhatsApp requests that could not be mapped) with one-click 'add as alias' or 'create service'.
+Geography manager: a tree of states and locations; add, edit, merge duplicates (with redirects), aliases, CSV import, activate locations per category, plan-cap settings, and a table of demand versus vendor supply per location.
+Roles: only super_admin and operations can publish. Tests for validation, versioning, merging and permissions.
+```
+
+## Prompt 46: Request capture engine for WhatsApp, web chat and the agent
+
+```
+Build the channel-agnostic request capture engine (packages/conversation) so the same catalog-driven request flow runs on WhatsApp, the web chat and the agent. WhatsApp itself stays behind the stub adapter until the API is live.
+
+- A conversation state machine driven by buildRequestSchema: category, type, services (a loop with 'Add another' and 'Done'), dimension values with band hints, date, location (state, then location with search), budget, mode, and a final confirmation with Submit, Edit and Cancel.
+- Message builders for WhatsApp interactive messages (reply buttons up to 3 and lists up to 10 rows, with a 'More' row for pagination) and plain-text fallbacks. Keep the limits in configuration. Support WhatsApp Flows for the multi-field details screen as an optional renderer when available.
+- Free-text path: a message such as 'Need catering and a photographer for a wedding in Lekki Phase 1, 150 guests, 20 December' is converted by Claude into a structured request, constrained to catalog and geography IDs (the model may only choose from the options provided), validated by the same schema, then only missing fields are asked, followed by a confirmation. Unknown terms are matched through aliases; otherwise offer the closest options and log the term to catalog_gaps.
+- Respect budgets from the plan system. Prefer rules and lists, and use the model only for messy free text. Never send contact details.
+- Vendor lead cards and quote replies: a structured lead card (type, service, guests, date, location, budget, with buttons Quote, Use my rate card, Decline, Ask) and a parser for replies such as '6k per head' mapped to the vendor's rate card.
+- A simulator page in the admin console to play a conversation and see the extracted request.
+- Tests with at least 40 fixture conversations including Pidgin, misspelled locations, multiple services, wrong numbers and cancellations.
+```
+
+## Order for Phase 4
+
+1. **39** (password reset fix) and **40** (Send Email Hook), in parallel with the rest.
+2. **41** (catalog), then **42** (geography).
+3. **43** (vendor onboarding and My Services), **44** (buyer request flow).
+4. **45** (admin managers), then **46** (WhatsApp capture).
+
+Tip: run the Review prompt from Phase 1 after each one, and test with real examples (a wedding caterer in Lekki Phase 1 with a 100 to 150 guest band, and a buyer asking for 120 guests).

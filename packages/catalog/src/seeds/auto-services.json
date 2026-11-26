@@ -1,0 +1,122 @@
+{
+  "category_slug": "auto-services",
+  "category_name": "Auto services",
+  "type_label": "Vehicle type",
+  "types": [
+    {
+      "slug": "car",
+      "name": "Car",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "suv",
+      "name": "SUV",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "truck",
+      "name": "Truck",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "mechanic",
+      "name": "Mobile mechanic",
+      "pricing_model": "quote_only",
+      "dimension": "none",
+      "default_bands": [],
+      "packages": [],
+      "status": "active",
+      "sort": 1,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "mech",
+          "language": "pcm"
+        }
+      ],
+      "type_slugs": [
+        "car",
+        "suv",
+        "truck"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "car-wash",
+      "name": "Car wash",
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 800000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 2,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 6,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "car",
+        "suv",
+        "truck"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "towing",
+      "name": "Towing",
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 12,
+          "basis": "per_unit",
+          "priceMinor": 5000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 3,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 1,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "car",
+        "suv",
+        "truck"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [],
+  "aliases": []
+}

@@ -58,6 +58,11 @@ export {
 } from './areas-catalogue';
 export { mergeAreaCatalogues, normalizeRemoteAreas } from './areas-normalize';
 export { ensureCategoryId, resolveCategoryId } from './resolve-category-id';
+export {
+  findCatalogSeedBySlug,
+  listCatalogCategorySlugs,
+  listCatalogSeeds,
+} from './catalog-seeds';
 export { isSupabaseEnabled, requireSupabaseEnv } from './feature-flag';
 export { publicSupabaseEnv } from './public-env';
 export {
@@ -94,7 +99,20 @@ export type {
   CategoryAttributeRow,
   CategoryRow,
   CategoryStatus,
+  CategoryTypeRow,
   CategoryVersionRow,
+  CatalogAliasEntity,
+  CatalogAliasLanguage,
+  CatalogAliasRow,
+  CatalogAttributeRow,
+  CatalogAttributeScope,
+  CatalogDimension,
+  CatalogEntityStatus,
+  CatalogPricingModel,
+  CatalogRateBasis,
+  CatalogServiceRow,
+  CatalogVersionRow,
+  CatalogAddonBasis,
   Database,
   Json,
   MissionCandidateRow,
@@ -106,6 +124,14 @@ export type {
   RequestRow,
   RequestStatus,
   UnmetDemandRow,
+  ServiceTypeRow,
+  VendorAddonRow,
+  VendorCategoryRow,
+  VendorRateRow,
+  VendorServiceRow,
+  VendorServiceStatus,
+  VendorServiceTypeRow,
+  VendorTypeRow,
 } from './types';
 export {
   adminUiRoleSchema,

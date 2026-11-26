@@ -1,0 +1,199 @@
+{
+  "category_slug": "beauty-at-home",
+  "category_name": "Beauty at home",
+  "type_label": "Occasion",
+  "types": [
+    {
+      "slug": "bridal",
+      "name": "Bridal",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "everyday",
+      "name": "Everyday",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "photoshoot",
+      "name": "Photoshoot",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "makeup",
+      "name": "Makeup",
+      "pricing_model": "flat",
+      "dimension": "items",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 2500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 1,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "bridal",
+        "everyday",
+        "photoshoot"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "hair",
+      "name": "Hair styling",
+      "pricing_model": "flat",
+      "dimension": "items",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 1800000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 2,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "hair do",
+          "language": "pcm"
+        }
+      ],
+      "type_slugs": [
+        "bridal",
+        "everyday",
+        "photoshoot"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "gele",
+      "name": "Gele tying",
+      "pricing_model": "flat",
+      "dimension": "items",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 1200000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 3,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "gele",
+          "language": "yo"
+        },
+        {
+          "alias": "head tie",
+          "language": "en"
+        }
+      ],
+      "type_slugs": [
+        "bridal",
+        "everyday",
+        "photoshoot"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "nails",
+      "name": "Nails",
+      "pricing_model": "flat",
+      "dimension": "items",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 800000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 4,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "bridal",
+        "everyday",
+        "photoshoot"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "lashes",
+      "name": "Lashes",
+      "pricing_model": "flat",
+      "dimension": "items",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 1500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 5,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "bridal",
+        "everyday",
+        "photoshoot"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [],
+  "aliases": []
+}

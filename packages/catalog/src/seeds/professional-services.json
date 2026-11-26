@@ -1,0 +1,102 @@
+{
+  "category_slug": "professional-services",
+  "category_name": "Professional services",
+  "type_label": "Service line",
+  "types": [
+    {
+      "slug": "legal",
+      "name": "Legal",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "accounting",
+      "name": "Accounting",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "consulting",
+      "name": "Consulting",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    },
+    {
+      "slug": "marketing",
+      "name": "Marketing",
+      "aliases": [],
+      "status": "active",
+      "sort": 3,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "hourly-consultation",
+      "name": "Hourly consultation",
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 8,
+          "basis": "per_unit",
+          "priceMinor": 15000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 1,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "legal",
+        "accounting",
+        "consulting",
+        "marketing"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "project-package",
+      "name": "Project package",
+      "pricing_model": "quote_only",
+      "dimension": "none",
+      "default_bands": [],
+      "packages": [],
+      "status": "active",
+      "sort": 2,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "legal",
+        "accounting",
+        "consulting",
+        "marketing"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [],
+  "aliases": [
+    {
+      "alias": "consultant",
+      "language": "en"
+    }
+  ]
+}

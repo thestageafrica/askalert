@@ -22,6 +22,27 @@ export type MissionCandidateStatus =
 export type OfferStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 export type BookingStatus = 'awaiting_payment' | 'paid' | 'cancelled' | 'completed';
 export type RequestStatus = 'draft' | 'active' | 'closed' | 'cancelled';
+export type CatalogEntityStatus = 'draft' | 'active' | 'paused' | 'archived';
+export type CatalogPricingModel =
+  | 'banded'
+  | 'per_unit'
+  | 'flat'
+  | 'package'
+  | 'quote_only';
+export type CatalogDimension =
+  | 'guests'
+  | 'hours'
+  | 'nights'
+  | 'units'
+  | 'guards'
+  | 'items'
+  | 'none';
+export type CatalogRateBasis = 'per_unit' | 'total';
+export type CatalogAddonBasis = 'per_unit' | 'total' | 'flat';
+export type CatalogAttributeScope = 'category' | 'type' | 'service';
+export type CatalogAliasEntity = 'category' | 'type' | 'service';
+export type CatalogAliasLanguage = 'en' | 'pcm' | 'yo' | 'ig' | 'ha';
+export type VendorServiceStatus = 'draft' | 'active' | 'paused' | 'archived';
 export type AttributeType =
   | 'text'
   | 'number'
@@ -739,6 +760,7 @@ export type Database = {
           budget_max_minor: number | null;
           currency: string;
           status: RequestStatus;
+          catalog_version_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -752,6 +774,7 @@ export type Database = {
           budget_max_minor?: number | null;
           currency?: string;
           status?: RequestStatus;
+          catalog_version_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -765,6 +788,7 @@ export type Database = {
           budget_max_minor?: number | null;
           currency?: string;
           status?: RequestStatus;
+          catalog_version_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -872,6 +896,7 @@ export type Database = {
           status: OfferStatus;
           rank_score: number | null;
           rank_reason: string | null;
+          catalog_version_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -886,6 +911,7 @@ export type Database = {
           status?: OfferStatus;
           rank_score?: number | null;
           rank_reason?: string | null;
+          catalog_version_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -900,6 +926,7 @@ export type Database = {
           status?: OfferStatus;
           rank_score?: number | null;
           rank_reason?: string | null;
+          catalog_version_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -942,6 +969,501 @@ export type Database = {
           status?: BookingStatus;
           total_minor?: number;
           currency?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      category_types: {
+        Row: {
+          id: string;
+          category_id: string;
+          slug: string;
+          name: string;
+          aliases: Json;
+          status: CatalogEntityStatus;
+          sort_order: number;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category_id: string;
+          slug: string;
+          name: string;
+          aliases?: Json;
+          status?: CatalogEntityStatus;
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          category_id?: string;
+          slug?: string;
+          name?: string;
+          aliases?: Json;
+          status?: CatalogEntityStatus;
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      services: {
+        Row: {
+          id: string;
+          category_id: string;
+          slug: string;
+          name: string;
+          description: string;
+          status: CatalogEntityStatus;
+          sort_order: number;
+          pricing_model: CatalogPricingModel;
+          dimension: CatalogDimension;
+          dimension_label: string | null;
+          unit_label: string | null;
+          min_value: number | null;
+          max_value: number | null;
+          step: number;
+          default_bands: Json;
+          packages: Json;
+          allow_custom_bands: boolean;
+          requires_inspection: boolean;
+          default_lead_time_hours: number;
+          regulated: boolean;
+          required_documents: Json;
+          aliases: Json;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category_id: string;
+          slug: string;
+          name: string;
+          description?: string;
+          status?: CatalogEntityStatus;
+          sort_order?: number;
+          pricing_model: CatalogPricingModel;
+          dimension: CatalogDimension;
+          dimension_label?: string | null;
+          unit_label?: string | null;
+          min_value?: number | null;
+          max_value?: number | null;
+          step?: number;
+          default_bands?: Json;
+          packages?: Json;
+          allow_custom_bands?: boolean;
+          requires_inspection?: boolean;
+          default_lead_time_hours?: number;
+          regulated?: boolean;
+          required_documents?: Json;
+          aliases?: Json;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          category_id?: string;
+          slug?: string;
+          name?: string;
+          description?: string;
+          status?: CatalogEntityStatus;
+          sort_order?: number;
+          pricing_model?: CatalogPricingModel;
+          dimension?: CatalogDimension;
+          dimension_label?: string | null;
+          unit_label?: string | null;
+          min_value?: number | null;
+          max_value?: number | null;
+          step?: number;
+          default_bands?: Json;
+          packages?: Json;
+          allow_custom_bands?: boolean;
+          requires_inspection?: boolean;
+          default_lead_time_hours?: number;
+          regulated?: boolean;
+          required_documents?: Json;
+          aliases?: Json;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      service_types: {
+        Row: {
+          id: string;
+          service_id: string;
+          type_id: string;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          service_id: string;
+          type_id: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          service_id?: string;
+          type_id?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      catalog_attributes: {
+        Row: {
+          id: string;
+          scope: CatalogAttributeScope;
+          scope_id: string;
+          key: string;
+          label: string;
+          type: AttributeType;
+          required: boolean;
+          options: Json | null;
+          applies_to: AppliesTo;
+          validation: Json | null;
+          sort_order: number;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          scope: CatalogAttributeScope;
+          scope_id: string;
+          key: string;
+          label: string;
+          type: AttributeType;
+          required?: boolean;
+          options?: Json | null;
+          applies_to: AppliesTo;
+          validation?: Json | null;
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          scope?: CatalogAttributeScope;
+          scope_id?: string;
+          key?: string;
+          label?: string;
+          type?: AttributeType;
+          required?: boolean;
+          options?: Json | null;
+          applies_to?: AppliesTo;
+          validation?: Json | null;
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      catalog_aliases: {
+        Row: {
+          id: string;
+          entity: CatalogAliasEntity;
+          entity_id: string;
+          alias: string;
+          language: CatalogAliasLanguage;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity: CatalogAliasEntity;
+          entity_id: string;
+          alias: string;
+          language: CatalogAliasLanguage;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity?: CatalogAliasEntity;
+          entity_id?: string;
+          alias?: string;
+          language?: CatalogAliasLanguage;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      catalog_versions: {
+        Row: {
+          id: string;
+          version_number: number;
+          snapshot: Json;
+          published_by: string | null;
+          published_at: string | null;
+          change_note: string;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          version_number: number;
+          snapshot: Json;
+          published_by?: string | null;
+          published_at?: string | null;
+          change_note?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          version_number?: number;
+          snapshot?: Json;
+          published_by?: string | null;
+          published_at?: string | null;
+          change_note?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vendor_categories: {
+        Row: {
+          id: string;
+          vendor_profile_id: string;
+          category_id: string;
+          status: CatalogEntityStatus;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_profile_id: string;
+          category_id: string;
+          status?: CatalogEntityStatus;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_profile_id?: string;
+          category_id?: string;
+          status?: CatalogEntityStatus;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vendor_types: {
+        Row: {
+          id: string;
+          vendor_profile_id: string;
+          category_id: string;
+          type_id: string;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_profile_id: string;
+          category_id: string;
+          type_id: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_profile_id?: string;
+          category_id?: string;
+          type_id?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vendor_services: {
+        Row: {
+          id: string;
+          vendor_profile_id: string;
+          service_id: string;
+          status: VendorServiceStatus;
+          min_notice_hours: number;
+          deposit_pct: number;
+          inclusions: Json;
+          exclusions: Json;
+          notes: string;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_profile_id: string;
+          service_id: string;
+          status?: VendorServiceStatus;
+          min_notice_hours?: number;
+          deposit_pct?: number;
+          inclusions?: Json;
+          exclusions?: Json;
+          notes?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_profile_id?: string;
+          service_id?: string;
+          status?: VendorServiceStatus;
+          min_notice_hours?: number;
+          deposit_pct?: number;
+          inclusions?: Json;
+          exclusions?: Json;
+          notes?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vendor_service_types: {
+        Row: {
+          id: string;
+          vendor_service_id: string;
+          type_id: string;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_service_id: string;
+          type_id: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_service_id?: string;
+          type_id?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vendor_rates: {
+        Row: {
+          id: string;
+          vendor_service_id: string;
+          dim_min: number;
+          dim_max: number;
+          basis: CatalogRateBasis;
+          price_minor: number;
+          currency: string;
+          min_charge_minor: number | null;
+          label: string | null;
+          valid_from: string | null;
+          valid_to: string | null;
+          sort_order: number;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_service_id: string;
+          dim_min: number;
+          dim_max: number;
+          basis: CatalogRateBasis;
+          price_minor: number;
+          currency?: string;
+          min_charge_minor?: number | null;
+          label?: string | null;
+          valid_from?: string | null;
+          valid_to?: string | null;
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_service_id?: string;
+          dim_min?: number;
+          dim_max?: number;
+          basis?: CatalogRateBasis;
+          price_minor?: number;
+          currency?: string;
+          min_charge_minor?: number | null;
+          label?: string | null;
+          valid_from?: string | null;
+          valid_to?: string | null;
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vendor_addons: {
+        Row: {
+          id: string;
+          vendor_service_id: string;
+          name: string;
+          price_minor: number;
+          basis: CatalogAddonBasis;
+          max_qty: number | null;
+          notes: string;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_service_id: string;
+          name: string;
+          price_minor: number;
+          basis: CatalogAddonBasis;
+          max_qty?: number | null;
+          notes?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_service_id?: string;
+          name?: string;
+          price_minor?: number;
+          basis?: CatalogAddonBasis;
+          max_qty?: number | null;
+          notes?: string;
+          archived_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1054,6 +1576,18 @@ export type UnmetDemandRow = Database['public']['Tables']['unmet_demand']['Row']
 export type CategoryRow = Database['public']['Tables']['categories']['Row'];
 export type CategoryVersionRow = Database['public']['Tables']['category_versions']['Row'];
 export type CategoryAttributeRow = Database['public']['Tables']['category_attributes']['Row'];
+export type CategoryTypeRow = Database['public']['Tables']['category_types']['Row'];
+export type CatalogServiceRow = Database['public']['Tables']['services']['Row'];
+export type ServiceTypeRow = Database['public']['Tables']['service_types']['Row'];
+export type CatalogAttributeRow = Database['public']['Tables']['catalog_attributes']['Row'];
+export type CatalogAliasRow = Database['public']['Tables']['catalog_aliases']['Row'];
+export type CatalogVersionRow = Database['public']['Tables']['catalog_versions']['Row'];
+export type VendorCategoryRow = Database['public']['Tables']['vendor_categories']['Row'];
+export type VendorTypeRow = Database['public']['Tables']['vendor_types']['Row'];
+export type VendorServiceRow = Database['public']['Tables']['vendor_services']['Row'];
+export type VendorServiceTypeRow = Database['public']['Tables']['vendor_service_types']['Row'];
+export type VendorRateRow = Database['public']['Tables']['vendor_rates']['Row'];
+export type VendorAddonRow = Database['public']['Tables']['vendor_addons']['Row'];
 
 /** Kept for documentation; Relationships shapes are inlined above. */
 export type { Relationship };

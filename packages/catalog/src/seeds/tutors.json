@@ -1,0 +1,143 @@
+{
+  "category_slug": "tutors",
+  "category_name": "Tutors",
+  "type_label": "Level",
+  "types": [
+    {
+      "slug": "primary",
+      "name": "Primary",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "secondary",
+      "name": "Secondary",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "exam-prep",
+      "name": "Exam prep",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    },
+    {
+      "slug": "music",
+      "name": "Music",
+      "aliases": [],
+      "status": "active",
+      "sort": 3,
+      "attributes": []
+    },
+    {
+      "slug": "language",
+      "name": "Language",
+      "aliases": [],
+      "status": "active",
+      "sort": 4,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "home-lessons",
+      "name": "Home lessons",
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 40,
+          "basis": "per_unit",
+          "priceMinor": 500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 1,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "lesson",
+          "language": "en"
+        }
+      ],
+      "type_slugs": [
+        "primary",
+        "secondary",
+        "exam-prep",
+        "music",
+        "language"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "online-lessons",
+      "name": "Online lessons",
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 40,
+          "basis": "per_unit",
+          "priceMinor": 350000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 2,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "zoom class",
+          "language": "pcm"
+        }
+      ],
+      "type_slugs": [
+        "primary",
+        "secondary",
+        "exam-prep",
+        "music",
+        "language"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [
+    {
+      "key": "subject",
+      "label": "Subject",
+      "type": "text",
+      "required": true,
+      "applies_to": "need",
+      "sort": 0
+    }
+  ],
+  "aliases": [
+    {
+      "alias": "teacher",
+      "language": "en"
+    },
+    {
+      "alias": "oluko",
+      "language": "yo"
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "category_slug": "security",
+  "category_name": "Security",
+  "type_label": "Coverage type",
+  "types": [
+    {
+      "slug": "event",
+      "name": "Event",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "residential",
+      "name": "Residential",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "corporate",
+      "name": "Corporate",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    },
+    {
+      "slug": "construction-site",
+      "name": "Construction site",
+      "aliases": [],
+      "status": "active",
+      "sort": 3,
+      "attributes": []
+    },
+    {
+      "slug": "vip",
+      "name": "VIP",
+      "aliases": [],
+      "status": "active",
+      "sort": 4,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "guards",
+      "name": "Guards",
+      "status": "active",
+      "sort": 1,
+      "pricing_model": "banded",
+      "dimension": "guards",
+      "min_value": 1,
+      "max_value": 50,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 5,
+          "basis": "per_unit",
+          "priceMinor": 4500000,
+          "currency": "NGN"
+        },
+        {
+          "dimMin": 6,
+          "dimMax": 15,
+          "basis": "per_unit",
+          "priceMinor": 4000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "ma guard",
+          "language": "pcm"
+        }
+      ],
+      "type_slugs": [
+        "event",
+        "residential",
+        "corporate",
+        "construction-site",
+        "vip"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "bouncers",
+      "name": "Bouncers",
+      "status": "active",
+      "sort": 2,
+      "pricing_model": "per_unit",
+      "dimension": "guards",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 50,
+          "basis": "per_unit",
+          "priceMinor": 5000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "event",
+        "vip"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "cctv-monitoring",
+      "name": "CCTV monitoring",
+      "status": "active",
+      "sort": 3,
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 25000000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": false,
+      "requires_inspection": true,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "event",
+        "residential",
+        "corporate",
+        "construction-site",
+        "vip"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "patrol",
+      "name": "Patrol",
+      "status": "active",
+      "sort": 4,
+      "pricing_model": "per_unit",
+      "dimension": "hours",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 24,
+          "basis": "per_unit",
+          "priceMinor": 3500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "event",
+        "residential",
+        "corporate",
+        "construction-site",
+        "vip"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "armed-escort",
+      "name": "Armed escort",
+      "status": "active",
+      "sort": 5,
+      "pricing_model": "quote_only",
+      "dimension": "hours",
+      "default_bands": [],
+      "packages": [],
+      "allow_custom_bands": false,
+      "requires_inspection": true,
+      "default_lead_time_hours": 72,
+      "regulated": true,
+      "required_documents": [
+        "Valid firearms licence",
+        "Police approval letter"
+      ],
+      "aliases": [],
+      "type_slugs": [
+        "vip",
+        "corporate"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [],
+  "aliases": [
+    {
+      "alias": "security",
+      "language": "en"
+    }
+  ]
+}

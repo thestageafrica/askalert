@@ -17,6 +17,7 @@ type NavItem = {
 const marketplace: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: <DashIcon /> },
   { href: '/categories', label: 'Categories', icon: <GridIcon /> },
+  { href: '/catalog', label: 'Catalog', icon: <CatalogIcon /> },
   { href: '/areas', label: 'Areas', icon: <MapIcon /> },
   { href: '/vendors', label: 'Vendors', icon: <UsersIcon /> },
   { href: '/public-pages', label: 'Public pages', icon: <PagesIcon /> },
@@ -294,6 +295,20 @@ function PagesIcon() {
         strokeLinejoin="round"
       />
       <path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CatalogIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 1 4 17.5v-11Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

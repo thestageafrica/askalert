@@ -23,6 +23,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@askalert/catalog':
+        specifier: workspace:*
+        version: link:../../packages/catalog
       '@askalert/category-engine':
         specifier: workspace:*
         version: link:../../packages/category-engine
@@ -204,6 +207,25 @@ importers:
         specifier: ^3.1.4
         version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.15)
 
+  packages/catalog:
+    dependencies:
+      zod:
+        specifier: ^3.24.4
+        version: 3.25.76
+    devDependencies:
+      '@askalert/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.20.5
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.15)
+
   packages/category-engine:
     dependencies:
       zod:
@@ -266,6 +288,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@askalert/catalog':
+        specifier: workspace:*
+        version: link:../catalog
       '@askalert/category-engine':
         specifier: workspace:*
         version: link:../category-engine

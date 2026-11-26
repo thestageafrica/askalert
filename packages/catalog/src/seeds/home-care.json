@@ -1,0 +1,162 @@
+{
+  "category_slug": "home-care",
+  "category_name": "Home care",
+  "type_label": "Property type",
+  "types": [
+    {
+      "slug": "apartment",
+      "name": "Apartment",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "house",
+      "name": "House",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "office",
+      "name": "Office",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "deep-cleaning",
+      "name": "Deep cleaning",
+      "pricing_model": "banded",
+      "dimension": "units",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 3,
+          "basis": "total",
+          "priceMinor": 4500000,
+          "currency": "NGN"
+        },
+        {
+          "dimMin": 4,
+          "dimMax": 6,
+          "basis": "total",
+          "priceMinor": 7500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 1,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "apartment",
+        "house",
+        "office"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "laundry",
+      "name": "Laundry",
+      "pricing_model": "per_unit",
+      "dimension": "items",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 100,
+          "basis": "per_unit",
+          "priceMinor": 150000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 2,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "apartment",
+        "house",
+        "office"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "ac-servicing",
+      "name": "AC servicing",
+      "pricing_model": "per_unit",
+      "dimension": "units",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 10,
+          "basis": "per_unit",
+          "priceMinor": 1200000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 3,
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "apartment",
+        "house",
+        "office"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "fumigation",
+      "name": "Fumigation",
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 3500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "status": "active",
+      "sort": 4,
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "apartment",
+        "house",
+        "office"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [],
+  "aliases": []
+}

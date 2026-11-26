@@ -1,0 +1,284 @@
+{
+  "category_slug": "shortlets",
+  "category_name": "Shortlets",
+  "type_label": "Property type",
+  "types": [
+    {
+      "slug": "studio",
+      "name": "Studio",
+      "aliases": [],
+      "status": "active",
+      "sort": 0,
+      "attributes": []
+    },
+    {
+      "slug": "1-bed",
+      "name": "1 bedroom",
+      "aliases": [],
+      "status": "active",
+      "sort": 1,
+      "attributes": []
+    },
+    {
+      "slug": "2-bed",
+      "name": "2 bedroom",
+      "aliases": [],
+      "status": "active",
+      "sort": 2,
+      "attributes": []
+    },
+    {
+      "slug": "3-bed",
+      "name": "3 bedroom",
+      "aliases": [],
+      "status": "active",
+      "sort": 3,
+      "attributes": []
+    },
+    {
+      "slug": "4-plus",
+      "name": "4+ bedroom",
+      "aliases": [],
+      "status": "active",
+      "sort": 4,
+      "attributes": []
+    },
+    {
+      "slug": "duplex",
+      "name": "Duplex",
+      "aliases": [],
+      "status": "active",
+      "sort": 5,
+      "attributes": []
+    },
+    {
+      "slug": "penthouse",
+      "name": "Penthouse",
+      "aliases": [],
+      "status": "active",
+      "sort": 6,
+      "attributes": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "nightly",
+      "name": "Nightly stay",
+      "description": "",
+      "status": "active",
+      "sort": 1,
+      "pricing_model": "banded",
+      "dimension": "nights",
+      "min_value": 1,
+      "max_value": 365,
+      "step": 1,
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 2,
+          "basis": "per_unit",
+          "priceMinor": 8500000,
+          "currency": "NGN",
+          "label": "1-2 nights"
+        },
+        {
+          "dimMin": 3,
+          "dimMax": 6,
+          "basis": "per_unit",
+          "priceMinor": 7500000,
+          "currency": "NGN"
+        },
+        {
+          "dimMin": 7,
+          "dimMax": 29,
+          "basis": "per_unit",
+          "priceMinor": 6500000,
+          "currency": "NGN"
+        },
+        {
+          "dimMin": 30,
+          "dimMax": 365,
+          "basis": "per_unit",
+          "priceMinor": 5500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": true,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "studio",
+        "1-bed",
+        "2-bed",
+        "3-bed",
+        "4-plus",
+        "duplex",
+        "penthouse"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "weekly",
+      "name": "Weekly stay",
+      "status": "active",
+      "sort": 2,
+      "pricing_model": "flat",
+      "dimension": "nights",
+      "default_bands": [
+        {
+          "dimMin": 7,
+          "dimMax": 7,
+          "basis": "total",
+          "priceMinor": 42000000,
+          "currency": "NGN",
+          "label": "Per week"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 24,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "studio",
+        "1-bed",
+        "2-bed",
+        "3-bed",
+        "4-plus",
+        "duplex",
+        "penthouse"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "monthly",
+      "name": "Monthly stay",
+      "status": "active",
+      "sort": 3,
+      "pricing_model": "flat",
+      "dimension": "nights",
+      "default_bands": [
+        {
+          "dimMin": 30,
+          "dimMax": 30,
+          "basis": "total",
+          "priceMinor": 150000000,
+          "currency": "NGN",
+          "label": "Per month"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 48,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "studio",
+        "1-bed",
+        "2-bed",
+        "3-bed",
+        "4-plus",
+        "duplex",
+        "penthouse"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "airport-pickup",
+      "name": "Airport pickup",
+      "status": "active",
+      "sort": 4,
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 3500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [
+        {
+          "alias": "airport run",
+          "language": "pcm"
+        }
+      ],
+      "type_slugs": [
+        "studio",
+        "1-bed",
+        "2-bed",
+        "3-bed",
+        "4-plus",
+        "duplex",
+        "penthouse"
+      ],
+      "attributes": []
+    },
+    {
+      "slug": "cleaning",
+      "name": "Cleaning add-on",
+      "status": "active",
+      "sort": 5,
+      "pricing_model": "flat",
+      "dimension": "none",
+      "default_bands": [
+        {
+          "dimMin": 1,
+          "dimMax": 1,
+          "basis": "total",
+          "priceMinor": 1500000,
+          "currency": "NGN"
+        }
+      ],
+      "packages": [],
+      "allow_custom_bands": false,
+      "requires_inspection": false,
+      "default_lead_time_hours": 12,
+      "regulated": false,
+      "required_documents": [],
+      "aliases": [],
+      "type_slugs": [
+        "studio",
+        "1-bed",
+        "2-bed",
+        "3-bed",
+        "4-plus",
+        "duplex",
+        "penthouse"
+      ],
+      "attributes": []
+    }
+  ],
+  "attributes": [
+    {
+      "key": "check_in",
+      "label": "Check-in date",
+      "type": "date",
+      "required": true,
+      "applies_to": "need",
+      "sort": 0
+    }
+  ],
+  "aliases": [
+    {
+      "alias": "shortlet",
+      "language": "en"
+    }
+  ]
+}

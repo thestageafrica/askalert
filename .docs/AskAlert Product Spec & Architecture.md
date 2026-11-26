@@ -1297,3 +1297,707 @@ Nine categories at launch is too many, so the launch narrows to the original rec
 | **Later** | Food and groceries (section 26), freelancers, movers and relocation, healthcare-adjacent |
 
 All nine are still created in the category engine, so the admin can switch any of them on when its readiness gate (section 24.2) passes. Users see only Live categories, and other categories show a dashed “Coming soon” tile with a waitlist.
+
+## 35. Zero-fixed-cost launch architecture (1,000 to 3,000 users)
+
+**Goal:** no monthly platform bill before revenue, with only variable costs (WhatsApp messages, AI usage, payment fees) that grow with real activity. This section **supersedes the hosting choices in 28.1** (Vercel, Railway or Render worker, and pg-boss).
+
+### 35.1 Why the original stack needs changing
+
+- **Vercel Hobby is for personal, non-commercial use only.** Vercel’s fair-use guidelines state that commercial usage needs a paid plan. A prototype is a grey area, but a launched, revenue-seeking product should not stay on Hobby.
+- **Supabase Free is generous but not production-grade for money.** Free includes 500 MB of database, 50,000 monthly active users, 5 GB of egress, 1 GB of file storage, and two active projects. It has **no automatic backups**, and projects **pause after one week of inactivity**.
+- **Cloudflare’s free tier fits a mostly static app.** Workers Free allows 100,000 requests per day with 10 ms of CPU time per invocation. Requests to static assets are free and unlimited. Check Cloudflare’s terms for commercial use before launch.
+
+### 35.2 The architecture
+
+| Layer | Free choice | What it does | Notes |
+| --- | --- | --- | --- |
+| **Web app and admin** | Cloudflare Pages, as static exports of the Next.js apps | Landing page, PWA, admin screens | No server rendering; the admin domain is protected by Cloudflare Access (verify its free allowance) |
+| **Webhook front door** | One Cloudflare Worker | Verifies WhatsApp and Paystack signatures, drops noisy status events, forwards only what matters | Keeps database and function usage low |
+| **Database, auth, storage** | Supabase Free | Postgres, row-level security, small file storage | Needs DIY backups and a retention policy |
+| **Background jobs** | Supabase Edge Functions with `pgmq` and `pg_cron` | A queue inside Postgres, processed every minute | No always-on server to pay for; outreach can lag by up to a minute, which is fine for these missions |
+| **Login and identity** | The user’s WhatsApp number, with a magic link sent in the chat | Avoids paid SMS one-time codes | The user has already messaged AskAlert, so the number is verified by WhatsApp |
+| **Backups** | Nightly `pg_dump` through a GitHub Action, encrypted, stored privately | Restores if something breaks | Test a restore once |
+| **Monitoring** | Sentry free, Cloudflare analytics, Supabase logs, a daily cost and size report | Catch limits early |  |
+| **Domain** | askalert.com | About $12 per year | The only certain fixed cost |
+
+### 35.3 Capacity check at 3,000 users (assumptions, to be replaced with real data)
+
+Assume 3,000 users make about 2 missions each per month: 6,000 missions, about 12 messages each.
+
+- **Database:** roughly 90 to 130 MB per month with indexes, so the 500 MB limit would be reached in about 4 months. **Fix:** keep full message text for 90 days, archive summaries after that, and delete media after 30 days.
+- **Webhook volume:** each WhatsApp message also triggers sent, delivered, and read events. Dropping those at the Worker keeps meaningful events near 120,000 per month, well inside the 500,000 Edge Function invocations on Free.
+- **Egress (5 GB):** serve the app from Cloudflare, keep API payloads small, and never serve media through Supabase.
+- **Monthly active users (50,000):** not a concern at this scale.
+- **Worker requests (100,000 per day):** comfortable.
+
+### 35.4 When to start paying (upgrade triggers)
+
+| Signal | Action | Approximate cost |
+| --- | --- | --- |
+| **The first real escrow hold** | Upgrade Supabase to Pro for daily backups and no pausing | $25 per month (about ₦33,000, roughly one or two commissions on a shortlet booking) |
+| Database above about 350 MB, or egress above about 3.5 GB in a month | Trim data, or move to Pro | Included in Pro |
+| Worker traffic above about 70,000 requests per day | Workers Paid plan | From $5 per month |
+| Jobs that need more than a minute of latency or long CPU time | A small always-on worker on Railway or Render | About $5 to $7 per month |
+| Monthly revenue is at least three times your fixed infrastructure bill | Upgrade whatever is closest to its limit | As needed |
+
+### 35.5 What changes in the code
+
+- Next.js for web and admin uses **static export** (`output: export`): no middleware, no API routes, no image optimisation service, and static social-share images.
+- The queue uses **`pgmq` plus `pg_cron`**, not pg-boss.
+- Webhooks go through **the Worker first**, then a Supabase Edge Function.
+- Business logic stays in shared packages so it can move to a paid server later without a rewrite.
+- Keep to **standard Postgres** and standard web code, so you can leave any provider.
+
+### 35.6 The honest picture
+
+- **Infrastructure is not your big cost.** At 3,000 missions a month, WhatsApp and AI usage could be roughly ₦0.7 to ₦2.4 million (using ₦230 to ₦800 per mission from section 15), against about ₦0 to ₦67,000 for platform fees. Optimising cost per mission, conversion, and commission matters far more than saving $50.
+- **Free tiers change.** Re-check limits and commercial-use terms for Cloudflare and Supabase before launch, and keep the code portable.
+- **During quiet pilot weeks,** a daily health-check ping keeps the free Supabase project from pausing.
+- **Money safety comes first.** Do not hold real customer funds on a database with no backups. That is why the first escrow hold is the trigger to pay for Supabase Pro.
+
+### 35.7 Fixed-cost budget by stage
+
+| Stage | Fixed monthly cost |
+| --- | --- |
+| **Design and concierge pilot** | About ₦0 (domain only) |
+| **Pilot with real money (first holds)** | About $25 for Supabase Pro, roughly ₦33,000 |
+| **Growth (traffic limits reached)** | About $30 to $40, roughly ₦40,000 to ₦55,000, with the Worker upgrade as needed |
+
+At the commission levels in section 15, one or two bookings pay for the whole stack.
+
+## 36. Channel and plan model: free in-app chat with caps, WhatsApp chat in the Starter plan
+
+**Decision:** AskAlert’s own **in-app chat is free, with caps**. **WhatsApp chat and alerts become part of a paid Starter plan.** Every costly action is metered, so cost follows usage. This **supersedes section 23** (“WhatsApp first”) for buyers. Vendors remain on WhatsApp, because that is where they are.
+
+### 36.1 Why this is financially sound
+
+Since **1 October 2026**, Meta charges per outbound message on the WhatsApp Business Platform: free-form replies inside the 24-hour customer service window and utility templates inside that window are both chargeable at the market’s utility rate. Messages from users to the business remain free. Every AI reply AskAlert sends on WhatsApp therefore has a price. Free, unlimited WhatsApp chat would be an open-ended cost. One source reports a free monthly quota in India; check whether any free quota applies to Nigeria.
+
+### 36.2 What each tier gets (starting hypotheses, to be tested)
+
+|  | **Free** | **Starter** (prepaid pass) |
+| --- | --- | --- |
+| **Price** | ₦0 | About ₦2,500 to ₦3,500 per 30 days; test a weekly pass around ₦800 to ₦1,000 |
+| **Chat** | Enhanced in-app chat: a thread per vendor, side-by-side quote comparison, photos, read ticks, saved replies | In-app chat **plus WhatsApp chat and alerts** |
+| **Notifications** | In-app, web push, email | WhatsApp, plus the free channels |
+| **Missions per month** | 2 | 6 |
+| **Vendors contacted per mission** | Up to 4 | Up to 8 |
+| **Relayed chat messages per month** | About 30 | About 150 |
+| **AI assist suggestions per month** | About 10 | About 60 |
+| **Standing alerts** | 1 | 3 |
+| **Buyer booking fee** | Standard | Waived |
+| **Autopilot** | No | Not in Starter; a later Plus plan |
+
+**Top-ups:** credit packs for extra missions or messages (for example ₦500 for 2 missions or 40 messages). **Commission on platform bookings continues in all plans.**
+
+### 36.3 Where the cost really is
+
+1. **Buyer-facing WhatsApp messages.** These are gated by the plan.
+2. **Vendor outreach and vendor replies.** The vendor is on WhatsApp whatever plan the buyer is on, so every mission costs messages even for a free in-app user. This is the larger cost, and the lever is **caps on vendors contacted per mission**, set by plan.
+3. **Relayed chat.** An in-app message from a buyer that is relayed to a vendor’s WhatsApp is an outbound message AskAlert pays for. It must be capped.
+4. **AI usage.** Metered per mission and per assist suggestion.
+
+**Ways to cut cost without hurting the experience:**
+
+- **Rate cards:** vendors pre-fill price ranges, so many quotes need no message at all.
+- **Batch vendor leads** into a single message.
+- **Optional vendor web link:** a vendor opens a no-install chat page from one notification instead of exchanging many WhatsApp messages.
+- **Combine replies:** fewer, richer messages with buttons, since billing is per message, not per character.
+- **Per-mission message budget** enforced by the policy engine.
+
+### 36.4 How usage is metered
+
+```
+plans            id, name, status, current_version
+plan_versions    plan_id, version, price_minor, period_days, limits jsonb, features jsonb
+subscriptions    user_id, plan_id, version, starts_at, ends_at, status
+credit_wallets   user_id, balance, expires_at
+usage_events     id, user_id, mission_id, type (ai_tokens, wa_service, wa_template,
+                 wa_utility, sms, stt, places), units, est_cost_minor, created_at
+```
+
+- **Plans are configuration,** edited in the admin console with versioning, exactly like categories (section 25).
+- **Entitlement check:** the policy engine checks the user’s plan and balance **before** every costly action (start a mission, contact more vendors, send a WhatsApp message, request an AI suggestion).
+- **Soft cap at 80%:** warn the user and offer a top-up or the Starter plan. **Hard cap at 100%:** pause the costly action and explain clearly.
+- **Cost ledger:** every event records its estimated cost, so you see cost per user, per mission, and per booking.
+- **Alerts:** a daily report, and an alert when any user’s cost exceeds a threshold. Rate limits and fair-use rules handle abuse.
+
+### 36.5 WhatsApp as the front door for free users
+
+Your landing page and marketing still say “Ask on WhatsApp,” because that is where people start. The rule:
+
+- Inbound messages are free. For a non-subscriber, AskAlert sends **one short automatic reply** with a sign-in link to continue in the app, and a line about Starter.
+- Further WhatsApp messages from a non-subscriber are not answered by the agent, apart from a limited reminder at most once per 24 hours.
+- **Experiment:** allow free users two WhatsApp “quotes ready” nudges per month if they lift booking conversion enough to pay for themselves.
+
+### 36.6 Passes and credits fit Nigeria better than auto-renewing subscriptions
+
+- Card renewals often fail, and many people prefer transfer or USSD. Sell **prepaid passes** (30 days, or weekly) and **credit packs**, with a renewal reminder, instead of relying only on automatic card billing. Paystack supports plans and subscriptions if you want to offer auto-renew as an option.
+- If AskAlert is later wrapped as a store app, check Apple and Google rules for selling digital subscriptions inside the app.
+- Have a lawyer review the terms for prepaid credits, including expiry.
+
+### 36.7 Unit economics sketch (illustrative)
+
+|  | Estimate |
+| --- | --- |
+| **Lean free mission** (4 vendors, no negotiation, in-app buyer) | About ₦150 to ₦300 (vendor messages and parsing) |
+| **Free user worst case** (2 missions) | About ₦300 to ₦600 per month; target an average well below ₦150 |
+| **Starter user at the cap** (6 missions) | About ₦1,500 to ₦3,600 in cost, against a ₦2,500 to ₦3,500 pass, plus commission on any booking |
+
+At pessimistic costs, a fully used Starter plan can lose money. That is why the caps, credits, and cost-cutting steps matter, and why commission on bookings and the waived booking fee must be designed together. Replace every number here with measured data from the pilot.
+
+### 36.8 Effect on the roadmap
+
+- **In-app chat moves earlier,** into the main build (weeks 5 to 8 of the plan in section 30), because the free tier depends on it. WhatsApp becomes an **entitlement-gated channel adapter** on the same conversation store (section 23.1).
+- **Landing page:** keep “Ask on WhatsApp” as the entry, add “Start in your browser,” and add a plans section once the pass is ready.
+- **Admin console:** add Plans, Usage, and Cost pages.
+
+### 36.9 Risks
+
+- **Lower conversion on the free tier.** In-app replies are seen less often than WhatsApp messages, and web push is weaker on iPhone, so add email fallback and measure conversion by tier.
+- **Two experiences to build and support.** Keep the conversation store shared and the in-app chat simple at first.
+- **Starter demand is unproven.** Test willingness to pay with a pre-sale or a waiting list before building billing.
+- **Fairness and clarity.** Show remaining missions and messages in plain language, never raw token counts.
+- **Vendors carry a hidden cost.** Watch whether vendors tire of lead messages, and keep the batching and rate-card options.
+
+## 37. PWA push notifications and the vendor WhatsApp policy
+
+### 37.1 How device notifications work in the PWA
+
+A PWA can send **web push notifications** to a phone or computer even when the app is closed. This uses open web standards: a service worker, the Push API, and **VAPID** keys. Firebase is **not required**. Browsers deliver the notification through their own push services (Chrome uses Google’s infrastructure, Safari uses Apple’s). Sending is free.
+
+| Option | Cost | Covers | Notes |
+| --- | --- | --- | --- |
+| **Self-hosted Web Push (VAPID)** | Free | Browsers, including installed PWAs | No vendor, no Google account needed. Your code stores each device subscription and sends through a standard library. Recommended start. |
+| **Firebase Cloud Messaging** | Free | Web, plus native Android and iOS apps | Needs a Firebase project and service-account key. Worth adding if AskAlert is later wrapped as a store app. |
+| **OneSignal** | Free plan limited by monthly active users; paid plans from about $19 per month | Web and mobile, with audience tools | Easiest set-up. Adds a vendor and a usage ceiling. |
+
+**Recommendation:** build a `PushProvider` interface and start with self-hosted VAPID. Add FCM later for a native wrapper. If setup proves hard in Cursor, switch to OneSignal’s free plan as a fallback.
+
+### 37.2 Limits to design around
+
+- **Android (Chrome):** works after the user grants permission. Some low-end phones have aggressive battery savers that can delay notifications.
+- **iPhone:** needs iOS 16.4 or newer, the app **added to the Home Screen**, and the permission prompt shown only after the user opens that icon and taps a “turn on notifications” button. A plain Safari tab cannot receive push.
+- **Delivery is not guaranteed.** Treat push as one layer, not the only one.
+- **Privacy:** keep the text generic (for example “You have a new quote”). Never put names, prices, phone numbers, or addresses in a notification.
+- **Permission timing:** ask only after the user has seen value, for example right after creating a request, with a clear explanation. Never on first load.
+
+### 37.3 Notification ladder
+
+1. **In-app notification centre** (always available).
+2. **Web push** if the device is subscribed.
+3. **Email** as a free fallback for important events (quotes ready, booking confirmed).
+4. **WhatsApp** for Starter users and vendors with an allowance (section 37.4).
+5. **SMS** only for critical events, if at all, because of cost.
+
+Every event has a **priority**, and the system tries cheaper channels first and escalates only when needed and allowed by the user’s plan.
+
+### 37.4 Should vendors also need a plan to get WhatsApp messages?
+
+**Decision:** the buyer side follows section 36. For **vendors, WhatsApp lead alerts are not paywalled at launch.** They are **cost-capped and earned** instead. Reasons:
+
+- Vendors are the scarce side of the marketplace. If free vendors cannot see leads quickly, quotes arrive late, buyers leave, and the platform fails.
+- Vendors already live on WhatsApp, and many will not install an app or pay to receive leads from an unproven platform.
+- The cost of a lead alert is small compared with the cost of **not** having vendors. Treat it as supply-acquisition cost.
+
+**Protecting the business without a paywall:**
+
+| Control | How it works (starting hypotheses) |
+| --- | --- |
+| **Lead allowance** | A free vendor receives up to about 20 WhatsApp lead alerts per month and a limited number of chat messages. |
+| **Earn more by performing** | Each completed, platform-paid booking adds credits (for example 10 lead alerts). |
+| **Response-rate throttling** | A vendor who ignores several leads in a row moves to a digest and web or push alerts only. Cost follows value. |
+| **Batching** | Several leads in one message or a daily digest, never one message per lead where avoidable. |
+| **Rate cards** | Vendors pre-fill price ranges, so many quotes need no message. |
+| **Vendor web link** | A no-install page where the vendor answers a lead, replacing a back-and-forth of paid messages. |
+| **Vendor Pro (later)** | About ₦3,000 to ₦5,000 per month: unlimited WhatsApp lead alerts, priority placement in lead delivery, a verified badge, and tools. No pay-to-rank. |
+| **Verification fee (later)** | A small one-time fee for the verified badge, once supply is established. Waive it during the pilot. |
+
+### 37.5 Designing for people who avoid responsibility
+
+Every marketplace has free riders on both sides. Do not rely on goodwill; build the system so that avoiding responsibility does not pay.
+
+- **Money flow:** escrow with the buyer-chosen hold, and commission collected on platform payments.
+- **Reputation scores** for buyers and vendors: response rate, no-shows, late cancellations, disputes. Low scores reduce reach or access.
+- **Caps and rate limits** on missions, messages, and alerts, tied to phone verification.
+- **Commitment signals** where abuse is likely: a small refundable or creditable deposit for high-cost missions or for Autopilot.
+- **No-show and cancellation rules** with clear penalties, enforced through held funds.
+- **Fast blocking and suspension** for repeat abusers, with a human review step.
+
+### 37.6 Estimated cost of the vendor allowance
+
+At about ₦14 per outbound message (a reported Nigerian utility rate; confirm on Meta’s rate card), a vendor using 20 lead alerts and 60 chat messages costs roughly ₦1,100 per month at the worst case. For 100 vendors, about ₦110,000 per month. Treat it as an acquisition cost, and reduce it with batching, rate cards, and throttling.
+
+## 38. WhatsApp API: setup path and the developer-account SMS problem
+
+### 38.1 Where things stand
+
+Done: a dedicated number, and **AskAlert Technologies Limited verified** in the Meta business portfolio. Blocked: registering on developers.facebook.com because the SMS code does not arrive. This is a widely reported problem. Several developers in different countries report that Meta shows “code sent” but nothing arrives, even after trying several numbers. It is not specific to your number or to Nigeria.
+
+### 38.2 Fixes to try, in order
+
+1. **Re-add your phone in Accounts Center.** Go to Accounts Center, then Password and security, then Two-factor authentication, choose your account, pick “SMS or WhatsApp,” and **add the phone number again even if it is already listed**. Confirm the code that arrives, then retry developer registration. This reportedly worked for some people.
+2. **Use a different SIM or network** (MTN, Airtel, Glo, or 9mobile) for the developer verification. It does not have to be the WhatsApp number. Check that Do Not Disturb (DND) is off, that the correct SIM is active on a dual-SIM phone, and that you are not on airplane mode. Ask the carrier whether it blocks international or short-code SMS.
+3. **Try the other verification route** (WhatsApp or email) in Accounts Center. Some users received codes there but the developer page still insisted on SMS, so do this together with step 1.
+4. **Change the environment:** the Facebook mobile app instead of a browser (or the reverse), no VPN, a different network, and a different time of day. Leave about 24 hours between bursts of attempts, because repeated attempts can trigger temporary blocks.
+5. **Use a real, established personal Facebook account** with a confirmed email, a confirmed phone, and two-factor authentication on. The developer account attaches to a person, not to the company.
+6. **Contact Meta.** Use Business Support Home in your business portfolio (your verified status helps), and post a bug report and a support request describing “developer registration SMS code not received.” Include dates, the number’s country code, and the carrier.
+7. **Have a trusted co-director create the developer account.** They register with their own Meta account and are added to the AskAlert business portfolio. Make sure the **app is owned by the business portfolio**, not by a person, and that you keep full admin control.
+8. **Use a provider instead (see 38.3).**
+
+### 38.3 Provider route: skip the developer account
+
+A **WhatsApp Business Solution Provider or Tech Provider** (for example 360dialog or Twilio; compare current prices, Nigerian support, and API features) can onboard your number and business through Meta’s Embedded Signup. You log in with Facebook and connect the verified business, and the provider’s own app handles the developer side. Trade-offs: a monthly platform fee or message mark-up, and a dependency on the provider. Choose one that lets you keep ownership of the WhatsApp Business Account and number, and that has an API your code can use.
+
+### 38.4 Number rules
+
+- The number must **not be registered on the WhatsApp or WhatsApp Business app** (personal or business) before API onboarding. Delete the account on that number first.
+- It must receive **SMS or a voice call** for the registration code, and must not be a short code or toll-free line. If SMS fails, try the voice option.
+- **For a concierge pilot, use a separate cheap SIM in the WhatsApp Business app,** not the API number, so the two do not conflict. Meta has a coexistence feature for using one number in both places; check its current availability and conditions before relying on it.
+
+### 38.5 Setup steps once developer access works
+
+1. Create an app (business type) and **attach it to the verified business portfolio.**
+2. Add the WhatsApp product and create or link the **WhatsApp Business Account**.
+3. Add your number, verify it, and **register it with a two-step verification PIN.**
+4. Submit the **display name** and complete the profile (logo, description, category, website, privacy policy URL).
+5. Create a **system user** and a **permanent access token** with the WhatsApp messaging and management permissions. Store it as a secret.
+6. Set the **webhook** (the Cloudflare Worker from Prompt 14) with the verify token, and subscribe to the messages field.
+7. Add a **payment method** to the WhatsApp Business Account. Check which cards Meta accepts for your account; many Nigerian businesses use a dollar-capable card.
+8. Create and submit **message templates** (generic, utility category, with variables), then test on the test number.
+9. Go live with **opt-in records** for every user and vendor, and watch the quality rating and messaging limits. Business-initiated limits start low and rise with quality and volume; check the current tiers.
+
+### 38.6 Meta’s AI policy and AskAlert
+
+Since **15 January 2026**, Meta’s WhatsApp Business terms bar **general-purpose AI assistants** (open-ended bots that answer anything) from the platform, but structured, business-specific uses such as bookings, support, notifications, and sales remain allowed. AskAlert is a marketplace service with a narrow, task-specific agent, which fits, but you should:
+
+- Keep the agent **strictly on topic** (requests, quotes, bookings), and have it politely decline unrelated questions.
+- Describe AskAlert as a **marketplace and booking service**, not as “an AI chatbot on WhatsApp.”
+- Provide **human handoff** and clear escalation.
+- Re-read Meta’s current terms before launch, because they have changed recently.
+
+### 38.7 What continues while this is blocked
+
+- Phase 2 prompts (16 to 21) run on a **stubbed WhatsApp adapter**, so no work stops.
+- Run the concierge pilot from a separate WhatsApp Business app number.
+- Prepare the templates, display name, profile assets, privacy policy, and opt-in wording now, so approval is quick once access works.
+
+## 39. Payments model after Paystack’s feedback: staged payments, no held funds
+
+### 39.1 What Paystack said
+
+Paystack reviewed the hold-percentage design and replied that it **cannot support holding or releasing customer funds based on service completion or dispute outcomes**, even if the funds are not in an AskAlert escrow account. It described this as a conditional, delayed payout arrangement. It said split payments and subaccounts allocate money at settlement and do **not** provide a way to hold a vendor’s share and release it later. It asked AskAlert to either (a) confirm a standard flow with no completion-based or staged release, or (b) name a separate licensed financial institution that manages the flow, with licence and partnership documents, and to share website wording that no longer describes escrow or funds held pending completion.
+
+This confirms the risk flagged in sections 7 and 33.6. Renaming the feature on the website does not change what it does, so **wording changes alone cannot solve it.** The product itself has to change.
+
+### 39.2 Decision
+
+- AskAlert launches with **standard Paystack payments and split payments**. AskAlert **does not hold customer funds** and does not release funds on completion or dispute outcomes.
+- There is **no escrow, hold, or release** feature in the product, the website, or the terms.
+- This **supersedes** section 33 (buyer-chosen hold), the escrow parts of section 7, the “Protected by AskAlert” and “Direct payment” labels in section 18.2, and the escrow defence in section 20.3.
+- Real escrow can return later through a **licensed partner** (39.7).
+
+### 39.3 Pay in stages: two real payments
+
+The buyer-choice idea survives in a form that holds no money. The buyer chooses **how much to pay now (deposit)** and how much to pay **after the job is done (balance)**.
+
+1. **Payment 1, the deposit,** is paid at booking through Paystack checkout and settles normally, split between the vendor and AskAlert’s commission.
+2. **Payment 2, the balance,** is requested after the job is done. When the buyer taps “Job done” (or the vendor marks it completed), the buyer receives a payment link and has a set window to pay (for example 24 to 48 hours) or to raise a claim.
+3. Each payment is a **separate, standard payment** settled in the usual way. Nothing is retained pending completion.
+
+**Worked example** (₦100,000 job, 40% deposit, 12% commission on each payment, Paystack’s 1.5% + ₦100 fee charged to the vendor side):
+
+|  | Amount | AskAlert commission | Paystack fee | Vendor receives |
+| --- | --- | --- | --- | --- |
+| Deposit (40%) | ₦40,000 | ₦4,800 | ₦700 | ₦34,500 |
+| Balance (60%) | ₦60,000 | ₦7,200 | ₦1,000 | ₦51,800 |
+| **Total** | ₦100,000 | ₦12,000 | ₦1,700 | ₦86,300 |
+
+The flat ₦100 fee applies twice, so staging costs ₦100 more in fees than a single payment (₦1,600). Confirm Paystack’s current fee rules.
+
+**Bounds (set per category in the admin):** a minimum deposit (for example 30 to 50% for events, 100% for short bookings), a maximum, a balance due window, and higher minimums for new buyers or new vendors. 100% deposit means pay in full.
+
+### 39.4 What replaces the protection
+
+| Mechanism | How it helps |
+| --- | --- |
+| **Buyer controls exposure** | The buyer risks only the deposit before the job is done |
+| **Verified vendors and tiers** | ID and business checks before vendors go live |
+| **Reputation** | Reviews and ratings only from platform-paid bookings; scores affect reach |
+| **Claims and mediation** | A fair process with outcomes (vendor-approved refund, credit, penalties, suspension), but no frozen funds |
+| **Goodwill refund policy** | A capped refund or credit funded from AskAlert’s own commission, for no-shows and “not as described.” Have a lawyer confirm it is not insurance and word it carefully. |
+| **Account restrictions** | Unpaid balances reduce a buyer’s access, and repeated vendor failures reduce a vendor’s reach |
+
+### 39.5 New risks and how to handle them
+
+- **Vendors carry non-payment risk on the balance.** Set minimum deposits per category, let vendors require a higher deposit, and restrict buyers who do not pay.
+- **Leakage on the balance:** the buyer and vendor might settle the balance in cash. Make the balance link the only way to unlock the receipt, the review, goodwill-refund eligibility, and loyalty credits, and set minimum deposits high enough to cover AskAlert’s commission.
+- **Upfront-risk categories** (shortlets, car hire) will usually need full or large deposits. Until a licensed escrow partner exists, rely on strong verification, reviews, and the goodwill policy, and be honest in the copy.
+- **Refunds on split payments:** confirm with Paystack how refunds work on split transactions and who funds them.
+
+### 39.6 Technical changes
+
+- Replace `computeEscrowSplit` with **`computeStagedPayments`**: for each payment, compute commission, processing fee, and vendor share.
+- Category configuration: replace the `escrow` block with `payment_terms`:
+
+```
+payment_terms:
+  mode: staged                 # single | staged
+  default_deposit_pct: 50
+  min_deposit_pct: 30
+  max_deposit_pct: 100
+  balance_due_hours: 48
+  commission_on: each_payment
+  fee_bearer: vendor           # vendor | platform | buyer
+```
+
+- **Ledger:** payments, splits, commission, fees, refunds, and goodwill credits only. Remove `escrow_held`, release jobs, and auto-release.
+- **Disputes become claims** with no freezing logic.
+- Vendors get **Paystack subaccounts** (bank account verification needed) for splits.
+- Keep a `PaymentProvider` interface, plus an optional `EscrowProvider` interface that stays empty until a licensed partner is signed.
+
+### 39.7 Route to real escrow later
+
+Escrow services in Nigeria are provided by banks and fintechs, and technology companies typically partner with a bank because they are not licensed to hold customer funds themselves. One WhatsApp-native escrow service, EscrowPay, launched in June 2026 and holds buyer funds in a designated account at a CBN-licensed microfinance bank, with milestone escrow for services planned. It could be a partner or a competitor; contact them to find out whether any partnership or API exists. A legal commentary notes there is no specific escrow law yet and CBN consumer-protection rules apply, and that guidelines may follow. Steps: get a Nigerian fintech lawyer’s opinion, shortlist licensed partners, sign an agreement with licence documents, integrate behind `EscrowProvider`, and only then bring back a hold feature, with wording that names the licensed institution.
+
+### 39.8 Wording rules
+
+**Do not use** (for money): escrow, hold or held, protected funds, release, safekeeping, “AskAlert keeps your money.” **Use:** pay in stages, deposit, balance, pay after the job, verified vendors, paid on AskAlert, secure checkout by Paystack.
+
+Replace “Protected payments” with “Pay in stages,” replace the “Protected by AskAlert” badge with “Paid on AskAlert,” and rewrite the landing section, FAQ, checkout screen, and terms. Add an automated **copy check** in the build that fails when banned words appear in user-facing text.
+
+### 39.9 Effect on the plan
+
+- **Prompts 7, 30, and 31 are superseded** by Prompts 35 to 37 in the prompt pack.
+- The landing page slider section (“You decide how much to protect”), the trust cards, and the sign-in slide 4 must be rewritten.
+- The monetization model (section 15) still works, because commission is collected on each payment through the split.
+- Next steps: lawyer’s opinion, reply to Paystack with the standard flow, then refactor with Prompts 35 to 37.
+
+## 40. Licensed escrow partner: options and how to choose
+
+### 40.1 Decision
+
+Staged payments (section 39) leave the balance exposed to payment outside AskAlert, which weakens commission capture. The founder has decided to pursue a **licensed escrow partner** so that the hold-and-release design can return. Paystack’s reply left this door open: it said a flow managed by a **separate licensed financial institution** can be reviewed if AskAlert names the institution and provides licence and partnership documents. **Section 39 stays as the fallback** if no partner can be secured, and as the interim rule for copy (40.7).
+
+AskAlert must never hold the money itself, and must not claim protection that does not yet exist.
+
+### 40.2 What the market offers (public information, November 2026)
+
+These are the providers’ own public claims. **Verify every licence, structure, and fee directly.**
+
+| Option | What it says publicly | Notes for AskAlert |
+| --- | --- | --- |
+| **EscrowPay** | WhatsApp-native escrow live since 26 June 2026. Funds sit in a designated account at Rubies MFB, a CBN-licensed microfinance bank. It launched an API in August 2026 for marketplaces and stores, and in October 2026 launched milestone (staged) payments for freelancers and contractors, with a 72-hour review window and automatic payment if the client does not respond. Platforms already run live transactions on it. | Strong feature fit (milestones and services). It is also a consumer product on WhatsApp, so ask about exclusivity and whether it would compete for your users. |
+| **Payluk** | Escrow API backed by a CBN-licensed microfinance bank (SafeHaven MFB), with a sandbox, milestone escrow, a pooled vault, dispute-resolution APIs, instant withdrawals, and cNGN stablecoin support. | Developer-friendly. Confirm fees, limits, and KYC. |
+| **PayScrow** | B2B escrow API for platforms; funds held in a CBN-licensed deposit bank; payment links, buyer and seller dashboards, dispute resolution. | Verify licence and API details. |
+| **Pandascrow** | Escrow and payment infrastructure for businesses, marketplaces, and freelancers, with an API for payments, milestones, and fund release. Lists Nigeria, Ghana, Kenya, and South Africa among the areas it serves. | Relevant for expansion across Africa. Verify. |
+| **AtaraPay** | Web-based escrow that holds buyer funds with CBN-licensed banks. | Consumer-facing; ask whether an API exists. |
+| **Direct bank or MFB arrangement** | A designated escrow or collection account with a licensed bank or microfinance bank, with a sub-account or virtual account per transaction. | Most control, but slow, with minimums and custom work. Revisit at scale. |
+| **Become licensed yourself** | A CBN payment-related licence. | Not realistic now: capital, compliance, and time. |
+
+### 40.3 Due diligence: questions to ask every partner
+
+**Licence and structure**
+
+- Who exactly holds the funds? Which licensed institution, and what is the licence? Is it a designated account, and who are the account owner and signatories?
+- Is the partner itself licensed, or is it a technology provider on top of a bank? Please provide documents.
+- What happens to customer funds if the partner fails? Is there ring-fencing or deposit insurance?
+
+**Product and API**
+
+- Can we create milestones (a share released at booking, the remainder on completion)? Auto-release timers? Dispute pause? Partial refunds?
+- Is there a sandbox, webhooks with signatures, and idempotent endpoints?
+- How do customers pay in (bank transfer, virtual account, USSD, cards)?
+- How do vendors receive payouts, and how is vendor KYC and name-matching handled?
+- Can our commission be deducted automatically, and at what point?
+
+**Commercial and legal**
+
+- Fees: per transaction, per release, monthly minimums, payout fees, and who pays them.
+- Per-transaction and monthly limits; settlement speed.
+- Exclusivity, non-compete, brand use (white-label or co-branded), and termination and data portability.
+- Who handles consumer complaints and chargebacks? Who is the data controller for payment data? A data processing agreement under the NDPA.
+- Uptime commitments, support, and incident response.
+
+### 40.4 How it maps to AskAlert
+
+1. The buyer chooses what share to pay now and what share to confirm later (the milestone split).
+2. The buyer pays into the partner’s designated account (by transfer or virtual account, and by card if supported).
+3. The “pay now” share is released to the vendor when funding is confirmed; the remainder is released when the buyer confirms the job, or automatically after a set time unless a claim is open. A claim pauses the release.
+4. The partner pays the vendor’s bank account after vendor verification. AskAlert receives events by webhook and sends instructions through the API. **AskAlert never touches the funds.**
+5. Commission is deducted according to the partner’s model (confirm in the contract).
+
+### 40.5 Role of Paystack from here
+
+Use Paystack only for AskAlert’s **own revenue** (Starter passes and credit packs) and any standard payments it approves. Do not route escrowed customer money through Paystack. Be accurate with Paystack: tell them a licensed partner will handle held funds, and send the partner’s name and documents once signed.
+
+### 40.6 Suggested process (estimated; real timelines depend on the partners)
+
+| Step | Time |
+| --- | --- |
+| Shortlist three partners and request licence documents, API access, and a sandbox | Week 1 |
+| Legal review of the agreement, licence, and data-processing terms | Weeks 2 to 3 |
+| Sandbox integration behind the `EscrowProvider` interface (Prompt 38) | Weeks 2 to 4 |
+| Pilot with caps on amount and volume | After signing |
+| Update the website, app, and Terms with the partner’s name and licence details | Before go-live |
+
+### 40.7 Interim rules until a partner is live
+
+- **No user-facing claim** that funds are held or protected. Use “Protected payments are coming soon.”
+- The pilot may run with direct vendor payment and AskAlert’s commission collected by invoice, accepting some leakage while learning, or with the staged model from section 39.
+- Keep the escrow wording out of anything sent to Paystack, Meta, or users until it is true.
+
+### 40.8 A reality check on bypass
+
+Even with escrow, some users will deal directly on repeat jobs. The defences in sections 20 and 37.5, the non-circumvention terms (lawyer review), loyalty benefits, and tools vendors value are what keep people on the platform. Escrow reduces bypass on the first job, because it gives buyers a reason to pay inside AskAlert.
+
+### 40.9 Effect on the plan
+
+- **Prompts 35 to 37 are paused** until the partner decision is made. Do not run them unless the fallback (section 39) is chosen.
+- **New Prompt 38** builds a provider-agnostic escrow layer with a sandbox mock, so the work does not wait for the contract.
+- The hold slider returns in principle, expressed as milestones, with wording that names the licensed institution.
+
+## 41. Service catalog, types, services, and rate cards
+
+### 41.1 Why the first rate card was too shallow
+
+A single price per category cannot describe real work. A caterer’s price depends on the **occasion** (a burial is different from a wedding), the **service** (catering, small chops, cakes), the **quantity** (100 to 150 guests), and the **location**. The catalog below replaces the flat rate card. It supersedes the rate-card steps in section 4.6 and Prompt 26, and extends the category engine in section 25.
+
+### 41.2 The structure: one pattern for every category
+
+**Category → Types → Services → Pricing model → Vendor rate cards.**
+
+- **Category:** the family (Events, Shortlets, Security, and so on).
+- **Types:** the “kind of” dimension. Its label changes per category (Event type, Property type, Vehicle type, Security type).
+- **Services:** what a vendor actually does inside the category.
+- **Pricing model and dimension:** how that service is priced (per guest, per hour, per night, flat, package, or quote only), with admin-defined default bands.
+- **Vendor rate card:** each vendor ticks the types they cover, ticks the services they offer, and sets prices for each service.
+
+| Category | Types (examples) | Services (examples) | Typical dimension |
+| --- | --- | --- | --- |
+| **Events** | Birthday, wedding, corporate, naming ceremony, burial or funeral, anniversary, graduation, religious, product launch, private party | Catering, small chops, cakes, drinks and bar, photography, videography, MC, DJ, live band, decor, makeup and gele, canopy chairs and tables, event planning, ushers, sound and lighting, venue | Guests (bands), hours, flat |
+| **Shortlets** | Studio, 1-bed, 2-bed, 3-bed, 4+ bed, duplex, penthouse | Nightly, weekly, monthly stay; add-ons: airport pickup, cleaning | Nights with length-of-stay bands, guests |
+| **Security** | Event, residential, corporate, construction site, VIP | Guards, bouncers, CCTV monitoring, patrol | Guards by shift or day |
+| **Car hire** | Sedan, SUV, luxury, van or bus | Hourly with driver, daily with driver, airport transfer, wedding car | Hours or days |
+| **Beauty at home** | Bridal, everyday, photoshoot | Makeup, hair, gele, nails, lashes | Flat per service, people count |
+| **Home care** | Apartment, house, office | Deep cleaning, laundry, AC servicing, fumigation | Bedrooms, units |
+| **Tutors** | Primary, secondary, exam prep, music, language | Home lessons, online lessons | Hours |
+
+Security and some other services are **regulated**. A service can be flagged as regulated in the admin, which requires extra documents (for example licences) and review before the vendor can offer it. Confirm the legal requirements with a lawyer.
+
+### 41.3 Data model
+
+```
+category_types      id, category_id, slug, name, aliases, status, sort
+services            id, category_id, slug, name, description, status, sort,
+                    pricing_model (banded | per_unit | flat | package | quote_only),
+                    dimension (guests | hours | nights | units | guards | items | none),
+                    dimension_label, unit_label, min_value, max_value, step,
+                    default_bands jsonb, allow_custom_bands, requires_inspection,
+                    default_lead_time_hours, regulated, required_documents jsonb, aliases
+service_types       service_id, type_id            -- which types a service applies to
+catalog_attributes  id, scope (category | type | service), scope_id, key, label, type,
+                    required, options, applies_to, validation, sort
+catalog_aliases     id, entity, entity_id, alias, language (en | pcm | yo | ig | ha)
+catalog_versions    id, version, snapshot jsonb, published_by, published_at, change_note
+
+vendor_categories     vendor_id, category_id, status
+vendor_types          vendor_id, category_id, type_id
+vendor_services       id, vendor_id, service_id, status (active | paused | draft),
+                      min_notice_hours, deposit_pct, inclusions jsonb, exclusions jsonb, notes
+vendor_service_types  vendor_service_id, type_id         -- null means all the vendor’s types
+vendor_rates          id, vendor_service_id, dim_min, dim_max, basis (per_unit | total),
+                      price_minor, currency, min_charge_minor, label, valid_from, valid_to, sort
+vendor_addons         id, vendor_service_id, name, price_minor, basis, max_qty, notes
+```
+
+Every request and quote stores the **catalog version** it used. Items are **archived**, never deleted, so old bookings stay readable.
+
+### 41.4 Pricing models (examples)
+
+- **Banded, per guest (catering):** 50 to 99 guests at N6,500 per guest; 100 to 150 at N6,000; 151 to 250 at N5,500; over 250 by custom quote.
+- **Banded, total (small chops):** 100 to 150 guests at a total of N350,000.
+- **Per unit (DJ):** N60,000 per hour, minimum 4 hours.
+- **Package (photography):** Silver, Gold, Platinum, each with inclusions and a price.
+- **Banded by length of stay (shortlet):** per night for 1 to 2 nights, 3 to 6, 7 to 29, and 30 or more.
+- **Banded by guards (security):** per guard per shift, with bands by number of guards.
+- **Quote only:** no price shown, the vendor quotes for each request.
+
+**Rate-card rules:** bands ascend and do not overlap, the minimum is below the maximum, prices are positive whole kobo amounts, gaps and large price jumps produce warnings, and a minimum charge and add-ons (extra hour, travel, overtime) are optional. Each rate can apply to **all of the vendor’s types or only specific ones** (for example a wedding rate and a birthday rate).
+
+**Later modifiers (v1.5):** type-based adjustments, peak-season and weekend surcharges, and rush fees for short notice.
+
+### 41.5 Vendor onboarding and “My Services”
+
+**Onboarding steps:**
+
+1. Who you are.
+2. Categories.
+3. **Types** you cover in each category (tick the boxes, for example birthday, wedding, corporate, naming, burial).
+4. **Services** you offer in each category.
+5. A **rate card for each service** (for example catering: 100 to 150 guests at N6,000 per guest).
+6. **Coverage areas** (section 42).
+7. Availability.
+8. Documents, including extras for regulated services.
+9. Payout details.
+10. Review and submit.
+
+**After onboarding, in vendor mode, “My Services”:** list every service with status, completeness, and last update; add or remove types and services at any time; edit or pause a rate card; add coverage areas within the plan cap. **Changes apply to new quotes only.** Quotes already sent and confirmed bookings keep their prices.
+
+**Helper tools:** copy a rate card from another service, duplicate for another type, adjust all prices by a percentage (useful when costs rise), and an instant preview such as “A buyer asking for 120 guests in Lekki Phase 1 will see N720,000.”
+
+### 41.6 Admin catalog manager
+
+Admins manage the whole tree from the back office: add or edit categories, types, and services; set pricing models, dimensions, default bands, attributes at each level, regulated flags and required documents; add aliases (including Pidgin and Yoruba); import and export; preview the buyer flow and the vendor editor; and publish with versions and rollback. A **Catalog gaps** report shows searches and WhatsApp requests that could not be matched, with one-click “add as alias” or “create service.”
+
+## 42. Geography: states and locations
+
+### 42.1 Admin-seedable hierarchy
+
+```
+geo_nodes   id, parent_id, level (country | state | area | neighbourhood), slug, name,
+            aliases, lat, lng, is_statewide, status, sort
+```
+
+Every state automatically gets a **statewide node** called “All of \<State>” (for example `lagos-all`). Admins add, edit, merge, and import locations (CSV), and set which locations are active for each category. Seed with Lagos (Eti-Osa, Lekki, Lekki Phase 1, Victoria Island, Ikoyi, Oniru, Ajah, Ikeja, Yaba, Surulere, and more) and the FCT, then grow.
+
+### 42.2 Vendor coverage screen
+
+- Each row has a **State** dropdown on the left and a **Location** dropdown on the right.
+- **Start with one empty row,** not rows pre-filled from old drafts.
+- **“+ Add another location”** adds a row, up to the plan cap.
+- The location list for a state is the same in every row.
+- Picking a location already added shows a red notice: “This location is already added. Choose another location.”
+- The first location option for a state is **“All of \<State>”** (statewide cover). Choosing it blocks other rows for that state (after a confirmation that clears them) and counts as one location.
+- **Plan caps** are configuration: for example free vendors up to 3 locations and no statewide, Pro vendors up to 15 and statewide allowed. Statewide cover can flood a vendor with leads, so gating it by plan is sensible.
+
+### 42.3 Matching rule
+
+A vendor’s coverage node **covers** a request location if it is the same node, an **ancestor** of it, or the **statewide** node of its state.
+
+### 42.4 Buyer location
+
+The buyer picks **State then Location** from the same list, with a searchable box for long lists and alias matching (“Lekki Ph1,” “VI”). Each category sets a **location rule** (`specific`, `state`, or `none` for online services) and a **location role** (at the buyer’s place, at a venue, or at the vendor’s place). An exact address or venue is optional text and stays private until booking.
+
+## 43. Buyer request flow and WhatsApp capture
+
+### 43.1 One request schema
+
+A request holds: category, type, **items** (each a service with its dimension value and attributes), date and time (or stay dates), location node and optional venue text, budget, AskAlert mode, and media or notes. A single request can include several services (for example catering plus photography for a wedding).
+
+### 43.2 Web flow (generated from the catalog)
+
+1. Category. 2. Type (wedding, burial, and so on). 3. Services (multi-select). 4. Details for each service: its dimension (for example guests, with band hints) plus the merged attributes from category, type, and service. 5. Date and time. 6. Location (state then location). 7. Budget (optional). 8. How involved AskAlert should be. 9. Review.
+
+**Estimate before submitting:** when at least 3 vendors match, show an anonymous “typical price” range and “N vendors cover this,” computed from rate cards. This helps buyers set realistic budgets and shows where supply is thin.
+
+### 43.3 Matching
+
+A vendor is eligible if they offer the service, cover the type, cover the location, are available on the date, and the quantity fits a band or a custom quote. The price comes from the rate card (`computeQuote`), and the result is marked **instant quote** or **custom quote needed**. Ranking uses the category weights, and demand with too few vendors is logged as unmet demand by category, type, service, and location.
+
+### 43.4 WhatsApp capture (same schema, different front end)
+
+- **Guided path:** interactive messages walk through category, type, services (with “Add another” and “Done”), the quantity (with band hints), date, state and location, budget, and mode, then a summary with Submit, Edit, and Cancel. WhatsApp reply buttons and lists have size limits, so long location lists use a “More” row or typed search. WhatsApp Flows can render the multi-field details screen if available (check current limits).
+- **Free-text path:** a message such as “Need catering and a photographer for a wedding in Lekki Phase 1, 150 guests, 20 December” is turned into a structured request by Claude, **constrained to catalog and geography IDs**, validated by the same schema, then only missing fields are asked, followed by a confirmation.
+- **Unknown terms** are matched through aliases (owambe, naming or christening, send-off, traditional wedding), otherwise the closest options are offered and the term goes to the Catalog gaps report.
+- **Cost control:** rules and lists first, the model only for messy free text, within the user’s plan budget.
+- **Vendor lead cards** carry the structured fields (type, service, guests, date, location, budget) with buttons **Quote, Use my rate card, Decline, Ask**. Replies such as “6k per head” are parsed and mapped to the vendor’s rate card.
+
+### 43.5 Effect on earlier sections
+
+This supersedes the rate-card parts of sections 4.6 and 24, the intake generation in section 25.4 (which now uses the catalog tree), and the request steps in Prompts 8, 26, and 28. The category engine stays the home of category-level settings (payments, rules, ranking weights).
+
+## 44. Group buying (managed collective imports): concept review, redesign, and naming
+
+### 44.1 The concept as proposed
+
+AskAlert would run a managed group-buying section for selected products, mainly from China. Each product has a **target number of buyers** per batch. Buyers see progress (for example “12 of 30 joined”), the price per person, and the estimated delivery, and **join by paying their share**. When the target is reached, the batch **closes automatically**, AskAlert handles the order and shipping to Nigeria, and a **new batch opens** for the next group. It would live in its own tab, with live progress, “My Group Orders,” notifications when a batch is close to filling, when it closes, and when shipping updates arrive, and an admin area to create products, set targets, and manage batches.
+
+### 44.2 Honest assessment
+
+**What is good**
+
+- It uses a familiar idea: Nigerians already pool money to buy in bulk and share costs.
+- It fits AskAlert’s strengths: alerts (“tell me when a batch is nearly full”), notifications, plans, and a trust layer.
+- Repeat batches can bring users back often, which the services marketplace alone may not.
+- There is proof of appetite: Pricepally, founded in 2019, built a following on group purchases of staples such as rice and tomatoes.
+
+**What is hard**
+
+- **It is a different business.** Importing and shipping goods means suppliers, quality checks, freight, customs, warehousing, delivery, returns, and being the **seller of record**. That needs capital, operations, and legal readiness, which is exactly what you are short of.
+- **Exchange-rate and inflation risk is severe.** Public reports say Pricepally’s business-to-business procurement fell from 25% to 10% of its revenue in 2024 because of naira depreciation and food inflation. A batch priced in naira but paid to a Chinese supplier in dollars or yuan can lose money before the goods ship.
+- **Focus.** The core marketplace has not launched. A second business now would split your attention at the worst time.
+
+### 44.3 Problems in the draft and how to fix them
+
+| Problem | Why it matters | Fix |
+| --- | --- | --- |
+| **Paying to join before the batch fills** | Collecting money that is held until a target is met is a conditional payment. This is the same issue Paystack raised about holding and releasing customer funds. | Use **pledge, then pay** (below), or collect money through a licensed escrow partner that can refund automatically if the batch fails. |
+| **Fixed naira price with dollar costs** | Price moves between joining and ordering | A price-validity window, an exchange-rate buffer, and written repricing rules |
+| **“AskAlert handles everything”** | AskAlert becomes liable for quality, customs, warranty, and returns | Start with a few low-risk products, use partner importers or freight forwarders, and write clear terms |
+| **Estimated delivery** | Imports from China take weeks, and sea freight takes longer than air | Show honest ranges, status updates, and a delay policy |
+| **What if the batch never fills?** | The draft does not say | A deadline, then extend, lower the tier, or cancel at no charge |
+| **Refunds, defects, and disputes** | Importing creates more claims | A clear policy, quality-check photos at the warehouse, and the claims process in section 8 of the Terms |
+| **Regulated and restricted goods** | Some products need approvals or are restricted | Check each product with a customs broker and the relevant regulators before listing |
+
+### 44.3a Two ways to build it
+
+|  | **A. AskAlert as importer** | **B. Demand pooling (recommended)** |
+| --- | --- | --- |
+| What AskAlert does | Buys stock, ships, and sells to the batch | Gathers buyer pledges and uses the agent to negotiate with vetted importers or forwarders; they fulfil |
+| Inventory and import risk | AskAlert carries it | The partner carries it |
+| Capital needed | High | Low |
+| Fits the agent model | Weak | Strong: pooled demand, negotiation, alerts |
+| Revenue | Product margin | A fee or commission per batch |
+
+### 44.4 Recommended flow (model B, pledge then pay)
+
+1. **Pledge:** a buyer taps “Join” and reserves a slot, **with no payment**.
+2. **Target reached:** the batch fills. The partner confirms a price that holds for a short validity window.
+3. **Pay window:** each pledger gets a **24-hour** window to pay (through the payment or escrow partner in use). Unpaid slots go to a **waitlist**.
+4. **Order placed**, then **in transit**, **arrived at the hub**, **ready for pickup or delivery**, **completed**.
+5. **If the batch fails** or the supplier cannot deliver, pledges lapse or payments are refunded under the partner’s rules.
+
+This avoids holding money before the target is met. The cost is drop-outs after pledging, which waitlists, reputation penalties, and (later, through a licensed partner) small commitment deposits can reduce.
+
+**Mechanics that make it work better**
+
+- **Tiered pricing:** the more people join, the lower the price (for example at 20, 40, and 60 buyers).
+- **Squads:** invite friends by WhatsApp link, with a shareable progress card and a countdown.
+- **Alerts:** “Notify me when a new batch opens” and “almost full” alerts, built on the existing alert system.
+- **Limits:** a cap per person and per batch, and a clear target and deadline on every batch.
+- **Hub pickup in Lekki** to keep last-mile cost low, with optional delivery for an added fee.
+- **Landed price:** show what is included (product, shipping to the Lagos hub, handling) and what is extra.
+- **Quality assurance:** warehouse photos or video before shipping.
+- **Batch history:** show past batches and delivery times, which builds trust.
+
+### 44.5 Product curation (start small)
+
+Begin with 3 to 5 products that are light, durable, and low-risk (for example phone accessories, small kitchen items, and fashion accessories). Avoid batteries, liquids, cosmetics, medicines, branded or counterfeit goods, and items needing special approvals, unless a customs broker confirms the rules.
+
+### 44.6 Validate before building
+
+Run a **manual pilot over WhatsApp** after the core marketplace is working: 2 products, 30 to 50 pledges, one reliable freight forwarder, and manual tracking. Measure the fill rate, the share of pledgers who pay after the target is hit, delivery time, complaints, and margin after exchange-rate movement. Only then build screens, in this order: product and batch objects, pledge and waitlist, pay window, tracking, admin batch manager.
+
+### 44.7 Where it fits in the roadmap
+
+Treat it as a **Phase 4 module**, after the core launch. It can reuse the catalog engine (a “Group buys” category with a batch object), notifications, plans, claims, reviews, and the escrow partner. Keep it as a **separate tab** so it does not confuse the reverse-marketplace flow.
+
+### 44.8 Naming
+
+**What a strong name needs:** short, easy to say in Lagos, instantly suggests “join others and save,” works in speech (“I’m in the squad”), feels trustworthy, and is free of regulatory baggage.
+
+| Name | Why it could work | Tagline idea | Caution |
+| --- | --- | --- | --- |
+| **AskAlert Jara** | “Jara” is Nigerian market slang for the extra you get when you buy more, so it carries savings and a bonus. It is instantly relatable. | “Buy together. Get jara.” | Confirm the meaning and tone with your audience; check availability |
+| **AskAlert Convoy** | A convoy fills up and moves together, which matches a batch that closes and ships. | “Fill the convoy. We bring it home.” | Slightly formal |
+| **AskAlert Squad Haul** (or **SquadCart**) | Squad is social and youthful; haul means a shipment of goods. | “Join the squad. Share the haul.” | Two words to remember |
+| **AskAlert Import Club** | Plain and trustworthy; a club suggests membership and belonging. | “Import smart, together.” | Generic and easy to copy |
+| **AskAlert Group Buy** | The safest and clearest. | “Join a batch. Save on every order.” | Not distinctive |
+
+**My ranking:** 1. **Jara**, 2. **Convoy**, 3. **Squad Haul**, 4. **Import Club**, 5. **Group Buy** (as a descriptive label under any brand name).
+
+**On “Vault”:** I would avoid it. It suggests safekeeping of money or goods, which conflicts with the care needed around holding funds, and it can imply a bank-like service.
+
+Before choosing, check the name in the Nigerian Trademarks Registry, the domain and social handles, and whether anyone else uses it, and test it with 10 to 20 target buyers.
