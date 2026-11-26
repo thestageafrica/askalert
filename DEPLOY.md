@@ -266,6 +266,7 @@ Vercel is **not** required. If you keep a Vercel project temporarily:
 - [ ] Old Vercel deployment disabled after cutover
 - [ ] Edge webhooks Worker deployed + secrets set
 - [x] Supabase queue / retention / size monitoring migrations applied
+- [x] Migration `20260333000001_site_pages.sql` applied (public pages + `site-assets` bucket)
 - [x] Edge Functions `ingest-webhook` + `process-jobs` deployed
 - [ ] Set `WEBHOOK_SHARED_SECRET` / `CRON_SHARED_SECRET` + Worker `SUPABASE_FUNCTION_URL`
 - [ ] GitHub secrets for backup + keep-alive; run backup workflow once

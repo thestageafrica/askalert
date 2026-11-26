@@ -8,6 +8,7 @@ import { AdminStoreProvider } from '../lib/admin-store';
 import { AreasAdminProvider } from '../lib/areas-admin-store';
 import { BillingAdminProvider } from '../lib/billing-admin-store';
 import { OpsStoreProvider } from '../lib/ops-store';
+import { SitePagesAdminProvider } from '../lib/site-pages-admin-store';
 import { AdminShell } from './admin-shell';
 import { RequireAdminAuth } from './require-admin-auth';
 
@@ -40,7 +41,9 @@ export function Providers({
                 <BillingAdminProvider>
                   <OpsStoreProvider>
                     <AreasAdminProvider>
-                      <AdminShell>{children}</AdminShell>
+                      <SitePagesAdminProvider>
+                        <AdminShell>{children}</AdminShell>
+                      </SitePagesAdminProvider>
                     </AreasAdminProvider>
                   </OpsStoreProvider>
                 </BillingAdminProvider>

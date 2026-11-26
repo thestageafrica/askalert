@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { PlanDefinition } from '@askalert/core';
+import { getSeedSitePage, type PublicPageHeader } from '@askalert/db';
 import { Accordion, Button, Container, Section, cn } from '@askalert/ui';
 import {
   chatExplainer,
@@ -11,6 +14,8 @@ import {
   plansFaqItems,
 } from '../../lib/plan-marketing';
 import { getWhatsAppUrl } from '../../lib/site';
+import { loadPublicSitePage } from '../../lib/site-pages';
+import { PublicPageHero } from '../public/public-page-hero';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 
@@ -19,36 +24,51 @@ export function PlansPageView() {
   const vendor = marketingVendorPlan();
   const starterUrl = getWhatsAppUrl('Hi AskAlert, I want Starter.');
   const vendorUrl = getWhatsAppUrl('Hi AskAlert, I want to join as a vendor.');
+  const [header, setHeader] = useState<PublicPageHeader>(() => getSeedSitePage('header'));
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadPublicSitePage('header').then((next) => {
+      if (!cancelled) {
+        setHeader(next);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main>
-        <section className="relative overflow-hidden bg-navy-950 text-surface">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_10%_0%,_var(--glow-orange-strong),_transparent_50%),radial-gradient(ellipse_50%_40%_at_90%_20%,_color-mix(in_srgb,var(--orange-400)_25%,transparent),_transparent_55%)]"
-            aria-hidden
-          />
-          <Container width="xl" className="relative py-14 sm:py-20">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-400">AskAlert Plans</p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-[3.25rem]">
+        <PublicPageHero
+          header={{ ...header, minHeightPx: Math.max(header.minHeightPx, 320) }}
+          eyebrow="Plans"
+          title={
+            <>
               Ask freely.
               <span className="mt-2 block text-orange-400">Upgrade when you need more.</span>
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-surface/75 sm:text-lg">
-              Free to try. Starter when you want more asks and WhatsApp chat. Vendors join free with a
-              clear lead-alert allowance.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button href="/app" size="lg">
-                Open the app
-              </Button>
-              <Button href={starterUrl} target="_blank" rel="noopener noreferrer" variant="secondary" size="lg" className="border-surface/25 bg-surface/10 text-surface hover:bg-surface/15">
-                Ask about Starter
-              </Button>
-            </div>
-          </Container>
-        </section>
+            </>
+          }
+          description="Free to try. Starter when you want more asks and WhatsApp chat. Vendors join free with a clear lead-alert allowance."
+        >
+          <div className="flex flex-wrap gap-3">
+            <Button href="/app" size="lg">
+              Open the app
+            </Button>
+            <Button
+              href={starterUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="secondary"
+              size="lg"
+              className="border-surface/25 bg-surface/10 text-surface hover:bg-surface/15"
+            >
+              Ask about Starter
+            </Button>
+          </div>
+        </PublicPageHero>
 
         <div className="bg-background">
           <Container width="xl">

@@ -42,3 +42,55 @@
     animation: none;
   }
 }
+
+@keyframes public-hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.public-hero-rise {
+  animation: public-hero-rise 0.65s ease-out both;
+}
+
+.public-hero-rise-delay {
+  animation-delay: 0.08s;
+}
+
+.public-hero-rise-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.public-hero-rise-delay-3 {
+  animation-delay: 0.24s;
+}
+
+@keyframes legal-section-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.legal-section-rise {
+  animation: legal-section-rise 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-hero-rise,
+  .public-hero-rise-delay,
+  .public-hero-rise-delay-2,
+  .public-hero-rise-delay-3,
+  .legal-section-rise {
+    animation: none;
+  }
+}

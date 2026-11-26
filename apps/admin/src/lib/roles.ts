@@ -40,3 +40,7 @@ export function canEditUnitCosts(role: AdminUiRole): boolean {
 export function canGrantCredits(role: AdminUiRole): boolean {
   return role === 'super_admin' || role === 'operations';
 }
+
+export function canEditPublicPages(role: AdminUiRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}

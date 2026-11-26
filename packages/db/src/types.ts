@@ -69,6 +69,27 @@ export type Database = {
           },
         ];
       };
+      site_pages: {
+        Row: {
+          slug: string;
+          content: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          slug: string;
+          content: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          slug?: string;
+          content?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;

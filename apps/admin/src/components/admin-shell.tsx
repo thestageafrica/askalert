@@ -19,6 +19,7 @@ const marketplace: NavItem[] = [
   { href: '/categories', label: 'Categories', icon: <GridIcon /> },
   { href: '/areas', label: 'Areas', icon: <MapIcon /> },
   { href: '/vendors', label: 'Vendors', icon: <UsersIcon /> },
+  { href: '/public-pages', label: 'Public pages', icon: <PagesIcon /> },
 ];
 
 const operations: NavItem[] = [
@@ -279,6 +280,20 @@ function AuditIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M7 4h10a2 2 0 0 1 2 2v14l-3.5-2L12 20l-3.5-2L5 20V6a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
       <path d="M9 9h6M9 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PagesIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
