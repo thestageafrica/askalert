@@ -96,7 +96,7 @@ export default function DashboardPage() {
             {live.slice(0, 5).map((category) => (
               <li key={category.id}>
                 <Link
-                  href={`/categories/${category.draft.slug}/`}
+                  href={`/categories/edit/?slug=${encodeURIComponent(category.draft.slug)}`}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card-muted/60 px-3.5 py-3 transition hover:border-orange-500/30 hover:bg-orange-500/5"
                 >
                   <div>

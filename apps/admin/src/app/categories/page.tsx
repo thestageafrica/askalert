@@ -73,7 +73,7 @@ export default function CategoriesPage() {
                 {category.vendorsCount} vendors
               </p>
               <Link
-                href={`/categories/${category.draft.slug}/`}
+                href={`/categories/edit/?slug=${encodeURIComponent(category.draft.slug)}`}
                 className="text-sm font-bold text-orange-600 hover:underline"
               >
                 {canEdit ? 'Edit' : 'View'}
@@ -106,7 +106,7 @@ export default function CategoriesPage() {
                 <td className="px-4 py-3 font-semibold">{category.vendorsCount}</td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/categories/${category.draft.slug}/`}
+                    href={`/categories/edit/?slug=${encodeURIComponent(category.draft.slug)}`}
                     className="font-semibold text-orange-600 hover:underline"
                   >
                     {canEdit ? 'Edit' : 'View'}

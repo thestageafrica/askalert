@@ -1,3 +1,5 @@
-# Hard-refresh fallback for category editor deep links (static export).
-# Soft navigation must use prebuilt slugs or /categories/new/ — see generateStaticParams.
-/categories/*  /categories/shortlets/index.html  200
+# Static export cannot prebuild every category slug. Send deep links to the
+# query-param editor (soft Links in the app already use /categories/edit/).
+/categories/new/  /categories/new/index.html  200
+/categories/edit/  /categories/edit/index.html  200
+/categories/:slug/  /categories/edit/index.html?slug=:slug  302
