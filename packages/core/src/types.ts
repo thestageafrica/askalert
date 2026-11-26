@@ -26,6 +26,8 @@ export const planFeaturesSchema = z
     label: z.string(),
     summary: z.string(),
     enabled: z.boolean().default(true),
+    /** Starter (and later plans) may enable Autopilot negotiation. */
+    autopilotEnabled: z.boolean().optional().default(false),
   })
   .strict();
 

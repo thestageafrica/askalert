@@ -267,6 +267,8 @@ Vercel is **not** required. If you keep a Vercel project temporarily:
 - [ ] Edge webhooks Worker deployed + secrets set
 - [x] Supabase queue / retention / size monitoring migrations applied
 - [x] Migration `20260333000001_site_pages.sql` applied (public pages + `site-assets` bucket)
+- [x] Migration `20260334000001_mission_engine.sql` applied (requests/missions/offers/bookings)
+- [x] Edge Function `agent-turn` deployed; set `ANTHROPIC_API_KEY` via `supabase secrets` before live agent calls (never in Pages env)
 - [x] Edge Functions `ingest-webhook` + `process-jobs` deployed
 - [ ] Set `WEBHOOK_SHARED_SECRET` / `CRON_SHARED_SECRET` + Worker `SUPABASE_FUNCTION_URL`
 - [ ] GitHub secrets for backup + keep-alive; run backup workflow once

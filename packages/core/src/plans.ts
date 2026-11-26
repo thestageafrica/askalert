@@ -50,6 +50,7 @@ export const PLAN_CATALOGUE: PlanDefinition[] = [
       label: 'Buyer Starter',
       summary: 'More asks, WhatsApp chat, booking fee waived.',
       enabled: true,
+      autopilotEnabled: true,
     },
     disabled: false,
   }),
