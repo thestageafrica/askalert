@@ -18,6 +18,7 @@ const PRIORITY_BY_EVENT: Record<NotificationEventType, NotificationPriority> = {
   payment_issue: 'critical',
   quotes_ready: 'high',
   vendor_replied: 'high',
+  lead_alert: 'high',
   reminder: 'normal',
   tip: 'low',
 };

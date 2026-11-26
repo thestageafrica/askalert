@@ -1,6 +1,27 @@
 /** Hand-written Database types matching supabase/migrations. */
 
 export type CategoryStatus = 'draft' | 'pilot' | 'live' | 'paused';
+export type MissionStatus =
+  | 'DRAFT'
+  | 'CLARIFYING'
+  | 'SEARCHING'
+  | 'OUTREACH'
+  | 'COLLECTING'
+  | 'RANKING'
+  | 'AWAITING_USER'
+  | 'BOOKED'
+  | 'EXPIRED'
+  | 'CANCELLED';
+export type MissionCandidateStatus =
+  | 'selected'
+  | 'contacted'
+  | 'nudged'
+  | 'responded'
+  | 'ignored'
+  | 'declined';
+export type OfferStatus = 'pending' | 'accepted' | 'declined' | 'expired';
+export type BookingStatus = 'awaiting_payment' | 'paid' | 'cancelled' | 'completed';
+export type RequestStatus = 'draft' | 'active' | 'closed' | 'cancelled';
 export type AttributeType =
   | 'text'
   | 'number'
@@ -707,6 +728,261 @@ export type Database = {
         };
         Relationships: [];
       };
+      requests: {
+        Row: {
+          id: string;
+          buyer_user_id: string;
+          category_slug: string;
+          area_slug: string;
+          need_payload: Json;
+          budget_min_minor: number | null;
+          budget_max_minor: number | null;
+          currency: string;
+          status: RequestStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          buyer_user_id: string;
+          category_slug: string;
+          area_slug: string;
+          need_payload?: Json;
+          budget_min_minor?: number | null;
+          budget_max_minor?: number | null;
+          currency?: string;
+          status?: RequestStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          buyer_user_id?: string;
+          category_slug?: string;
+          area_slug?: string;
+          need_payload?: Json;
+          budget_min_minor?: number | null;
+          budget_max_minor?: number | null;
+          currency?: string;
+          status?: RequestStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      missions: {
+        Row: {
+          id: string;
+          request_id: string;
+          status: MissionStatus;
+          state_entered_at: string;
+          response_deadline_at: string | null;
+          collect_deadline_at: string | null;
+          expires_at: string | null;
+          top_n: number;
+          matched_count: number;
+          last_idempotency_key: string | null;
+          meta: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          status?: MissionStatus;
+          state_entered_at?: string;
+          response_deadline_at?: string | null;
+          collect_deadline_at?: string | null;
+          expires_at?: string | null;
+          top_n?: number;
+          matched_count?: number;
+          last_idempotency_key?: string | null;
+          meta?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_id?: string;
+          status?: MissionStatus;
+          state_entered_at?: string;
+          response_deadline_at?: string | null;
+          collect_deadline_at?: string | null;
+          expires_at?: string | null;
+          top_n?: number;
+          matched_count?: number;
+          last_idempotency_key?: string | null;
+          meta?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      mission_candidates: {
+        Row: {
+          id: string;
+          mission_id: string;
+          vendor_profile_id: string;
+          vendor_user_id: string;
+          status: MissionCandidateStatus;
+          match_score: number | null;
+          contacted_at: string | null;
+          nudged_at: string | null;
+          responded_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          mission_id: string;
+          vendor_profile_id: string;
+          vendor_user_id: string;
+          status?: MissionCandidateStatus;
+          match_score?: number | null;
+          contacted_at?: string | null;
+          nudged_at?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          mission_id?: string;
+          vendor_profile_id?: string;
+          vendor_user_id?: string;
+          status?: MissionCandidateStatus;
+          match_score?: number | null;
+          contacted_at?: string | null;
+          nudged_at?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      offers: {
+        Row: {
+          id: string;
+          mission_id: string;
+          vendor_profile_id: string;
+          vendor_user_id: string;
+          amount_minor: number;
+          currency: string;
+          message: string;
+          status: OfferStatus;
+          rank_score: number | null;
+          rank_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          mission_id: string;
+          vendor_profile_id: string;
+          vendor_user_id: string;
+          amount_minor: number;
+          currency?: string;
+          message?: string;
+          status?: OfferStatus;
+          rank_score?: number | null;
+          rank_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          mission_id?: string;
+          vendor_profile_id?: string;
+          vendor_user_id?: string;
+          amount_minor?: number;
+          currency?: string;
+          message?: string;
+          status?: OfferStatus;
+          rank_score?: number | null;
+          rank_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      bookings: {
+        Row: {
+          id: string;
+          mission_id: string;
+          offer_id: string;
+          buyer_user_id: string;
+          vendor_profile_id: string;
+          vendor_user_id: string;
+          status: BookingStatus;
+          total_minor: number;
+          currency: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          mission_id: string;
+          offer_id: string;
+          buyer_user_id: string;
+          vendor_profile_id: string;
+          vendor_user_id: string;
+          status?: BookingStatus;
+          total_minor: number;
+          currency?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          mission_id?: string;
+          offer_id?: string;
+          buyer_user_id?: string;
+          vendor_profile_id?: string;
+          vendor_user_id?: string;
+          status?: BookingStatus;
+          total_minor?: number;
+          currency?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      unmet_demand: {
+        Row: {
+          id: string;
+          request_id: string;
+          mission_id: string | null;
+          category_slug: string;
+          area_slug: string;
+          matched_count: number;
+          required_count: number;
+          need_snapshot: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          mission_id?: string | null;
+          category_slug: string;
+          area_slug: string;
+          matched_count: number;
+          required_count: number;
+          need_snapshot?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_id?: string;
+          mission_id?: string | null;
+          category_slug?: string;
+          area_slug?: string;
+          matched_count?: number;
+          required_count?: number;
+          need_snapshot?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -746,6 +1022,22 @@ export type Database = {
         Args: { p_batch_size?: number; p_max_attempts?: number };
         Returns: Json;
       };
+      transition_mission: {
+        Args: {
+          p_mission_id: string;
+          p_target_status: MissionStatus;
+          p_idempotency_key?: string | null;
+        };
+        Returns: Json;
+      };
+      expire_missions: {
+        Args: { p_batch_size?: number };
+        Returns: Json;
+      };
+      process_mission_job: {
+        Args: { p_payload: Json };
+        Returns: Json;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -753,6 +1045,12 @@ export type Database = {
 };
 
 export type AreaRow = Database['public']['Tables']['areas']['Row'];
+export type RequestRow = Database['public']['Tables']['requests']['Row'];
+export type MissionRow = Database['public']['Tables']['missions']['Row'];
+export type MissionCandidateRow = Database['public']['Tables']['mission_candidates']['Row'];
+export type OfferRow = Database['public']['Tables']['offers']['Row'];
+export type BookingRow = Database['public']['Tables']['bookings']['Row'];
+export type UnmetDemandRow = Database['public']['Tables']['unmet_demand']['Row'];
 export type CategoryRow = Database['public']['Tables']['categories']['Row'];
 export type CategoryVersionRow = Database['public']['Tables']['category_versions']['Row'];
 export type CategoryAttributeRow = Database['public']['Tables']['category_attributes']['Row'];

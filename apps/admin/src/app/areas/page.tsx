@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Input, cn } from '@askalert/ui';
+import { Button, Input, cn, useToast } from '@askalert/ui';
 import { useAreasAdmin } from '../../lib/areas-admin-store';
 import { useAdminStore } from '../../lib/admin-store';
+import { confirmReseed } from '../../lib/confirm-reseed';
 import { canEditCategories } from '../../lib/roles';
 
 export default function AreasPage() {
   const { role } = useAdminStore();
   const canEdit = canEditCategories(role);
+  const { toast } = useToast();
   const {
     ready,
     states,
@@ -64,11 +66,19 @@ export default function AreasPage() {
                 setBusy(true);
                 void publishToServer().then((result) => {
                   setBusy(false);
-                  setMessage(
-                    result.ok
-                      ? 'Synced all states and locations to the server for vendor onboarding.'
-                      : result.error,
-                  );
+                  if (result.ok) {
+                    setMessage(
+                      'Synced all states and locations to the server for vendor onboarding.',
+                    );
+                    toast({
+                      title: 'Saved to server',
+                      description: 'Areas catalogue is live for vendor onboarding.',
+                      tone: 'success',
+                    });
+                    return;
+                  }
+                  setMessage(result.error);
+                  toast({ title: 'Sync failed', description: result.error, tone: 'danger' });
                 });
               }}
             >
@@ -77,10 +87,38 @@ export default function AreasPage() {
             <Button
               variant="secondary"
               className="min-h-11"
+              disabled={busy}
               onClick={() => {
+                if (!confirmReseed('areas to the Lagos seed catalogue')) {
+                  toast({
+                    title: 'Reset cancelled',
+                    description: 'Areas were left unchanged.',
+                  });
+                  return;
+                }
                 resetToSeed();
                 setSelectedState('lagos');
-                setMessage('Reset to Lagos seed catalogue.');
+                setBusy(true);
+                void publishToServer().then((result) => {
+                  setBusy(false);
+                  if (result.ok) {
+                    setMessage('Reset to Lagos seed and saved to the server.');
+                    toast({
+                      title: 'Reset and saved',
+                      description: 'Lagos seed areas are now on the server.',
+                      tone: 'success',
+                    });
+                    return;
+                  }
+                  setMessage(
+                    `Reset locally, but server sync failed: ${result.error}. Click Sync to server.`,
+                  );
+                  toast({
+                    title: 'Reset locally only',
+                    description: result.error,
+                    tone: 'warning',
+                  });
+                });
               }}
             >
               Reset to seed

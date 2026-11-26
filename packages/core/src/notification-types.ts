@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const notificationEventTypeSchema = z.enum([
   'quotes_ready',
   'vendor_replied',
+  'lead_alert',
   'booking_confirmed',
   'payment_issue',
   'reminder',
@@ -45,6 +46,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   channelsByEvent: {
     quotes_ready: ['in_app', 'push', 'email'],
     vendor_replied: ['in_app', 'push'],
+    lead_alert: ['in_app', 'push', 'email'],
     booking_confirmed: ['in_app', 'push', 'email'],
     payment_issue: ['in_app', 'push', 'email', 'sms'],
     reminder: ['in_app'],

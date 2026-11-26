@@ -2,16 +2,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button, Input } from '@askalert/ui';
+import { Button, Input, useToast } from '@askalert/ui';
 import { TextAreaField } from '../../../components/public-pages/field';
 import { useAdminStore } from '../../../lib/admin-store';
+import { confirmReseed } from '../../../lib/confirm-reseed';
 import { canEditPublicPages } from '../../../lib/roles';
 import { useSitePagesAdmin } from '../../../lib/site-pages-admin-store';
 
 export default function ContactAdminPage() {
   const { role } = useAdminStore();
   const locked = !canEditPublicPages(role);
-  const { ready, contact, setContact, savePage, resetPage } = useSitePagesAdmin();
+  const { toast } = useToast();
+  const { ready, contact, setContact, savePage, resetAndSavePage } = useSitePagesAdmin();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -53,8 +55,28 @@ export default function ContactAdminPage() {
               className="min-h-11"
               disabled={busy}
               onClick={() => {
-                resetPage('contact');
-                setNotice('Reset to seed Contact page.');
+                if (!confirmReseed('the Contact page')) {
+                  toast({
+                    title: 'Reset cancelled',
+                    description: 'Contact page was left unchanged.',
+                  });
+                  return;
+                }
+                setBusy(true);
+                void resetAndSavePage('contact').then((result) => {
+                  setBusy(false);
+                  if (result.ok) {
+                    setNotice('Contact page reset to seed and saved to the server.');
+                    toast({
+                      title: 'Reset and saved',
+                      description: 'Contact page seed is now on the server.',
+                      tone: 'success',
+                    });
+                    return;
+                  }
+                  setNotice(`Reset failed to save: ${result.error}`);
+                  toast({ title: 'Reset save failed', description: result.error, tone: 'danger' });
+                });
               }}
             >
               Reset to seed
@@ -66,7 +88,17 @@ export default function ContactAdminPage() {
                 setBusy(true);
                 void savePage('contact').then((result) => {
                   setBusy(false);
-                  setNotice(result.ok ? 'Contact page saved.' : result.error);
+                  if (result.ok) {
+                    setNotice('Contact page saved to the server.');
+                    toast({
+                      title: 'Saved to server',
+                      description: 'Contact page is live.',
+                      tone: 'success',
+                    });
+                    return;
+                  }
+                  setNotice(result.error);
+                  toast({ title: 'Save failed', description: result.error, tone: 'danger' });
                 });
               }}
             >

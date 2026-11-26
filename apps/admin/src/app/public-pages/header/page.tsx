@@ -2,17 +2,20 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Button, Input } from '@askalert/ui';
+import { Button, Input, useToast } from '@askalert/ui';
 import { DEFAULT_PUBLIC_PAGE_HEADER_IMAGE } from '@askalert/db';
 import { TextAreaField } from '../../../components/public-pages/field';
 import { useAdminStore } from '../../../lib/admin-store';
+import { confirmReseed } from '../../../lib/confirm-reseed';
 import { canEditPublicPages } from '../../../lib/roles';
 import { useSitePagesAdmin } from '../../../lib/site-pages-admin-store';
 
 export default function PublicPageHeaderEditorPage() {
   const { role } = useAdminStore();
   const locked = !canEditPublicPages(role);
-  const { ready, header, setHeader, savePage, resetPage, uploadHeaderImage } = useSitePagesAdmin();
+  const { toast } = useToast();
+  const { ready, header, setHeader, savePage, resetAndSavePage, uploadHeaderImage } =
+    useSitePagesAdmin();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -49,8 +52,28 @@ export default function PublicPageHeaderEditorPage() {
               className="min-h-11"
               disabled={busy}
               onClick={() => {
-                resetPage('header');
-                setNotice('Reset to seed header.');
+                if (!confirmReseed('the shared page header')) {
+                  toast({
+                    title: 'Reset cancelled',
+                    description: 'Header was left unchanged.',
+                  });
+                  return;
+                }
+                setBusy(true);
+                void resetAndSavePage('header').then((result) => {
+                  setBusy(false);
+                  if (result.ok) {
+                    setNotice('Header reset to seed and saved to the server.');
+                    toast({
+                      title: 'Reset and saved',
+                      description: 'Shared header seed is now on the server.',
+                      tone: 'success',
+                    });
+                    return;
+                  }
+                  setNotice(`Reset failed to save: ${result.error}`);
+                  toast({ title: 'Reset save failed', description: result.error, tone: 'danger' });
+                });
               }}
             >
               Reset to seed
@@ -62,7 +85,17 @@ export default function PublicPageHeaderEditorPage() {
                 setBusy(true);
                 void savePage('header').then((result) => {
                   setBusy(false);
-                  setNotice(result.ok ? 'Header saved.' : result.error);
+                  if (result.ok) {
+                    setNotice('Header saved to the server.');
+                    toast({
+                      title: 'Saved to server',
+                      description: 'Shared page header is live.',
+                      tone: 'success',
+                    });
+                    return;
+                  }
+                  setNotice(result.error);
+                  toast({ title: 'Save failed', description: result.error, tone: 'danger' });
                 });
               }}
             >

@@ -71,6 +71,13 @@ export {
 } from './webhook-ingest';
 export { getLatestDbSizeSnapshot, type DbSizeSnapshot } from './db-metrics';
 export {
+  buildMissionJobPayload,
+  missionJobPayloadSchema,
+  missionJobTypeSchema,
+  type MissionJobPayload,
+  type MissionJobType,
+} from './mission-job-payload';
+export {
   auditActionForOp,
   canPublicReadAttributes,
   canPublicReadCategory,
@@ -82,12 +89,23 @@ export type {
   AppliesTo,
   AreaRow,
   AttributeType,
+  BookingRow,
+  BookingStatus,
   CategoryAttributeRow,
   CategoryRow,
   CategoryStatus,
   CategoryVersionRow,
   Database,
   Json,
+  MissionCandidateRow,
+  MissionCandidateStatus,
+  MissionRow,
+  MissionStatus,
+  OfferRow,
+  OfferStatus,
+  RequestRow,
+  RequestStatus,
+  UnmetDemandRow,
 } from './types';
 export {
   adminUiRoleSchema,

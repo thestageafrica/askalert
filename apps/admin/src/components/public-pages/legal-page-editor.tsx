@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button, Input, cn } from '@askalert/ui';
+import { Button, Input, cn, useToast } from '@askalert/ui';
 import type { LegalPageContent, LegalSection } from '@askalert/db';
+import { confirmReseed } from '../../lib/confirm-reseed';
 import { TextAreaField } from './field';
 
 function slugify(input: string): string {
@@ -38,6 +39,7 @@ export function LegalPageEditor({
   onSave,
   onReset,
 }: LegalPageEditorProps) {
+  const { toast } = useToast();
   const [openId, setOpenId] = useState<string | null>(value.sections[0]?.id ?? null);
 
   const update = (patch: Partial<LegalPageContent>) => {
@@ -96,7 +98,22 @@ export function LegalPageEditor({
         </div>
         {!locked ? (
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" className="min-h-11" disabled={busy} onClick={onReset}>
+            <Button
+              variant="secondary"
+              className="min-h-11"
+              disabled={busy}
+              onClick={() => {
+                if (!confirmReseed(title)) {
+                  toast({
+                    title: 'Reset cancelled',
+                    description: `${title} was left unchanged.`,
+                    tone: 'default',
+                  });
+                  return;
+                }
+                onReset();
+              }}
+            >
               Reset to seed
             </Button>
             <Button className="min-h-11" disabled={busy} onClick={onSave}>

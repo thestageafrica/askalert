@@ -58,8 +58,12 @@ type SitePagesAdminStore = {
   setContact: (next: ContactPageContent) => void;
   savePage: (
     slug: SitePageSlug,
+    contentOverride?: SitePageContentMap[SitePageSlug],
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   resetPage: (slug: SitePageSlug) => void;
+  resetAndSavePage: (
+    slug: SitePageSlug,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   uploadHeaderImage: (
     file: File,
   ) => Promise<{ ok: true; url: string } | { ok: false; error: string }>;
@@ -166,9 +170,9 @@ export function SitePagesAdminProvider({ children }: { children: ReactNode }) {
   );
 
   const savePage = useCallback(
-    async (slug: SitePageSlug) => {
+    async (slug: SitePageSlug, contentOverride?: SitePageContentMap[SitePageSlug]) => {
       const contentMap: SitePageContentMap = { header, privacy, terms, contact };
-      const content = contentMap[slug];
+      const content = contentOverride ?? contentMap[slug];
 
       if (!adminSupabaseEnabled()) {
         persist({ [slug]: content });
@@ -203,6 +207,30 @@ export function SitePagesAdminProvider({ children }: { children: ReactNode }) {
       if (slug === 'contact') setContact(getSeedSitePage('contact'));
     },
     [setContact, setHeader, setPrivacy, setTerms],
+  );
+
+  const resetAndSavePage = useCallback(
+    async (slug: SitePageSlug) => {
+      if (slug === 'header') {
+        const seed = getSeedSitePage('header');
+        setHeader(seed);
+        return savePage('header', seed);
+      }
+      if (slug === 'privacy') {
+        const seed = getSeedSitePage('privacy');
+        setPrivacy(seed);
+        return savePage('privacy', seed);
+      }
+      if (slug === 'terms') {
+        const seed = getSeedSitePage('terms');
+        setTerms(seed);
+        return savePage('terms', seed);
+      }
+      const seed = getSeedSitePage('contact');
+      setContact(seed);
+      return savePage('contact', seed);
+    },
+    [savePage, setContact, setHeader, setPrivacy, setTerms],
   );
 
   const uploadHeaderImage = useCallback(async (file: File) => {
@@ -247,6 +275,7 @@ export function SitePagesAdminProvider({ children }: { children: ReactNode }) {
       setContact,
       savePage,
       resetPage,
+      resetAndSavePage,
       uploadHeaderImage,
     }),
     [
@@ -255,6 +284,7 @@ export function SitePagesAdminProvider({ children }: { children: ReactNode }) {
       lastSyncedAt,
       privacy,
       ready,
+      resetAndSavePage,
       resetPage,
       savePage,
       setContact,
