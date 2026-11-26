@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { AdminAuthProvider } from '../lib/admin-auth';
 import { AdminStoreProvider } from '../lib/admin-store';
+import { AreasAdminProvider } from '../lib/areas-admin-store';
 import { BillingAdminProvider } from '../lib/billing-admin-store';
 import { OpsStoreProvider } from '../lib/ops-store';
 import { AdminShell } from './admin-shell';
@@ -38,7 +39,9 @@ export function Providers({
               <AdminStoreProvider>
                 <BillingAdminProvider>
                   <OpsStoreProvider>
-                    <AdminShell>{children}</AdminShell>
+                    <AreasAdminProvider>
+                      <AdminShell>{children}</AdminShell>
+                    </AreasAdminProvider>
                   </OpsStoreProvider>
                 </BillingAdminProvider>
               </AdminStoreProvider>

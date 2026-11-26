@@ -119,15 +119,6 @@ export type VendorBooking = {
   status: 'upcoming' | 'done' | 'cancelled';
 };
 
-export const SERVICE_AREA_LEAVES = [
-  { slug: 'lekki-phase-1', name: 'Lekki Phase 1' },
-  { slug: 'lekki', name: 'Lekki' },
-  { slug: 'victoria-island', name: 'Victoria Island' },
-  { slug: 'ikoyi', name: 'Ikoyi' },
-  { slug: 'ajah', name: 'Ajah' },
-  { slug: 'oniru', name: 'Oniru' },
-] as const;
-
 export const DEFAULT_WEEKLY_HOURS: DayHours[] = [
   { day: 'mon', open: true, start: '09:00', end: '18:00' },
   { day: 'tue', open: true, start: '09:00', end: '18:00' },

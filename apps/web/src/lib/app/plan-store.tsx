@@ -29,19 +29,39 @@ type ConsumeResult = {
   blocked: boolean;
 };
 
+type EntitlementCheckContext = {
+  vendorsOnRequest?: number;
+  serviceAreaCount?: number;
+};
+
 type PlanStore = {
   state: UserPlanState;
   planName: string;
   walletBalanceMinor: number;
   creditPackMinor: number;
-  check: (action: EntitlementAction, vendorsOnRequest?: number) => EntitlementDecision;
-  consume: (action: EntitlementAction, vendorsOnRequest?: number) => ConsumeResult;
+  check: (
+    action: EntitlementAction,
+    context?: number | EntitlementCheckContext,
+  ) => EntitlementDecision;
+  consume: (
+    action: EntitlementAction,
+    context?: number | EntitlementCheckContext,
+  ) => ConsumeResult;
   buyStarter: () => void;
   buyCreditPack: () => void;
   completePurchase: (kind: PurchaseKind) => void;
 };
 
 const PlanStoreContext = createContext<PlanStore | null>(null);
+
+function normalizeContext(
+  context?: number | EntitlementCheckContext,
+): EntitlementCheckContext {
+  if (typeof context === 'number') {
+    return { vendorsOnRequest: context };
+  }
+  return context ?? {};
+}
 
 function usageTypeFor(action: EntitlementAction, audience: PlanAudience) {
   switch (action) {
@@ -55,6 +75,8 @@ function usageTypeFor(action: EntitlementAction, audience: PlanAudience) {
       return 'ai_suggestion' as const;
     case 'send_whatsapp':
       return audience === 'vendor' ? ('lead_alert' as const) : ('wa_service' as const);
+    case 'select_service_area':
+      return null;
     default: {
       const _exhaustive: never = action;
       return _exhaustive;
@@ -81,20 +103,24 @@ export function PlanStoreProvider({
   const planName = plan?.name ?? 'Free';
 
   const check = useCallback(
-    (action: EntitlementAction, vendorsOnRequest?: number) =>
-      checkEntitlement(state, action, { vendorsOnRequest }),
+    (action: EntitlementAction, context?: number | EntitlementCheckContext) =>
+      checkEntitlement(state, action, normalizeContext(context)),
     [state],
   );
 
   const consume = useCallback(
-    (action: EntitlementAction, vendorsOnRequest?: number): ConsumeResult => {
-      const decision = checkEntitlement(state, action, { vendorsOnRequest });
+    (action: EntitlementAction, context?: number | EntitlementCheckContext): ConsumeResult => {
+      const decision = checkEntitlement(state, action, normalizeContext(context));
       if (decision.outcome === 'block') {
         return { decision, blocked: true };
       }
+      const usageType = usageTypeFor(action, state.audience);
+      if (!usageType) {
+        return { decision, blocked: false };
+      }
       const { state: next } = recordUsage({
         state,
-        type: usageTypeFor(action, state.audience),
+        type: usageType,
         settings: DEFAULT_UNIT_COSTS,
       });
       setState(next);

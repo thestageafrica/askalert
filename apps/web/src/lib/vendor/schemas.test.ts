@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   areasStepSchema,
+  areasStepSchemaWithLimit,
   categoriesStepSchema,
   documentsStepSchema,
   payoutStepSchema,
   rateCardSchema,
+  validateCoverageRows,
   whoYouAreSchema,
 } from './schemas';
 
@@ -30,6 +32,29 @@ describe('vendor onboarding validation', () => {
   it('requires at least one category and area', () => {
     expect(categoriesStepSchema.safeParse({ categorySlugs: [] }).success).toBe(false);
     expect(areasStepSchema.safeParse({ areaSlugs: ['lekki'] }).success).toBe(true);
+  });
+
+  it('enforces plan max on service areas', () => {
+    const limited = areasStepSchemaWithLimit(2);
+    expect(
+      limited.safeParse({ areaSlugs: ['lekki', 'ikorodu', 'ikeja'] }).success,
+    ).toBe(false);
+    expect(limited.safeParse({ areaSlugs: ['lekki', 'ikorodu'] }).success).toBe(true);
+  });
+
+  it('blocks mixing All of Lagos with specific Lagos places', () => {
+    expect(
+      validateCoverageRows(
+        [
+          { stateSlug: 'lagos', locationSlug: 'lagos-all' },
+          { stateSlug: 'lagos', locationSlug: 'lekki' },
+        ],
+        2,
+      ),
+    ).toMatch(/already covers/i);
+    expect(
+      validateCoverageRows([{ stateSlug: 'lagos', locationSlug: 'lekki' }], 2),
+    ).toBeNull();
   });
 
   it('validates rate card bounds', () => {

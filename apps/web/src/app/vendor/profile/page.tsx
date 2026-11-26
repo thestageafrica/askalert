@@ -1,17 +1,15 @@
 'use client';
 
+import { areaDisplayName } from '@askalert/db';
 import { Button } from '@askalert/ui';
 import { createMoney, formatNaira } from '@askalert/payments';
-import { SERVICE_AREA_LEAVES } from '../../../lib/vendor/types';
 import { useVendorStore } from '../../../lib/vendor/vendor-store';
 import { useCategories } from '../../../lib/use-categories';
 
 export default function VendorProfilePreviewPage() {
   const { draft } = useVendorStore();
   const { categories } = useCategories();
-  const areaNames = draft.areaSlugs
-    .map((slug) => SERVICE_AREA_LEAVES.find((area) => area.slug === slug)?.name ?? slug)
-    .join(', ');
+  const areaNames = draft.areaSlugs.map((slug) => areaDisplayName(slug)).join(', ');
 
   return (
     <div className="mx-auto max-w-2xl">

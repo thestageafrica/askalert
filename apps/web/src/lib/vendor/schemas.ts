@@ -31,8 +31,58 @@ export const categoriesStepSchema = z.object({
 });
 
 export const areasStepSchema = z.object({
-  areaSlugs: z.array(z.string().min(1)).min(1, 'Pick at least one service area.'),
+  areaSlugs: z.array(z.string().min(1)).min(1, 'Add at least one service location.'),
 });
+
+/** Validate coverage rows against a plan cap (defaults to free: 2). */
+export function areasStepSchemaWithLimit(maxServiceAreas: number) {
+  return areasStepSchema.superRefine((value, ctx) => {
+    if (value.areaSlugs.length > maxServiceAreas) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Your plan allows up to ${maxServiceAreas} service locations.`,
+        path: ['areaSlugs'],
+      });
+    }
+  });
+}
+
+export const coverageRowSchema = z.object({
+  stateSlug: z.string().min(1, 'Pick a state.'),
+  locationSlug: z.string().min(1, 'Pick a location.'),
+});
+
+export function validateCoverageRows(
+  rows: Array<{ stateSlug: string; locationSlug: string }>,
+  maxServiceAreas: number,
+): string | null {
+  const filled = rows.filter((row) => row.stateSlug && row.locationSlug);
+  if (filled.length === 0) {
+    return 'Add at least one service location.';
+  }
+  if (filled.length > maxServiceAreas) {
+    return `Your plan allows up to ${maxServiceAreas} service locations.`;
+  }
+  const seen = new Set<string>();
+  for (const row of filled) {
+    if (seen.has(row.locationSlug)) {
+      return 'You already added that location.';
+    }
+    seen.add(row.locationSlug);
+    if (row.locationSlug.endsWith('-all')) {
+      const statePrefix = row.locationSlug.slice(0, -'-all'.length);
+      const hasSpecific = filled.some(
+        (other) =>
+          other.locationSlug !== row.locationSlug &&
+          other.stateSlug === statePrefix,
+      );
+      if (hasSpecific) {
+        return 'All of that state already covers every location there.';
+      }
+    }
+  }
+  return null;
+}
 
 export const rateCardSchema = z
   .object({

@@ -9,6 +9,8 @@ import type {
 export type EntitlementContext = {
   /** Vendors already contacted / about to contact on this request. */
   vendorsOnRequest?: number;
+  /** Service coverage rows already selected (before adding another). */
+  serviceAreaCount?: number;
   now?: Date;
 };
 
@@ -166,6 +168,21 @@ export function checkEntitlement(
         });
       }
       return { outcome: 'allow' };
+    }
+    case 'select_service_area': {
+      const limit = limits.maxServiceAreas ?? 1;
+      const used = context.serviceAreaCount ?? 0;
+      return decideAgainstLimit({
+        used,
+        limit,
+        units: 1,
+        blockReason: 'Your plan only allows this many service locations.',
+        warnReason: 'You are near your service location limit.',
+        nextStep:
+          plan.audience === 'vendor'
+            ? 'Upgrade to Vendor Pro for more coverage areas.'
+            : topUp,
+      });
     }
     default: {
       const _exhaustive: never = action;

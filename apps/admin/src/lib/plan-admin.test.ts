@@ -95,4 +95,10 @@ describe('plan admin versioning', () => {
     const lines = previewPlanCapabilities(getLiveVersion(planFromCatalogue(seed)));
     expect(lines.some((line) => /WhatsApp/i.test(line))).toBe(true);
   });
+
+  it('previews vendor service location caps', () => {
+    const seed = listPlans(true).find((plan) => plan.slug === 'vendor_free')!;
+    const lines = previewPlanCapabilities(getLiveVersion(planFromCatalogue(seed)));
+    expect(lines.some((line) => /2 service locations/i.test(line))).toBe(true);
+  });
 });

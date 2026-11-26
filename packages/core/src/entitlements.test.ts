@@ -130,4 +130,19 @@ describe('checkEntitlement', () => {
     });
     expect(decision.outcome).toBe('warn_at_80');
   });
+
+  it('allows a second service area on vendor free, blocks a third', () => {
+    const state = createFreeSubscription({ userId: 'v1', audience: 'vendor', now });
+    const allow = checkEntitlement(state, 'select_service_area', {
+      now,
+      serviceAreaCount: 1,
+    });
+    expect(allow.outcome).not.toBe('block');
+    const blocked = checkEntitlement(state, 'select_service_area', {
+      now,
+      serviceAreaCount: 2,
+    });
+    expect(blocked.outcome).toBe('block');
+    expect(blocked.limit).toBe(2);
+  });
 });

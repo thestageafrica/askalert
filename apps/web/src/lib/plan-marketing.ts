@@ -42,6 +42,11 @@ export function planFeatureLines(plan: PlanDefinition): string[] {
   if (limits.chatMessages != null) {
     lines.push(`About ${limits.chatMessages} chat messages with buyers`);
   }
+  if (limits.maxServiceAreas != null) {
+    lines.push(
+      `Up to ${limits.maxServiceAreas} service location${limits.maxServiceAreas === 1 ? '' : 's'}`,
+    );
+  }
   if (limits.whatsappEnabled) {
     lines.push('WhatsApp chat included');
   } else if (limits.whatsappEnabled === false) {

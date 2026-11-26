@@ -14,6 +14,8 @@ export const planLimitsSchema = z
     bookingFeeWaived: z.boolean().optional(),
     leadAlertsPerMonth: z.number().int().nonnegative().optional(),
     chatMessages: z.number().int().nonnegative().optional(),
+    /** Max service coverage rows a vendor may save on their profile. */
+    maxServiceAreas: z.number().int().positive().optional(),
   })
   .strict();
 
@@ -53,6 +55,7 @@ export const entitlementActionSchema = z.enum([
   'relay_message',
   'ai_suggestion',
   'send_whatsapp',
+  'select_service_area',
 ]);
 
 export type EntitlementAction = z.infer<typeof entitlementActionSchema>;

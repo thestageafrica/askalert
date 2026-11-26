@@ -1,14 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { getActivePlan, getPlanById } from '@askalert/core';
+import { areaDisplayName, rowsFromAreaSlugs } from '@askalert/db';
 import { Button, Input, cn } from '@askalert/ui';
 import { formatNairaInput, parseNairaInput } from '@askalert/payments';
 import { useAuth } from '../../lib/auth/auth-provider';
+import { usePlanStore } from '../../lib/app/plan-store';
 import { useCategories } from '../../lib/use-categories';
 import { prepareVendorDocument } from '../../lib/vendor/document-prep';
 import { maskAccountNumber } from '../../lib/vendor/documents';
 import {
-  areasStepSchema,
   availabilityStepSchema,
   categoriesStepSchema,
   documentsStepSchema,
@@ -17,14 +19,17 @@ import {
   previousStep,
   rateCardsStepSchema,
   STEP_ORDER,
+  validateCoverageRows,
   whoYouAreSchema,
 } from '../../lib/vendor/schemas';
-import { SERVICE_AREA_LEAVES, type OnboardingStepId, type RateCard } from '../../lib/vendor/types';
+import { type OnboardingStepId, type RateCard } from '../../lib/vendor/types';
 import { useVendorStore } from '../../lib/vendor/vendor-store';
+import { ServiceAreasStep } from './service-areas-step';
 
 export function OnboardingWizard() {
   const { user } = useAuth();
   const { draft, updateDraft, setStep, upsertRateCard, submitOnboarding, ready } = useVendorStore();
+  const { state: planState } = usePlanStore();
   const { categories } = useCategories();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,6 +38,11 @@ export function OnboardingWizard() {
     () => categories.filter((c) => c.status === 'live' || c.status === 'pilot'),
     [categories],
   );
+
+  const maxServiceAreas = useMemo(() => {
+    const plan = getActivePlan(planState) ?? getPlanById(planState.planId);
+    return plan?.limits.maxServiceAreas ?? 2;
+  }, [planState]);
 
   if (!ready) {
     return <div className="h-40 animate-pulse rounded-2xl bg-card-muted" aria-busy="true" />;
@@ -77,8 +87,11 @@ export function OnboardingWizard() {
         return result.success ? null : result.error.issues[0]?.message ?? 'Check this step.';
       }
       case 'areas': {
-        const result = areasStepSchema.safeParse({ areaSlugs: draft.areaSlugs });
-        return result.success ? null : result.error.issues[0]?.message ?? 'Check this step.';
+        const rows = rowsFromAreaSlugs(draft.areaSlugs);
+        return validateCoverageRows(
+          rows.length > 0 ? rows : [{ stateSlug: 'lagos', locationSlug: '' }],
+          maxServiceAreas,
+        );
       }
       case 'rate_cards': {
         const cards = draft.categorySlugs.map((slug) => {
@@ -139,30 +152,47 @@ export function OnboardingWizard() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-600">Vendor onboarding</p>
-      <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">Set up your profile</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Saved as you go. You can leave and come back anytime.
-      </p>
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-border/60 bg-[radial-gradient(90%_80%_at_0%_0%,_color-mix(in_srgb,var(--orange-500)_14%,transparent),_transparent_55%),var(--card)] p-5 shadow-sm sm:p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-600">
+          Vendor onboarding
+        </p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
+          Set up your profile
+        </h1>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          Saved as you go. One calm step at a time — leave and come back anytime.
+        </p>
+
+        <div
+          className="mt-6 h-2.5 overflow-hidden rounded-full bg-border/80"
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Onboarding progress"
+        >
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400 transition-[width] duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-muted-foreground">
+            Step {STEP_ORDER.indexOf(step) + 1} of {STEP_ORDER.length}
+          </p>
+          <p className="rounded-full border border-orange-500/25 bg-orange-500/10 px-2.5 py-1 text-xs font-bold text-navy-950">
+            {labelFor(step)}
+          </p>
+        </div>
+      </div>
 
       <div
-        className="mt-6 h-2.5 overflow-hidden rounded-full bg-border/80"
-        role="progressbar"
-        aria-valuenow={Math.round(progress)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Onboarding progress"
+        key={step}
+        className="mt-5 rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-sm transition-opacity duration-300 ease-out lg:p-7"
       >
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400 transition-all"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">
-        Step {STEP_ORDER.indexOf(step) + 1} of {STEP_ORDER.length}: {labelFor(step)}
-      </p>
-
-      <div className="mt-6 rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-sm lg:p-7">
+        <h2 className="mb-4 text-lg font-extrabold tracking-tight text-foreground">
+          {labelFor(step)}
+        </h2>
         {step === 'who' ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
@@ -229,29 +259,11 @@ export function OnboardingWizard() {
         ) : null}
 
         {step === 'areas' ? (
-          <div className="grid grid-cols-2 gap-2">
-            {SERVICE_AREA_LEAVES.map((area) => {
-              const selected = draft.areaSlugs.includes(area.slug);
-              return (
-                <button
-                  key={area.slug}
-                  type="button"
-                  className={cn(
-                    'min-h-11 rounded-2xl border px-3 text-sm font-bold',
-                    selected ? 'border-orange-500 bg-orange-500/10' : 'border-border bg-card-muted',
-                  )}
-                  onClick={() => {
-                    const next = selected
-                      ? draft.areaSlugs.filter((slug) => slug !== area.slug)
-                      : [...draft.areaSlugs, area.slug];
-                    updateDraft({ areaSlugs: next });
-                  }}
-                >
-                  {area.name}
-                </button>
-              );
-            })}
-          </div>
+          <ServiceAreasStep
+            areaSlugs={draft.areaSlugs}
+            maxServiceAreas={maxServiceAreas}
+            onChange={(slugs) => updateDraft({ areaSlugs: slugs })}
+          />
         ) : null}
 
         {step === 'rate_cards' ? (
@@ -496,7 +508,12 @@ export function OnboardingWizard() {
             <Row label="Name" value={draft.displayName} />
             <Row label="Type" value={draft.entityType} />
             <Row label="Categories" value={draft.categorySlugs.join(', ') || '—'} />
-            <Row label="Areas" value={draft.areaSlugs.join(', ') || '—'} />
+            <Row
+              label="Areas"
+              value={
+                draft.areaSlugs.map((slug) => areaDisplayName(slug)).join(', ') || '—'
+              }
+            />
             <Row label="Documents" value={`${draft.documents.length} uploaded`} />
             <Row
               label="Payout"

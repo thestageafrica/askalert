@@ -65,6 +65,7 @@ export const PLAN_CATALOGUE: PlanDefinition[] = [
       leadAlertsPerMonth: 20,
       chatMessages: 60,
       whatsappEnabled: true,
+      maxServiceAreas: 2,
     },
     features: {
       label: 'Vendor Free',
@@ -85,6 +86,7 @@ export const PLAN_CATALOGUE: PlanDefinition[] = [
       leadAlertsPerMonth: 10_000,
       chatMessages: 10_000,
       whatsappEnabled: true,
+      maxServiceAreas: 10,
     },
     features: {
       label: 'Vendor Pro',

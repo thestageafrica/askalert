@@ -23,15 +23,28 @@ export function PlansAdminView() {
   const liveVersion = live?.version ?? 0;
   const livePriceMinor = live?.priceMinor ?? 0;
   const liveRequests = live?.limits.requestsPerMonth ?? 0;
+  const liveMaxServiceAreas = live?.limits.maxServiceAreas ?? 2;
+  const liveLeadAlerts = live?.limits.leadAlertsPerMonth ?? 0;
   const [note, setNote] = useState('');
   const [priceNaira, setPriceNaira] = useState(formatNairaInput(livePriceMinor));
   const [requests, setRequests] = useState(liveRequests);
+  const [maxServiceAreas, setMaxServiceAreas] = useState(liveMaxServiceAreas);
+  const [leadAlerts, setLeadAlerts] = useState(liveLeadAlerts);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setPriceNaira(formatNairaInput(livePriceMinor));
     setRequests(liveRequests);
-  }, [selectedId, liveVersion, livePriceMinor, liveRequests]);
+    setMaxServiceAreas(liveMaxServiceAreas);
+    setLeadAlerts(liveLeadAlerts);
+  }, [
+    selectedId,
+    liveVersion,
+    livePriceMinor,
+    liveRequests,
+    liveMaxServiceAreas,
+    liveLeadAlerts,
+  ]);
 
   if (!selected || !live) {
     return <p className="text-sm text-muted-foreground">No plans seeded.</p>;
@@ -60,7 +73,12 @@ export function PlansAdminView() {
       currency: 'NGN',
       limits: {
         ...live.limits,
-        requestsPerMonth: requests || live.limits.requestsPerMonth,
+        ...(selected.audience === 'buyer'
+          ? { requestsPerMonth: requests || live.limits.requestsPerMonth }
+          : {
+              maxServiceAreas: maxServiceAreas || live.limits.maxServiceAreas,
+              leadAlertsPerMonth: leadAlerts || live.limits.leadAlertsPerMonth,
+            }),
       },
       features: live.features,
       disabled: selected.disabled,
@@ -145,13 +163,33 @@ export function PlansAdminView() {
                 onChange={(event) => setPriceNaira(event.target.value)}
                 hint="Enter Naira. Example: 3000 for ₦3,000."
               />
-              <Input
-                label="Requests / month"
-                type="number"
-                value={String(requests)}
-                disabled={!canEdit || selected.audience !== 'buyer'}
-                onChange={(event) => setRequests(Number(event.target.value) || 0)}
-              />
+              {selected.audience === 'buyer' ? (
+                <Input
+                  label="Requests / month"
+                  type="number"
+                  value={String(requests)}
+                  disabled={!canEdit}
+                  onChange={(event) => setRequests(Number(event.target.value) || 0)}
+                />
+              ) : (
+                <>
+                  <Input
+                    label="Service locations"
+                    type="number"
+                    value={String(maxServiceAreas)}
+                    disabled={!canEdit}
+                    onChange={(event) => setMaxServiceAreas(Number(event.target.value) || 0)}
+                    hint="Max coverage rows on vendor onboarding."
+                  />
+                  <Input
+                    label="Lead alerts / month"
+                    type="number"
+                    value={String(leadAlerts)}
+                    disabled={!canEdit}
+                    onChange={(event) => setLeadAlerts(Number(event.target.value) || 0)}
+                  />
+                </>
+              )}
             </div>
             <div className="mt-3">
               <Input

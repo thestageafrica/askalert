@@ -42,6 +42,20 @@ export {
   type PublishInput,
   type PublishResult,
 } from './categories';
+export {
+  AREA_CATALOGUE,
+  areaDisplayName,
+  areaSlugsFromRows,
+  canAddCoverageRow,
+  findAreaBySlug,
+  isStatewideLocation,
+  listSeedLocationIdsForCategoryLinks,
+  listSeedLocationsForState,
+  listSeedStates,
+  rowsFromAreaSlugs,
+  statewideSlugForState,
+  type AreaNode,
+} from './areas-catalogue';
 export { ensureCategoryId, resolveCategoryId } from './resolve-category-id';
 export { isSupabaseEnabled, requireSupabaseEnv } from './feature-flag';
 export { publicSupabaseEnv } from './public-env';

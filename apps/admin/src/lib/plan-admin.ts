@@ -138,6 +138,12 @@ export function previewPlanCapabilities(version: AdminPlanVersion): string[] {
   if (limits.leadAlertsPerMonth != null) {
     lines.push(`About ${limits.leadAlertsPerMonth} lead alerts per month`);
   }
+  if (limits.chatMessages != null) {
+    lines.push(`About ${limits.chatMessages} vendor chat messages`);
+  }
+  if (limits.maxServiceAreas != null) {
+    lines.push(`${limits.maxServiceAreas} service locations`);
+  }
   if (limits.whatsappEnabled) {
     lines.push('WhatsApp chat included');
   } else if (limits.whatsappEnabled === false) {
