@@ -398,20 +398,39 @@ export const vendorDocumentSchema = z.object({
 export const documentsStepSchema = z.object({
   documents: z
     .array(vendorDocumentSchema)
-    .min(1, 'Upload at least one ID or portfolio document.'),
+    .min(1, 'Upload a clear photo of your ID.'),
 });
 
 export function validateDocumentsStep(
   documents: VendorProfileDraft['documents'],
-  extraRegulatedDocs: number,
+  options: {
+    entityType: VendorProfileDraft['entityType'];
+    regulatedDocCount: number;
+  },
 ): string | null {
+  const hasId = documents.some((doc) => doc.kind === 'id');
+  if (!hasId) {
+    return 'Upload a clear photo of your government ID.';
+  }
+
+  if (options.entityType === 'business') {
+    const hasBusinessProof = documents.some((doc) => doc.kind === 'business_proof');
+    if (!hasBusinessProof) {
+      return 'Upload business proof (CAC or registered business name).';
+    }
+  }
+
+  const licenceCount = documents.filter((doc) => doc.kind === 'licence').length;
+  if (licenceCount < options.regulatedDocCount) {
+    const needed = options.regulatedDocCount - licenceCount;
+    return needed === 1
+      ? 'Upload the required licence for your regulated service.'
+      : `Upload ${needed} more licence documents for your regulated services.`;
+  }
+
   const base = documentsStepSchema.safeParse({ documents });
   if (!base.success) {
     return base.error.issues[0]?.message ?? 'Upload documents.';
-  }
-  const minimum = 1 + extraRegulatedDocs;
-  if (documents.length < minimum) {
-    return `Upload at least ${minimum} documents (ID plus any regulated licences).`;
   }
   return null;
 }

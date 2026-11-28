@@ -9,6 +9,7 @@ import {
   payoutStepSchema,
   rateCardSchema,
   validateCoverageRows,
+  validateDocumentsStep,
   validateServiceRateCard,
   validateTypesStep,
   whoYouAreSchema,
@@ -148,5 +149,37 @@ describe('vendor onboarding validation', () => {
       }).success,
     ).toBe(true);
     expect(documentsStepSchema.safeParse({ documents: [] }).success).toBe(false);
+  });
+
+  it('requires photo ID for individuals and business proof for businesses', () => {
+    const idDoc = {
+      id: 'doc_1',
+      kind: 'id' as const,
+      fileName: 'nin.jpg',
+      mime: 'image/jpeg',
+      bytes: 1200,
+      path: 'u/nin.jpg',
+      ownerUserId: 'u',
+      scanned: true,
+      createdAt: new Date().toISOString(),
+    };
+    expect(
+      validateDocumentsStep([], { entityType: 'individual', regulatedDocCount: 0 }),
+    ).toMatch(/government ID/i);
+    expect(
+      validateDocumentsStep([idDoc], { entityType: 'individual', regulatedDocCount: 0 }),
+    ).toBeNull();
+    expect(
+      validateDocumentsStep([idDoc], { entityType: 'business', regulatedDocCount: 0 }),
+    ).toMatch(/business proof/i);
+    expect(
+      validateDocumentsStep(
+        [
+          idDoc,
+          { ...idDoc, id: 'doc_2', kind: 'business_proof', fileName: 'cac.pdf' },
+        ],
+        { entityType: 'business', regulatedDocCount: 0 },
+      ),
+    ).toBeNull();
   });
 });

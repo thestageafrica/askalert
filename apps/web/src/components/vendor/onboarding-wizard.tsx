@@ -33,6 +33,7 @@ import {
 import {
   type OnboardingStepId,
   type ServiceRateCard,
+  type VendorDocument,
   type VendorProfileDraft,
 } from '../../lib/vendor/types';
 import { useVendorStore } from '../../lib/vendor/vendor-store';
@@ -111,7 +112,10 @@ export function OnboardingWizard() {
         return result.success ? null : result.error.issues[0]?.message ?? 'Check availability.';
       }
       case 'documents':
-        return validateDocumentsStep(draft.documents, regulatedDocs.length);
+        return validateDocumentsStep(draft.documents, {
+          entityType: draft.entityType,
+          regulatedDocCount: regulatedDocs.length,
+        });
       case 'payout': {
         const result = payoutStepSchema.safeParse(draft.payout);
         return result.success ? null : result.error.issues[0]?.message ?? 'Check payout details.';
@@ -636,65 +640,179 @@ function DocumentsStep({
   userId: string;
   updateDraft: (patch: Partial<VendorProfileDraft>) => void;
 }) {
+  const isBusiness = draft.entityType === 'business';
+  const hasId = draft.documents.some((doc) => doc.kind === 'id');
+  const hasBusinessProof = draft.documents.some((doc) => doc.kind === 'business_proof');
+  const licenceCount = draft.documents.filter((doc) => doc.kind === 'licence').length;
+
+  const slots: Array<{
+    kind: VendorDocument['kind'];
+    title: string;
+    detail: string;
+    required: boolean;
+    done: boolean;
+  }> = [
+    {
+      kind: 'id',
+      title: isBusiness ? 'Owner photo ID' : 'Your photo ID',
+      detail: isBusiness
+        ? 'Clear photo of the owner’s NIN slip, driver’s licence, international passport, or national ID.'
+        : 'Clear photo of your NIN slip, driver’s licence, international passport, or national ID.',
+      required: true,
+      done: hasId,
+    },
+  ];
+
+  if (isBusiness) {
+    slots.push({
+      kind: 'business_proof',
+      title: 'Business proof',
+      detail: 'CAC certificate or registered business name document.',
+      required: true,
+      done: hasBusinessProof,
+    });
+  }
+
+  regulatedDocs.forEach((label, index) => {
+    slots.push({
+      kind: 'licence',
+      title: label,
+      detail: 'Required because one of your services is regulated.',
+      required: true,
+      done: licenceCount > index,
+    });
+  });
+
+  slots.push({
+    kind: 'portfolio',
+    title: 'Work sample (optional)',
+    detail: 'A photo of past work helps buyers trust you. You can skip this.',
+    required: false,
+    done: draft.documents.some((doc) => doc.kind === 'portfolio'),
+  });
+
+  const upload = (kind: VendorDocument['kind'], file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    void prepareVendorDocument({
+      file,
+      kind,
+      ownerUserId: userId,
+    }).then((result) => {
+      setBusy(false);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      updateDraft({ documents: [...draft.documents, result.document] });
+    });
+  };
+
   return (
     <div className="space-y-4">
-      {regulatedDocs.length > 0 ? (
-        <p className="rounded-2xl border border-orange-500/25 bg-orange-500/10 px-3 py-3 text-sm font-medium text-navy-950">
-          Regulated services need extra uploads: {regulatedDocs.join(', ')}.
-        </p>
-      ) : null}
       <p className="text-sm text-muted-foreground">
-        JPEG, PNG, WebP or PDF. Max 5 MB. Files stay private to your account.
+        {isBusiness
+          ? 'As a business, upload the owner’s ID and proof the business is registered. Files stay private.'
+          : 'As an individual vendor, upload a clear government ID so we can verify you. Files stay private.'}
       </p>
-      <input
-        type="file"
-        accept="image/jpeg,image/png,image/webp,application/pdf"
-        className="block w-full min-h-11 text-sm"
-        disabled={busy}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = '';
-          if (!file) {
-            return;
-          }
-          setBusy(true);
-          void prepareVendorDocument({
-            file,
-            kind: regulatedDocs.length > 0 ? 'licence' : 'id',
-            ownerUserId: userId,
-          }).then((result) => {
-            setBusy(false);
-            if (!result.ok) {
-              setError(result.error);
-              return;
-            }
-            updateDraft({ documents: [...draft.documents, result.document] });
-          });
-        }}
-      />
-      <ul className="space-y-2">
-        {draft.documents.map((doc) => (
+      <p className="text-xs text-muted-foreground">
+        JPEG, PNG, WebP or PDF. Max 5 MB each.
+      </p>
+
+      <ul className="space-y-3">
+        {slots.map((slot, index) => (
           <li
-            key={doc.id}
-            className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-border/60 px-3 py-2 text-sm"
+            key={`${slot.kind}-${slot.title}-${index}`}
+            className={cn(
+              'rounded-2xl border p-4',
+              slot.required && !slot.done
+                ? 'border-orange-500/40 bg-orange-500/5'
+                : 'border-border/70 bg-card',
+            )}
           >
-            <span className="truncate font-semibold">{doc.fileName}</span>
-            <button
-              type="button"
-              className="text-xs font-bold text-danger"
-              onClick={() =>
-                updateDraft({
-                  documents: draft.documents.filter((item) => item.id !== doc.id),
-                })
-              }
-            >
-              Remove
-            </button>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-extrabold text-foreground">
+                  {slot.title}
+                  {slot.required ? (
+                    <span className="ml-1 text-xs font-bold text-orange-700">Required</span>
+                  ) : (
+                    <span className="ml-1 text-xs font-semibold text-muted-foreground">Optional</span>
+                  )}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{slot.detail}</p>
+              </div>
+              {slot.done ? (
+                <span className="rounded-full bg-orange-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                  Uploaded
+                </span>
+              ) : null}
+            </div>
+            <label className="mt-3 flex min-h-11 cursor-pointer items-center rounded-xl border border-dashed border-border/80 bg-background px-3 text-sm font-semibold text-foreground">
+              <span>{busy ? 'Uploading…' : slot.done ? 'Add another file' : 'Choose file'}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                className="sr-only"
+                disabled={busy}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  upload(slot.kind, file);
+                }}
+              />
+            </label>
           </li>
         ))}
       </ul>
+
+      {draft.documents.length > 0 ? (
+        <ul className="space-y-2">
+          <li className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            Uploaded files
+          </li>
+          {draft.documents.map((doc) => (
+            <li
+              key={doc.id}
+              className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-border/60 px-3 py-2 text-sm"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{doc.fileName}</p>
+                <p className="text-xs text-muted-foreground">{documentKindLabel(doc.kind)}</p>
+              </div>
+              <button
+                type="button"
+                className="shrink-0 text-xs font-bold text-danger"
+                onClick={() =>
+                  updateDraft({
+                    documents: draft.documents.filter((item) => item.id !== doc.id),
+                  })
+                }
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
+}
+
+function documentKindLabel(kind: VendorDocument['kind']): string {
+  switch (kind) {
+    case 'id':
+      return 'Photo ID';
+    case 'business_proof':
+      return 'Business proof';
+    case 'licence':
+      return 'Licence';
+    case 'portfolio':
+      return 'Work sample';
+  }
 }
 
 function PayoutStep({
@@ -800,7 +918,7 @@ function labelFor(step: OnboardingStepId): string {
     case 'availability':
       return 'Availability';
     case 'documents':
-      return 'Documents';
+      return 'Verify with documents';
     case 'payout':
       return 'Payout details';
     case 'review':
