@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   catalogSeedsLive,
   createServiceRateCardFromSeed,
+  findCatalogService,
   regulatedRequiredDocuments,
 } from '../../lib/vendor/vendor-catalog';
 import { getActivePlan, getPlanById, resolveCoveragePlanCaps } from '@askalert/core';
@@ -17,6 +18,7 @@ import {
   availabilityStepSchema,
   categoriesStepSchema,
   DEFAULT_MAX_VENDOR_SERVICES,
+  listServiceRateCardIssues,
   nextStep,
   payoutStepSchema,
   previousStep,
@@ -33,7 +35,6 @@ import {
   type ServiceRateCard,
   type VendorProfileDraft,
 } from '../../lib/vendor/types';
-import { findCatalogService } from '../../lib/vendor/vendor-catalog';
 import { useVendorStore } from '../../lib/vendor/vendor-store';
 import { ServiceAreasStep } from './service-areas-step';
 import { ServiceRateCardEditor } from './service-rate-card-editor';
@@ -128,6 +129,22 @@ export function OnboardingWizard() {
     if (validation) {
       setError(validation);
       return;
+    }
+    if (step === 'services') {
+      for (const categorySlug of draft.categorySlugs) {
+        for (const serviceSlug of draft.serviceSlugsByCategory[categorySlug] ?? []) {
+          const existing = draft.serviceRateCards.find(
+            (item) => item.categorySlug === categorySlug && item.serviceSlug === serviceSlug,
+          );
+          if (existing) {
+            continue;
+          }
+          const catalog = findCatalogService(categorySlug, serviceSlug);
+          if (catalog) {
+            upsertServiceRateCard(createServiceRateCardFromSeed(categorySlug, catalog));
+          }
+        }
+      }
     }
     if (step === 'rate_cards') {
       for (const categorySlug of draft.categorySlugs) {
@@ -238,6 +255,8 @@ export function OnboardingWizard() {
             blocks={rateCardBlocks}
             cards={draft.serviceRateCards}
             upsert={upsertServiceRateCard}
+            draft={draft}
+            showIssues={Boolean(error)}
           />
         ) : null}
         {step === 'areas' ? (
@@ -409,13 +428,49 @@ function RateCardsStep({
   blocks,
   cards,
   upsert,
+  draft,
+  showIssues = false,
 }: {
   blocks: Array<{ categorySlug: string; serviceSlug: string }>;
   cards: ServiceRateCard[];
   upsert: (card: ServiceRateCard) => void;
+  draft: VendorProfileDraft;
+  showIssues?: boolean;
 }) {
+  // Persist seed templates so Continue does not fail with “pricing not saved”.
+  useEffect(() => {
+    for (const { categorySlug, serviceSlug } of blocks) {
+      const exists = cards.some(
+        (item) => item.categorySlug === categorySlug && item.serviceSlug === serviceSlug,
+      );
+      if (exists) {
+        continue;
+      }
+      const catalog = findCatalogService(categorySlug, serviceSlug);
+      if (!catalog) {
+        continue;
+      }
+      upsert(createServiceRateCardFromSeed(categorySlug, catalog));
+    }
+  }, [blocks, cards, upsert]);
+
+  const issues = useMemo(
+    () => (showIssues ? listServiceRateCardIssues(draft) : []),
+    [draft, showIssues],
+  );
+  const issueByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const issue of issues) {
+      map.set(`${issue.categorySlug}:${issue.serviceSlug}`, issue.error);
+    }
+    return map;
+  }, [issues]);
+
   return (
     <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Set a price card for each service. Red notices mark the ones that still need a fix.
+      </p>
       {blocks.map(({ categorySlug, serviceSlug }) => {
         const catalog = findCatalogService(categorySlug, serviceSlug);
         const existing = cards.find(
@@ -423,19 +478,53 @@ function RateCardsStep({
         );
         const card =
           existing ??
-          (catalog
-            ? createServiceRateCardFromSeed(categorySlug, catalog)
-            : null);
+          (catalog ? createServiceRateCardFromSeed(categorySlug, catalog) : null);
         if (!card) {
           return null;
         }
+        const issue = issueByKey.get(`${categorySlug}:${serviceSlug}`);
         return (
-          <span key={`${categorySlug}:${serviceSlug}`} className="block rounded-2xl border border-border/70 p-4">
+          <div
+            key={`${categorySlug}:${serviceSlug}`}
+            className={cn(
+              'rounded-2xl border p-4',
+              issue
+                ? 'border-danger/50 bg-danger/5'
+                : 'border-border/70 bg-card',
+            )}
+          >
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                  {categorySlug}
+                </p>
+                <h3 className="text-base font-extrabold text-foreground">
+                  {catalog?.name ?? serviceSlug}
+                </h3>
+              </div>
+              {issue ? (
+                <span className="rounded-full bg-danger/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-danger">
+                  Needs fix
+                </span>
+              ) : (
+                <span className="rounded-full bg-orange-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                  Ready
+                </span>
+              )}
+            </div>
+            {issue ? (
+              <p
+                className="mb-3 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger"
+                role="alert"
+              >
+                {issue}
+              </p>
+            ) : null}
             <ServiceRateCardEditor
               card={card}
               onChange={(next) => upsert({ ...next, status: 'draft' })}
             />
-          </span>
+          </div>
         );
       })}
     </div>

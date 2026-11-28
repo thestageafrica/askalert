@@ -5,6 +5,7 @@ import {
   areasStepSchemaWithLimit,
   categoriesStepSchema,
   documentsStepSchema,
+  listServiceRateCardIssues,
   payoutStepSchema,
   rateCardSchema,
   validateCoverageRows,
@@ -103,6 +104,32 @@ describe('vendor onboarding validation', () => {
     expect(catalog).toBeDefined();
     const card = createServiceRateCardFromSeed('events', catalog!);
     expect(validateServiceRateCard(card)).toBeNull();
+  });
+
+  it('lists per-service rate card issues with names', () => {
+    const issues = listServiceRateCardIssues({
+      entityType: 'individual',
+      displayName: 'Ada',
+      businessName: '',
+      categorySlugs: ['events'],
+      typeSlugsByCategory: { events: ['wedding'] },
+      serviceSlugsByCategory: { events: ['catering', 'dj'] },
+      serviceRateCards: [],
+      rateCards: [],
+      areaSlugs: [],
+      weeklyHours: [],
+      blackoutDates: [],
+      documents: [],
+      payout: { bankName: '', accountName: '', accountNumber: '' },
+      status: 'draft',
+      verificationTiers: ['phone'],
+      currentStep: 'rate_cards',
+      submittedAt: null,
+      updatedAt: new Date().toISOString(),
+    });
+    expect(issues.length).toBe(2);
+    expect(issues[0]?.serviceName.length).toBeGreaterThan(0);
+    expect(issues[0]?.error).toMatch(/pricing not saved/i);
   });
 
   it('requires 10-digit account number and at least one document', () => {

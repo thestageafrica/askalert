@@ -230,30 +230,58 @@ export function validateServiceRateCard(card: ServiceRateCard): string | null {
   return null;
 }
 
-export function validateServiceRateCardsStep(draft: VendorProfileDraft): string | null {
-  const slugs: Array<{ categorySlug: string; serviceSlug: string }> = [];
+export type ServiceRateCardIssue = {
+  categorySlug: string;
+  serviceSlug: string;
+  serviceName: string;
+  error: string;
+};
+
+export function listServiceRateCardIssues(
+  draft: VendorProfileDraft,
+): ServiceRateCardIssue[] {
+  const issues: ServiceRateCardIssue[] = [];
   for (const categorySlug of draft.categorySlugs) {
     for (const serviceSlug of draft.serviceSlugsByCategory[categorySlug] ?? []) {
-      slugs.push({ categorySlug, serviceSlug });
+      const catalog = findCatalogService(categorySlug, serviceSlug);
+      const serviceName = catalog?.name ?? serviceSlug;
+      const card = draft.serviceRateCards.find(
+        (item) => item.categorySlug === categorySlug && item.serviceSlug === serviceSlug,
+      );
+      if (!card) {
+        issues.push({
+          categorySlug,
+          serviceSlug,
+          serviceName,
+          error: 'Pricing not saved yet. Open this card and confirm the prices.',
+        });
+        continue;
+      }
+      const error = validateServiceRateCard(card);
+      if (error) {
+        issues.push({ categorySlug, serviceSlug, serviceName, error });
+      }
     }
   }
-  if (slugs.length === 0) {
+  return issues;
+}
+
+export function validateServiceRateCardsStep(draft: VendorProfileDraft): string | null {
+  const hasAnyService = draft.categorySlugs.some(
+    (categorySlug) => (draft.serviceSlugsByCategory[categorySlug] ?? []).length > 0,
+  );
+  if (!hasAnyService) {
     return 'Pick services before setting rate cards.';
   }
 
-  for (const { categorySlug, serviceSlug } of slugs) {
-    const card = draft.serviceRateCards.find(
-      (item) => item.categorySlug === categorySlug && item.serviceSlug === serviceSlug,
-    );
-    if (!card) {
-      return 'Set pricing for every selected service.';
-    }
-    const error = validateServiceRateCard(card);
-    if (error) {
-      return error;
-    }
+  const issues = listServiceRateCardIssues(draft);
+  if (issues.length === 0) {
+    return null;
   }
-  return null;
+  if (issues.length === 1) {
+    return `${issues[0]!.serviceName}: ${issues[0]!.error}`;
+  }
+  return `Fix pricing on ${issues.length} services below.`;
 }
 
 export const areasStepSchema = z.object({
