@@ -2,6 +2,7 @@ import { DedupeStore, defaultDedupe } from './dedupe';
 import type { EdgeWebhookEnv } from './env';
 import { requireSecret } from './env';
 import { logError } from './log';
+import { handleFlutterwavePost } from './flutterwave';
 import { handlePaystackPost } from './paystack';
 import { handleWhatsAppPost, handleWhatsAppVerify } from './whatsapp';
 
@@ -63,6 +64,21 @@ export async function handleRequest(
         rawBody,
         signatureHeader: request.headers.get('x-paystack-signature'),
         paystackSecret: requireSecret(env.PAYSTACK_SECRET, 'PAYSTACK_SECRET'),
+        sharedSecret: requireSecret(env.WEBHOOK_SHARED_SECRET, 'WEBHOOK_SHARED_SECRET'),
+        supabaseFunctionUrl: requireSecret(
+          env.SUPABASE_FUNCTION_URL,
+          'SUPABASE_FUNCTION_URL',
+        ),
+        fetchImpl: deps.fetchImpl,
+      });
+    }
+
+    if (path === '/flutterwave' && request.method === 'POST') {
+      const rawBody = await request.text();
+      return handleFlutterwavePost({
+        rawBody,
+        verifHashHeader: request.headers.get('verif-hash'),
+        flutterwaveSecretHash: requireSecret(env.FLW_SECRET_HASH, 'FLW_SECRET_HASH'),
         sharedSecret: requireSecret(env.WEBHOOK_SHARED_SECRET, 'WEBHOOK_SHARED_SECRET'),
         supabaseFunctionUrl: requireSecret(
           env.SUPABASE_FUNCTION_URL,

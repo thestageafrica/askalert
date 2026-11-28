@@ -1,4 +1,23 @@
 export type { EscrowProvider } from './provider';
+export { assertCapability } from './provider';
+
+export {
+  FLUTTERWAVE_ESCROW_CAPABILITIES_BASE,
+  MOCK_ESCROW_CAPABILITIES,
+  escrowCapabilitiesSchema,
+  type EscrowCapabilities,
+} from './capabilities';
+
+export {
+  DEFAULT_ESCROW_ROUTER_CONFIG,
+  EscrowProviderRegistry,
+  escrowProviderModeSchema,
+  escrowProviderRegistrationSchema,
+  type EscrowProviderFactory,
+  type EscrowProviderMode,
+  type EscrowProviderRegistration,
+  type EscrowRouterConfig,
+} from './registry';
 
 export {
   COMING_SOON_COPY,

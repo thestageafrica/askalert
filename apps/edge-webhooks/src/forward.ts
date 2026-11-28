@@ -12,7 +12,7 @@ export type ForwardResult = {
 export async function forwardToSupabase(options: {
   url: string;
   sharedSecret: string;
-  source: 'whatsapp' | 'paystack';
+  source: 'whatsapp' | 'paystack' | 'flutterwave';
   body: unknown;
   fetchImpl?: typeof fetch;
 }): Promise<ForwardResult> {

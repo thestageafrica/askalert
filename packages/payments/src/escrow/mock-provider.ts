@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { MOCK_ESCROW_CAPABILITIES, type EscrowCapabilities } from './capabilities';
 import type { EscrowProvider } from './provider';
 import {
   createEscrowInputSchema,
@@ -134,6 +135,10 @@ export class MockEscrowProvider implements EscrowProvider {
     };
     this.store.events.push(event);
     return event;
+  }
+
+  capabilities(): EscrowCapabilities {
+    return MOCK_ESCROW_CAPABILITIES;
   }
 
   async createEscrow(input: CreateEscrowInput): Promise<EscrowRecord> {
@@ -343,10 +348,9 @@ export class MockEscrowProvider implements EscrowProvider {
     });
   }
 
-  async openDispute(escrowId: string, evidence: DisputeEvidence): Promise<EscrowRecord> {
+  async pause(escrowId: string, reason: string): Promise<EscrowRecord> {
     const record = this.require(escrowId);
     await sleep(this.delayMs);
-
     const milestones = record.milestones.map((milestone) =>
       milestone.status === 'PENDING'
         ? {
@@ -356,22 +360,48 @@ export class MockEscrowProvider implements EscrowProvider {
           }
         : milestone,
     );
-
-    this.pushEvent('DisputeOpened', escrowId, this.nextId('mock_dispute'), {
-      claimId: evidence.claimId,
-      summary: evidence.summary,
-    });
-    this.pushEvent('EscrowPaused', escrowId, this.nextId('mock_pause'), {
-      claimId: evidence.claimId,
-    });
-
+    this.pushEvent('EscrowPaused', escrowId, this.nextId('mock_pause'), { reason });
     return this.save({
       ...record,
       milestones,
       disputeOpen: true,
       status: 'PAUSED',
+      metadata: { ...record.metadata, pauseReason: reason },
+    });
+  }
+
+  async resume(escrowId: string): Promise<EscrowRecord> {
+    const record = this.require(escrowId);
+    await sleep(this.delayMs);
+    const milestones = record.milestones.map((milestone) =>
+      milestone.status === 'PAUSED'
+        ? {
+            ...milestone,
+            status: 'PENDING' as const,
+            pausedAt: null,
+          }
+        : milestone,
+    );
+    this.pushEvent('EscrowResumed', escrowId, this.nextId('mock_resume'), {});
+    return this.save({
+      ...record,
+      milestones,
+      disputeOpen: false,
+      status: deriveStatus(milestones, false),
+      metadata: { ...record.metadata, pauseReason: '' },
+    });
+  }
+
+  async openDispute(escrowId: string, evidence: DisputeEvidence): Promise<EscrowRecord> {
+    this.pushEvent('DisputeOpened', escrowId, this.nextId('mock_dispute'), {
+      claimId: evidence.claimId,
+      summary: evidence.summary,
+    });
+    const paused = await this.pause(escrowId, evidence.summary);
+    return this.save({
+      ...paused,
       metadata: {
-        ...record.metadata,
+        ...paused.metadata,
         openClaimId: evidence.claimId,
       },
     });

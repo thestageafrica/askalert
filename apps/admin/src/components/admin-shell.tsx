@@ -29,6 +29,8 @@ const operations: NavItem[] = [
   { href: '/requests', label: 'Requests', icon: <BellIcon /> },
   { href: '/simulator', label: 'Capture sim', icon: <ChatIcon /> },
   { href: '/disputes', label: 'Disputes', icon: <AlertIcon /> },
+  { href: '/payments', label: 'Payments', icon: <CashIcon /> },
+  { href: '/provider-settings', label: 'Providers', icon: <GearIcon /> },
   { href: '/payouts', label: 'Payouts', icon: <CashIcon /> },
   { href: '/plans', label: 'Plans', icon: <PlansIcon /> },
   { href: '/usage', label: 'Usage', icon: <UsageIcon /> },

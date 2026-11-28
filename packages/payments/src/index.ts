@@ -99,19 +99,27 @@ export {
 
 export {
   COMING_SOON_COPY,
+  DEFAULT_ESCROW_ROUTER_CONFIG,
   ESCROW_BANNED_PATTERNS,
+  FLUTTERWAVE_ESCROW_CAPABILITIES_BASE,
   LEDGER_ACCOUNTS,
+  MOCK_ESCROW_CAPABILITIES,
   MockEscrowProvider,
   PartnerEscrowProvider,
   SANDBOX_BANNER,
+  EscrowProviderRegistry,
+  assertCapability,
   assertEscrowCopyAllowed,
   canUseEscrowWording,
   createEscrowInputSchema,
+  escrowCapabilitiesSchema,
   escrowCurrencySchema,
   escrowEventTypeSchema,
   escrowMilestoneSpecSchema,
   escrowPartnerDetailsSchema,
   escrowPartySchema,
+  escrowProviderModeSchema,
+  escrowProviderRegistrationSchema,
   escrowRuntimeConfigSchema,
   escrowStatusSchema,
   lintEscrowCopy,
@@ -131,6 +139,7 @@ export {
   type CopyLintResult,
   type CreateEscrowInput,
   type DisputeEvidence,
+  type EscrowCapabilities,
   type EscrowCurrency,
   type EscrowEvent,
   type EscrowEventType,
@@ -139,7 +148,11 @@ export {
   type EscrowPartnerDetails,
   type EscrowParty,
   type EscrowProvider,
+  type EscrowProviderFactory,
+  type EscrowProviderMode,
+  type EscrowProviderRegistration,
   type EscrowRecord,
+  type EscrowRouterConfig,
   type EscrowRuntimeConfig,
   type EscrowStatus,
   type FundingInstructions,
@@ -157,3 +170,54 @@ export {
   type ResolveEscrowProviderOptions,
   type WebhookVerificationResult,
 } from './escrow/index';
+
+export type { DirectPaymentProvider } from './direct/provider';
+export type {
+  BalanceRow,
+  CheckoutCustomer,
+  CreateSubaccountInput,
+  CreateSubaccountResult,
+  FxQuote,
+  FxQuoteRequest,
+  FxTradeResult,
+  InitiateCheckoutInput,
+  InitiateCheckoutResult,
+  MoneyAmount,
+  PaymentCurrency,
+  RefundInput,
+  RefundResult,
+  ResolveAccountInput,
+  ResolveAccountResult,
+  SplitSubaccount,
+  TransferInput,
+  TransferResult,
+  VerifiedTransaction,
+} from './direct/types';
+export { paymentCurrencySchema } from './direct/types';
+
+export {
+  FlutterwaveApiError,
+  FlutterwaveClient,
+  FlutterwaveDirectProvider,
+  FlutterwaveEscrowProvider,
+  adminLedgerHoldWarning,
+  flutterwaveMajorToMinor,
+  isFlutterwaveNoiseEvent,
+  loadFlutterwaveClientFromEnv,
+  maskAccountNumber,
+  minorToFlutterwaveMajor,
+  verifyFlutterwaveVerifHash,
+  type FlutterwaveClientOptions,
+  type FlutterwaveEscrowGates,
+  type FlutterwaveEscrowProviderOptions,
+  type FlutterwaveEscrowStrategy,
+} from './providers/flutterwave/index';
+
+export {
+  ProviderOutbox,
+  outboxStatusSchema,
+  type OutboxStatus,
+  type ProviderOutboxItem,
+} from './outbox';
+
+export { runEscrowProviderContract } from './contract-tests/escrow-contract';

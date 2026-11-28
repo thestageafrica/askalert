@@ -2,6 +2,8 @@ export type EdgeWebhookEnv = {
   WHATSAPP_VERIFY_TOKEN: string;
   WHATSAPP_APP_SECRET: string;
   PAYSTACK_SECRET: string;
+  /** Flutterwave dashboard secret hash for the `verif-hash` header. */
+  FLW_SECRET_HASH: string;
   WEBHOOK_SHARED_SECRET: string;
   SUPABASE_FUNCTION_URL: string;
   SERVICE_NAME?: string;

@@ -15,6 +15,7 @@ const env: EdgeWebhookEnv = {
   WHATSAPP_VERIFY_TOKEN: 'verify-token-test',
   WHATSAPP_APP_SECRET: 'whatsapp-app-secret',
   PAYSTACK_SECRET: 'paystack-secret',
+  FLW_SECRET_HASH: 'flutterwave-secret-hash',
   WEBHOOK_SHARED_SECRET: 'shared-secret',
   SUPABASE_FUNCTION_URL: 'https://example.functions.supabase.co/webhooks',
   SERVICE_NAME: 'askalert-edge-webhooks-test',
@@ -174,6 +175,42 @@ describe('handleRequest', () => {
       new Request('https://hooks.example/paystack', {
         method: 'POST',
         headers: { 'x-paystack-signature': digest },
+        body,
+      }),
+      env,
+      { dedupe, fetchImpl },
+    );
+    expect(response.status).toBe(200);
+    expect(forwarded).toHaveLength(1);
+  });
+
+  it('rejects Flutterwave posts with an invalid verif-hash', async () => {
+    const body = JSON.stringify({
+      event: 'charge.completed',
+      data: { id: 1, status: 'successful', tx_ref: 'tx' },
+    });
+    const response = await handleRequest(
+      new Request('https://hooks.example/flutterwave', {
+        method: 'POST',
+        headers: { 'verif-hash': 'nope' },
+        body,
+      }),
+      env,
+      { dedupe, fetchImpl },
+    );
+    expect(response.status).toBe(401);
+    expect(forwarded).toHaveLength(0);
+  });
+
+  it('forwards a valid Flutterwave charge.completed event', async () => {
+    const body = JSON.stringify({
+      event: 'charge.completed',
+      data: { id: 1, status: 'successful', tx_ref: 'tx' },
+    });
+    const response = await handleRequest(
+      new Request('https://hooks.example/flutterwave', {
+        method: 'POST',
+        headers: { 'verif-hash': env.FLW_SECRET_HASH },
         body,
       }),
       env,

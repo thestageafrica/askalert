@@ -9,20 +9,24 @@ AskAlert is a pnpm + Turborepo monorepo. Production uses **two Cloudflare Pages 
 
 Framework preset: **None** (or static assets). Cloudflare serves the `out/` folder.
 
-## Escrow layer (Prompt 38)
+## Escrow layer (Prompt 38) + Flutterwave (Prompt 48)
 
-AskAlert never holds customer funds. The `EscrowProvider` interface lives in `@askalert/payments` with a `MockEscrowProvider` for sandbox and a `PartnerEscrowProvider` skeleton for a licensed partner.
+AskAlert never holds customer funds. Direct payments use Flutterwave (`FlutterwaveDirectProvider`). Escrow-style modes use a swappable `EscrowProvider` registry; Flutterwave strategies (`native`, `ledger_hold`) stay **off** until written confirmation and a legal opinion are on file.
 
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `ESCROW_ENABLED` / `NEXT_PUBLIC_ESCROW_ENABLED` | `false` | Master switch. Off in production until a partner is live. |
 | `ESCROW_LIVE` | unset/false | When unset, sandbox mode (SANDBOX banners). |
-| `ESCROW_PROVIDER` | `mock` | `mock` or `partner`. |
-| `ESCROW_PARTNER_API_KEY` | — | Server-only; never in the browser. |
-| `ESCROW_PARTNER_WEBHOOK_SECRET` | — | Server-only. |
-| `ESCROW_PARTNER_LEGAL_NAME` / `LICENCE_*` / `INSTITUTION_NAME` | empty | Required before any user-facing hold wording. |
+| `ESCROW_PROVIDER` | `mock` | `mock`, `flutterwave`, or `partner`. |
+| `FLW_PUBLIC_KEY` / `FLW_SECRET_KEY` | — | Server-only TEST keys in sandbox. Never commit. |
+| `FLW_SECRET_HASH` | — | Dashboard secret hash for Worker `verif-hash` checks. |
+| `FLW_BASE_URL` | `https://api.flutterwave.com/v3` | Flutterwave v3 API. |
+| `FLW_USD_ENABLED` | `false` | Turn on only after USD is enabled on the account. |
+| `FLW_ESCROW_STRATEGY_ENABLED` | `false` | Keep off until gates are met. |
+| `FLW_HOLD_CONFIRMED` / `FLW_LEGAL_OPINION_ON_FILE` | `false` | Required before `ledger_hold`. |
+| `ESCROW_PARTNER_*` | — | Licensed partner skeleton (Prompt 38/50). |
 
-Checkout shows **Protected payments are coming soon** while the flag is off. Run `pnpm copy-lint` (also in CI) to block banned hold/protect wording in user-facing source.
+Worker webhook: `POST /flutterwave` (verif-hash). Checkout shows **Protected payments are coming soon** while escrow wording is not live-approved. Run `pnpm copy-lint` in CI.
 
 ## Environment variables
 

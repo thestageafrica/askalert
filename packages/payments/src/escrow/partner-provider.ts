@@ -1,3 +1,4 @@
+import { MOCK_ESCROW_CAPABILITIES, type EscrowCapabilities } from './capabilities';
 import type { EscrowProvider } from './provider';
 import type {
   CreateEscrowInput,
@@ -42,6 +43,14 @@ export class PartnerEscrowProvider implements EscrowProvider {
     );
   }
 
+  capabilities(): EscrowCapabilities {
+    return {
+      ...MOCK_ESCROW_CAPABILITIES,
+      nativeHold: false,
+      payInMethods: ['partner'],
+    };
+  }
+
   async createEscrow(_input: CreateEscrowInput): Promise<EscrowRecord> {
     this.notImplemented('createEscrow');
   }
@@ -68,6 +77,14 @@ export class PartnerEscrowProvider implements EscrowProvider {
     _reason: string,
   ): Promise<EscrowRecord> {
     this.notImplemented('refund');
+  }
+
+  async pause(_escrowId: string, _reason: string): Promise<EscrowRecord> {
+    this.notImplemented('pause');
+  }
+
+  async resume(_escrowId: string): Promise<EscrowRecord> {
+    this.notImplemented('resume');
   }
 
   async openDispute(_escrowId: string, _evidence: DisputeEvidence): Promise<EscrowRecord> {
