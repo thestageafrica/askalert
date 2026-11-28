@@ -6,6 +6,8 @@ export { Badge } from './badge';
 export { Card } from './card';
 export { Input } from './input';
 export { Select } from './select';
+export { CoveragePicker } from './coverage-picker';
+export { LocationSelect } from './location-select';
 export { Slider } from './slider';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 export { Accordion } from './accordion';
