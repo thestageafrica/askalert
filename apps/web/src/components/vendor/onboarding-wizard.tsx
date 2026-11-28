@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { getActivePlan, getPlanById } from '@askalert/core';
+import { getActivePlan, getPlanById, resolveCoveragePlanCaps } from '@askalert/core';
 import { areaDisplayName, rowsFromAreaSlugs } from '@askalert/db';
 import { Button, Input, cn } from '@askalert/ui';
 import { formatNairaInput, parseNairaInput } from '@askalert/payments';
@@ -39,10 +39,11 @@ export function OnboardingWizard() {
     [categories],
   );
 
-  const maxServiceAreas = useMemo(() => {
+  const coverageCaps = useMemo(() => {
     const plan = getActivePlan(planState) ?? getPlanById(planState.planId);
-    return plan?.limits.maxServiceAreas ?? 2;
+    return resolveCoveragePlanCaps(plan?.limits);
   }, [planState]);
+  const maxServiceAreas = coverageCaps.maxCoverageLocations;
 
   if (!ready) {
     return <div className="h-40 animate-pulse rounded-2xl bg-card-muted" aria-busy="true" />;
@@ -261,7 +262,9 @@ export function OnboardingWizard() {
         {step === 'areas' ? (
           <ServiceAreasStep
             areaSlugs={draft.areaSlugs}
-            maxServiceAreas={maxServiceAreas}
+            maxServiceAreas={coverageCaps.maxCoverageLocations}
+            allowStatewide={coverageCaps.allowStatewide}
+            maxStates={coverageCaps.maxStates}
             onChange={(slugs) => updateDraft({ areaSlugs: slugs })}
           />
         ) : null}

@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
     '@askalert/payments',
     '@askalert/category-engine',
     '@askalert/channels',
+    '@askalert/geo',
     '@askalert/core',
     '@askalert/db',
   ],

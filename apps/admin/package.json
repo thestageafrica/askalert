@@ -16,6 +16,7 @@
     "@askalert/category-engine": "workspace:*",
     "@askalert/core": "workspace:*",
     "@askalert/db": "workspace:*",
+    "@askalert/geo": "workspace:*",
     "@askalert/payments": "workspace:*",
     "@askalert/ui": "workspace:*",
     "next": "^15.3.2",

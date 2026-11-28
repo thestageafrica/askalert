@@ -111,6 +111,65 @@ export type Database = {
           },
         ];
       };
+      geo_nodes: {
+        Row: {
+          id: string;
+          parent_id: string | null;
+          level: 'country' | 'state' | 'area' | 'neighbourhood';
+          slug: string;
+          name: string;
+          aliases: Json;
+          lat: number | null;
+          lng: number | null;
+          is_statewide: boolean;
+          status: 'draft' | 'active' | 'paused' | 'archived';
+          sort_order: number;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          parent_id?: string | null;
+          level: 'country' | 'state' | 'area' | 'neighbourhood';
+          slug: string;
+          name: string;
+          aliases?: Json;
+          lat?: number | null;
+          lng?: number | null;
+          is_statewide?: boolean;
+          status?: 'draft' | 'active' | 'paused' | 'archived';
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          parent_id?: string | null;
+          level?: 'country' | 'state' | 'area' | 'neighbourhood';
+          slug?: string;
+          name?: string;
+          aliases?: Json;
+          lat?: number | null;
+          lng?: number | null;
+          is_statewide?: boolean;
+          status?: 'draft' | 'active' | 'paused' | 'archived';
+          sort_order?: number;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'geo_nodes_parent_id_fkey';
+            columns: ['parent_id'];
+            isOneToOne: false;
+            referencedRelation: 'geo_nodes';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       site_pages: {
         Row: {
           slug: string;
@@ -140,6 +199,8 @@ export type Database = {
           icon: string;
           status: CategoryStatus;
           current_version_id: string | null;
+          location_rule: 'specific' | 'state' | 'none';
+          location_role: 'at_buyer' | 'at_venue' | 'at_vendor';
           created_at: string;
           updated_at: string;
         };
@@ -150,6 +211,8 @@ export type Database = {
           icon: string;
           status?: CategoryStatus;
           current_version_id?: string | null;
+          location_rule?: 'specific' | 'state' | 'none';
+          location_role?: 'at_buyer' | 'at_venue' | 'at_vendor';
           created_at?: string;
           updated_at?: string;
         };
@@ -160,6 +223,8 @@ export type Database = {
           icon?: string;
           status?: CategoryStatus;
           current_version_id?: string | null;
+          location_rule?: 'specific' | 'state' | 'none';
+          location_role?: 'at_buyer' | 'at_venue' | 'at_vendor';
           created_at?: string;
           updated_at?: string;
         };
@@ -1567,6 +1632,8 @@ export type Database = {
 };
 
 export type AreaRow = Database['public']['Tables']['areas']['Row'];
+export type GeoNodeRow = Database['public']['Tables']['geo_nodes']['Row'];
+export type GeoNodeRow = Database['public']['Tables']['geo_nodes']['Row'];
 export type RequestRow = Database['public']['Tables']['requests']['Row'];
 export type MissionRow = Database['public']['Tables']['missions']['Row'];
 export type MissionCandidateRow = Database['public']['Tables']['mission_candidates']['Row'];

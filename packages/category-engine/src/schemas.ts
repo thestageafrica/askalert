@@ -18,6 +18,8 @@ export const attributeTypeSchema = z.enum([
   'boolean',
 ]);
 export const appliesToSchema = z.enum(['need', 'offer', 'both']);
+export const locationRuleSchema = z.enum(['specific', 'state', 'none']);
+export const locationRoleSchema = z.enum(['at_buyer', 'at_venue', 'at_vendor']);
 
 export const attributeValidationSchema = z
   .object({
@@ -139,6 +141,10 @@ export const categoryConfigSchema = z
     attributes: z.array(attributeSchema),
     agent: agentSchema,
     ranking_weights: rankingWeightsSchema,
+    /** Buyer location picker rule (Prompt 42). */
+    location_rule: locationRuleSchema.default('specific'),
+    /** Where the service happens for matching copy. */
+    location_role: locationRoleSchema.default('at_venue'),
   })
   .strict()
   .superRefine((config, ctx) => {

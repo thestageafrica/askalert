@@ -12,6 +12,8 @@ export {
   escrowSchema,
   feeBearerSchema,
   fulfilmentModeSchema,
+  locationRoleSchema,
+  locationRuleSchema,
   mediaAllowedSchema,
   negotiationModeSchema,
   pricingModeSchema,

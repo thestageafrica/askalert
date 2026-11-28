@@ -23,12 +23,17 @@ export function PlansAdminView() {
   const liveVersion = live?.version ?? 0;
   const livePriceMinor = live?.priceMinor ?? 0;
   const liveRequests = live?.limits.requestsPerMonth ?? 0;
-  const liveMaxServiceAreas = live?.limits.maxServiceAreas ?? 2;
+  const liveMaxServiceAreas =
+    live?.limits.maxCoverageLocations ?? live?.limits.maxServiceAreas ?? 3;
+  const liveAllowStatewide = live?.limits.allowStatewide ?? false;
+  const liveMaxStates = live?.limits.maxStates ?? 1;
   const liveLeadAlerts = live?.limits.leadAlertsPerMonth ?? 0;
   const [note, setNote] = useState('');
   const [priceNaira, setPriceNaira] = useState(formatNairaInput(livePriceMinor));
   const [requests, setRequests] = useState(liveRequests);
   const [maxServiceAreas, setMaxServiceAreas] = useState(liveMaxServiceAreas);
+  const [allowStatewide, setAllowStatewide] = useState(liveAllowStatewide);
+  const [maxStates, setMaxStates] = useState(liveMaxStates);
   const [leadAlerts, setLeadAlerts] = useState(liveLeadAlerts);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -36,6 +41,8 @@ export function PlansAdminView() {
     setPriceNaira(formatNairaInput(livePriceMinor));
     setRequests(liveRequests);
     setMaxServiceAreas(liveMaxServiceAreas);
+    setAllowStatewide(liveAllowStatewide);
+    setMaxStates(liveMaxStates);
     setLeadAlerts(liveLeadAlerts);
   }, [
     selectedId,
@@ -43,6 +50,8 @@ export function PlansAdminView() {
     livePriceMinor,
     liveRequests,
     liveMaxServiceAreas,
+    liveAllowStatewide,
+    liveMaxStates,
     liveLeadAlerts,
   ]);
 
@@ -77,6 +86,9 @@ export function PlansAdminView() {
           ? { requestsPerMonth: requests || live.limits.requestsPerMonth }
           : {
               maxServiceAreas: maxServiceAreas || live.limits.maxServiceAreas,
+              maxCoverageLocations: maxServiceAreas || live.limits.maxCoverageLocations,
+              allowStatewide,
+              maxStates: maxStates || live.limits.maxStates || 1,
               leadAlertsPerMonth: leadAlerts || live.limits.leadAlertsPerMonth,
             }),
       },
@@ -174,13 +186,31 @@ export function PlansAdminView() {
               ) : (
                 <>
                   <Input
-                    label="Service locations"
+                    label="Coverage locations"
                     type="number"
                     value={String(maxServiceAreas)}
                     disabled={!canEdit}
                     onChange={(event) => setMaxServiceAreas(Number(event.target.value) || 0)}
                     hint="Max coverage rows on vendor onboarding."
                   />
+                  <Input
+                    label="Max states"
+                    type="number"
+                    value={String(maxStates)}
+                    disabled={!canEdit}
+                    onChange={(event) => setMaxStates(Number(event.target.value) || 0)}
+                    hint="How many states a vendor may cover."
+                  />
+                  <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      className="size-5 rounded border-border"
+                      checked={allowStatewide}
+                      disabled={!canEdit}
+                      onChange={(event) => setAllowStatewide(event.target.checked)}
+                    />
+                    Allow statewide cover
+                  </label>
                   <Input
                     label="Lead alerts / month"
                     type="number"

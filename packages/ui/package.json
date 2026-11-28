@@ -22,6 +22,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "dependencies": {
+    "@askalert/geo": "workspace:*"
+  },
   "devDependencies": {
     "@askalert/config": "workspace:*",
     "@types/react": "^19.1.2",

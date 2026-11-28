@@ -18,7 +18,7 @@ const marketplace: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: <DashIcon /> },
   { href: '/categories', label: 'Categories', icon: <GridIcon /> },
   { href: '/catalog', label: 'Catalog', icon: <CatalogIcon /> },
-  { href: '/areas', label: 'Areas', icon: <MapIcon /> },
+  { href: '/areas', label: 'Geography', icon: <MapIcon /> },
   { href: '/vendors', label: 'Vendors', icon: <UsersIcon /> },
   { href: '/public-pages', label: 'Public pages', icon: <PagesIcon /> },
 ];

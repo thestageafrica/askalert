@@ -6,6 +6,10 @@ export {
   listPlans,
 } from './plans';
 export {
+  resolveCoveragePlanCaps,
+  type CoveragePlanCaps,
+} from './coverage-caps';
+export {
   checkEntitlement,
   getActivePlan,
   isSubscriptionActive,

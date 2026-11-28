@@ -16,6 +16,12 @@ export const planLimitsSchema = z
     chatMessages: z.number().int().nonnegative().optional(),
     /** Max service coverage rows a vendor may save on their profile. */
     maxServiceAreas: z.number().int().positive().optional(),
+    /** Preferred plan-cap name for coverage rows (Prompt 42). */
+    maxCoverageLocations: z.number().int().positive().optional(),
+    /** Whether the vendor may select statewide cover (All of State). */
+    allowStatewide: z.boolean().optional(),
+    /** Max distinct states in a vendor coverage set. */
+    maxStates: z.number().int().positive().optional(),
   })
   .strict();
 

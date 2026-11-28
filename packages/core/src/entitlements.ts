@@ -170,7 +170,7 @@ export function checkEntitlement(
       return { outcome: 'allow' };
     }
     case 'select_service_area': {
-      const limit = limits.maxServiceAreas ?? 1;
+      const limit = limits.maxCoverageLocations ?? limits.maxServiceAreas ?? 3;
       const used = context.serviceAreaCount ?? 0;
       return decideAgainstLimit({
         used,

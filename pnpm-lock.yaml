@@ -35,6 +35,9 @@ importers:
       '@askalert/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@askalert/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@askalert/payments':
         specifier: workspace:*
         version: link:../../packages/payments
@@ -120,6 +123,9 @@ importers:
       '@askalert/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@askalert/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@askalert/payments':
         specifier: workspace:*
         version: link:../../packages/payments
@@ -339,6 +345,25 @@ importers:
         specifier: ^3.1.4
         version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.15)
 
+  packages/geo:
+    dependencies:
+      zod:
+        specifier: ^3.24.4
+        version: 3.25.76
+    devDependencies:
+      '@askalert/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.20.5
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.15)
+
   packages/payments:
     dependencies:
       zod:
@@ -356,6 +381,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.15)
 
   packages/ui:
+    dependencies:
+      '@askalert/geo':
+        specifier: workspace:*
+        version: link:../geo
     devDependencies:
       '@askalert/config':
         specifier: workspace:*

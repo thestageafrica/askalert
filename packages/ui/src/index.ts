@@ -27,6 +27,12 @@ export type { InputProps } from './input';
 export { Select } from './select';
 export type { SelectOption, SelectProps } from './select';
 
+export { CoveragePicker } from './coverage-picker';
+export type { CoveragePickerProps } from './coverage-picker';
+
+export { LocationSelect } from './location-select';
+export type { LocationSelectProps, LocationSelectValue } from './location-select';
+
 export { Slider } from './slider';
 export type { SliderProps } from './slider';
 
