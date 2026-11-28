@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   computeQuote,
   dimensionLabel,
@@ -44,6 +44,36 @@ export function ServiceRateCardEditor({ card, onChange, compact = false }: Props
   const previewQty = catalogService
     ? previewQuantityForDimension(catalogService.dimension)
     : 1;
+
+  // Clamp rows that sit past the service max (e.g. after "Add band" past 250 guests).
+  useEffect(() => {
+    if (!catalogService || catalogService.max_value == null || catalogService.pricing_model !== 'banded') {
+      return;
+    }
+    const max = catalogService.max_value;
+    const unit = dimensionLabel(catalogService.dimension);
+    let changed = false;
+    const nextBands = card.bands.flatMap((band) => {
+      if (band.dimMin > max) {
+        changed = true;
+        return [];
+      }
+      if (band.dimMax > max) {
+        changed = true;
+        return [{ ...band, dimMax: max }];
+      }
+      return [band];
+    });
+    if (!changed) {
+      return;
+    }
+    onChange({ ...card, bands: nextBands, updatedAt: new Date().toISOString() });
+    setValidationHint(
+      `A price row went past the maximum of ${max} ${unit}. We trimmed it so you can continue.`,
+    );
+    // Only when this service's bands are out of range.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogService?.slug, catalogService?.max_value, card.bands]);
 
   const quotePreview = useMemo(() => {
     if (!catalogService) {
@@ -300,10 +330,23 @@ export function ServiceRateCardEditor({ card, onChange, compact = false }: Props
                 type="button"
                 variant="secondary"
                 className="min-h-11 w-full sm:w-auto"
+                disabled={
+                  catalogService.max_value != null &&
+                  (card.bands[card.bands.length - 1]?.dimMax ?? 0) >= catalogService.max_value
+                }
                 onClick={() => {
                   const last = card.bands[card.bands.length - 1];
+                  const serviceMax = catalogService.max_value;
                   const dimMin = last ? last.dimMax + 1 : catalogService.min_value ?? 1;
-                  const dimMax = dimMin + 10;
+                  if (serviceMax != null && dimMin > serviceMax) {
+                    setValidationHint(
+                      `This service only goes up to ${serviceMax} ${dimensionLabel(catalogService.dimension)}. Remove or shorten the last row first.`,
+                    );
+                    return;
+                  }
+                  const rawMax = dimMin + 10;
+                  const dimMax =
+                    serviceMax != null ? Math.min(rawMax, serviceMax) : rawMax;
                   const next = {
                     ...card,
                     bands: [
@@ -323,6 +366,13 @@ export function ServiceRateCardEditor({ card, onChange, compact = false }: Props
               >
                 Add band
               </Button>
+              {catalogService.max_value != null &&
+              (card.bands[card.bands.length - 1]?.dimMax ?? 0) >= catalogService.max_value ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Already covers up to the maximum (
+                  {catalogService.max_value} {dimensionLabel(catalogService.dimension)}).
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

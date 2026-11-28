@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { computeQuote, validateRateCard, type PricingModel } from '@askalert/catalog';
+import {
+  computeQuote,
+  dimensionLabel,
+  validateRateCard,
+  type PricingModel,
+  type ServiceDefinition,
+} from '@askalert/catalog';
 import {
   ONBOARDING_STEPS,
   VERIFICATION_TIERS,
@@ -9,6 +15,28 @@ import {
   type VendorProfileDraft,
 } from './types';
 import { findCatalogService } from './vendor-catalog';
+
+function humanizeRateCardError(
+  message: string | undefined,
+  catalog: ServiceDefinition,
+): string | undefined {
+  if (!message) {
+    return undefined;
+  }
+  const unit = dimensionLabel(catalog.dimension);
+  const above = message.match(/Band ends at (\d+), above service maximum (\d+)\./);
+  if (above) {
+    return `A price row goes up to ${above[1]} ${unit}, but this service only allows up to ${above[2]}. Lower the “To” number (or remove that row).`;
+  }
+  const below = message.match(/Band starts at (\d+), below service minimum (\d+)\./);
+  if (below) {
+    return `A price row starts at ${below[1]} ${unit}, but this service starts at ${below[2]}. Raise the “From” number.`;
+  }
+  if (message.includes('overlap')) {
+    return 'Two price rows overlap. Make sure each “To” is below the next “From”.';
+  }
+  return message;
+}
 
 export const vendorStatusSchema = z.enum(VENDOR_STATUSES);
 export const verificationTierSchema = z.enum(VERIFICATION_TIERS);
@@ -171,7 +199,7 @@ export function validateServiceRateCard(card: ServiceRateCard): string | null {
         minChargeMinor: card.minChargeMinor,
       });
       if (!check.ok) {
-        return check.errors[0] ?? 'Fix band pricing.';
+        return humanizeRateCardError(check.errors[0], catalog) ?? 'Fix band pricing.';
       }
       break;
     }
