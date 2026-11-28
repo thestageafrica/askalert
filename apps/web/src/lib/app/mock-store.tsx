@@ -78,6 +78,8 @@ type MockStore = {
     title: string;
     involvement: InvolvementMode;
     answers: Record<string, unknown>;
+    payload?: AppRequest['payload'];
+    quotes?: Quote[];
   }) => AppRequest;
   setRequestStatus: (id: string, status: RequestStatus) => void;
   markBooked: (requestId: string, quote: Quote) => void;
@@ -201,6 +203,10 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
     const id = `req_${Date.now()}`;
     const chatId = `chat_${Date.now()}`;
     const at = clock();
+    const quotes =
+      input.quotes && input.quotes.length > 0
+        ? input.quotes.map((quote) => ({ ...quote, id: `${quote.id}_${id}` }))
+        : seedRequest.quotes.map((quote) => ({ ...quote, id: `${quote.id}_${id}` }));
     const request: AppRequest = {
       id,
       categorySlug: input.categorySlug,
@@ -209,8 +215,9 @@ export function MockStoreProvider({ children }: { children: ReactNode }) {
       status: 'asking',
       involvement: input.involvement,
       answers: input.answers,
+      payload: input.payload,
       createdAt: new Date().toISOString(),
-      quotes: seedRequest.quotes.map((quote) => ({ ...quote, id: `${quote.id}_${id}` })),
+      quotes,
       chatId,
     };
     const chat: ChatThread = {

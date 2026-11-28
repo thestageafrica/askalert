@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EXAMPLE_CATERING_120_GUESTS_KOBO,
   EXAMPLE_CATERING_RATE_100_150_KOBO_PER_GUEST,
+  buildRequestSchema,
   buildSnapshotFromSeed,
   computeQuote,
   flattenSnapshotAliases,
@@ -132,5 +133,16 @@ describe('catalog seeds', () => {
     const armed = security?.services.find((s) => s.slug === 'armed-escort');
     expect(armed?.regulated).toBe(true);
     expect(armed?.required_documents.length).toBeGreaterThan(0);
+  });
+});
+
+describe('buildRequestSchema', () => {
+  it('builds dimension questions for multi-service wedding asks', () => {
+    const events = findCatalogSeedBySlug('events');
+    const snapshot = buildSnapshotFromSeed(events!);
+    const schema = buildRequestSchema(snapshot, 'wedding', ['catering', 'dj']);
+    expect(schema.dimensionQuestions.map((q) => q.scopeSlug).sort()).toEqual(['catering', 'dj']);
+    expect(schema.dimensionQuestions.every((q) => q.type === 'number')).toBe(true);
+    expect(schema.allQuestions.length).toBeGreaterThanOrEqual(2);
   });
 });

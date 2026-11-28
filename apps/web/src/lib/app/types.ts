@@ -31,6 +31,34 @@ export type ChatMessage = {
   media?: ChatMedia[];
 };
 
+export type AppRequestItem = {
+  serviceSlug: string;
+  serviceName: string;
+  quantity: number;
+  attributes: Record<string, string | number | boolean>;
+};
+
+export type AppRequestLocation = {
+  stateSlug: string;
+  locationSlug: string;
+  venueText?: string;
+};
+
+/** Structured buyer request (Prompt 44). Legacy flat `answers` kept for older rows. */
+export type AppRequestPayload = {
+  catalogVersion: number;
+  typeSlug: string;
+  typeName: string;
+  items: AppRequestItem[];
+  attributes: Record<string, string | number | boolean>;
+  startDate: string;
+  endDate?: string;
+  startTime?: string;
+  location: AppRequestLocation;
+  budgetMinMinor: number | null;
+  budgetMaxMinor: number | null;
+};
+
 export type AppRequest = {
   id: string;
   categorySlug: string;
@@ -39,6 +67,7 @@ export type AppRequest = {
   status: RequestStatus;
   involvement: InvolvementMode;
   answers: Record<string, unknown>;
+  payload?: AppRequestPayload;
   createdAt: string;
   quotes: Quote[];
   chatId: string;
