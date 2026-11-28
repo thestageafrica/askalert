@@ -48,5 +48,7 @@ export function createBlankCategory(slug = 'new-category'): CategoryConfig {
       proximity: 0.2,
       fit: 0.2,
     },
+    location_rule: 'specific',
+    location_role: 'at_venue',
   };
 }
