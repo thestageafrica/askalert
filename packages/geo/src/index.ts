@@ -58,3 +58,9 @@ export {
 } from './csv';
 
 export { listGeoSeedNodes, loadNigeriaGeoSeed, nigeriaGeoSeedCsv } from './seeds/index';
+
+export {
+  mergeGeoNodes,
+  type GeoRedirect,
+  type MergeGeoNodesResult,
+} from './merge-nodes';

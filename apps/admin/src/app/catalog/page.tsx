@@ -1,7 +1,7 @@
 'use client';
 
-import { CatalogExplorer } from '../../components/catalog/catalog-explorer';
+import { CatalogManager } from '../../components/catalog/catalog-manager';
 
 export default function CatalogPage() {
-  return <CatalogExplorer />;
+  return <CatalogManager />;
 }

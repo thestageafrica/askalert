@@ -44,3 +44,23 @@ export function canGrantCredits(role: AdminUiRole): boolean {
 export function canEditPublicPages(role: AdminUiRole): boolean {
   return role === 'super_admin' || role === 'operations';
 }
+
+/** Prompt 45: catalog tree editor. */
+export function canEditCatalog(role: AdminUiRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}
+
+/** Prompt 45: both super_admin and operations may publish catalog. */
+export function canPublishCatalog(role: AdminUiRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}
+
+/** Prompt 45: geography tree editor. */
+export function canEditGeography(role: AdminUiRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}
+
+/** Prompt 45: both super_admin and operations may publish geography. */
+export function canPublishGeography(role: AdminUiRole): boolean {
+  return role === 'super_admin' || role === 'operations';
+}

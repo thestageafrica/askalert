@@ -11,6 +11,7 @@ import {
   listStates,
   loadNigeriaGeoSeed,
   matchGeoAlias,
+  mergeGeoNodes,
   validateCoverageRows,
 } from './index';
 
@@ -123,5 +124,16 @@ describe('@askalert/geo', () => {
     const slugs = imported.map((node) => node.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
     expect(imported.some((node) => node.slug === 'lagos-all')).toBe(true);
+  });
+
+  it('merges a neighbourhood into another and returns a redirect', () => {
+    const source = nodes.find((node) => node.slug === 'oniru');
+    const target = nodes.find((node) => node.slug === 'victoria-island');
+    expect(source && target).toBeTruthy();
+    const result = mergeGeoNodes(nodes, source!.id, target!.id);
+    expect(result.nodes.some((node) => node.id === source!.id)).toBe(false);
+    expect(result.redirect.fromSlug).toBe('oniru');
+    expect(result.redirect.toSlug).toBe('victoria-island');
+    expect(result.nodes.find((node) => node.id === target!.id)?.aliases.length).toBeGreaterThan(0);
   });
 });
