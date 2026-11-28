@@ -14,7 +14,7 @@ const cards = [
 
 const activity = [
   { title: 'Shortlets quote burst', detail: '12 hosts reached · 4 replies', time: '2m ago' },
-  { title: 'Events category edited', detail: 'Escrow hold bounds updated', time: '18m ago' },
+  { title: 'Events category edited', detail: 'Payout bounds updated', time: '18m ago' },
   { title: 'Vendor waitlist', detail: '3 new home-care applications', time: '1h ago' },
 ] as const;
 

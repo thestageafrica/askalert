@@ -222,7 +222,7 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
           <TabsTrigger value="basics">Basics</TabsTrigger>
           <TabsTrigger value="attributes">Attributes</TabsTrigger>
           <TabsTrigger value="requirements">Vendor requirements</TabsTrigger>
-          <TabsTrigger value="rules">Rules and escrow</TabsTrigger>
+          <TabsTrigger value="rules">Rules and payouts</TabsTrigger>
           <TabsTrigger value="agent">Agent text</TabsTrigger>
           <TabsTrigger value="readiness">Areas and readiness</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -485,7 +485,7 @@ export function CategoryEditor({ categoryId }: { categoryId: string }) {
               onChange={(event) => patch({ autopilot_max_rounds: Number(event.target.value) })}
             />
             <Select
-              label="Escrow mode"
+              label="Payout mode"
               value={draft.escrow.mode}
               disabled={!canEdit}
               options={['fixed', 'buyer_selectable', 'none'].map((value) => ({

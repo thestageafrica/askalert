@@ -53,7 +53,7 @@ export function ProtectSlider() {
             <p className="mt-3 text-sm leading-relaxed text-surface/75">
               Some jobs need trust first. Raise the later-release share when you want more safety.
               Lower it when you already know the vendor. AskAlert is not a bank and does not keep
-              customer funds in an AskAlert escrow account.
+              customer funds.
             </p>
             <ul className="mt-5 space-y-3 text-sm text-surface/80">
               {[

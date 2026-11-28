@@ -1,7 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { computeEscrowSplit, createMoney, formatNaira } from '@askalert/payments';
+import {
+  computeEscrowSplit,
+  createMoney,
+  formatNaira,
+  loadEscrowRuntimeConfig,
+  presentCheckoutEscrow,
+} from '@askalert/payments';
 import { Button, Sheet, Slider, cn } from '@askalert/ui';
 import { showInstallPromptAfterBooking } from '../pwa/install-prompt';
 import {
@@ -29,6 +35,10 @@ export function CheckoutSheet({
   const { markBooked } = useMockStore();
   const [holdPct, setHoldPct] = useState(DEMO_HOLD_PCT);
   const [paying, setPaying] = useState(false);
+  const escrowUi = useMemo(
+    () => presentCheckoutEscrow(loadEscrowRuntimeConfig()),
+    [],
+  );
 
   const split = useMemo(() => {
     if (!quote) {
@@ -51,7 +61,7 @@ export function CheckoutSheet({
     return null;
   }
 
-  const onPay = async () => {
+  const onConfirm = async () => {
     setPaying(true);
     await new Promise((resolve) => window.setTimeout(resolve, 700));
     markBooked(request.id, quote);
@@ -79,41 +89,75 @@ export function CheckoutSheet({
             <p className="mt-1 text-sm text-surface/70">{request.title}</p>
           </div>
 
-          <Slider
-            label="Later release %"
-            min={0}
-            max={100}
-            step={1}
-            value={holdPct}
-            valueLabel={`${split.effectiveHoldPct}% after confirmation`}
-            onChange={(event) => setHoldPct(Number(event.target.value))}
-          />
+          {escrowUi.banner ? (
+            <div className="inline-flex rounded-full bg-orange-500 px-3 py-1 text-xs font-extrabold text-navy-950">
+              {escrowUi.banner}
+            </div>
+          ) : null}
 
-          <div
-            className={cn(
-              'inline-flex rounded-full px-3 py-1 text-xs font-bold',
-              split.heldMinor > 0
-                ? 'bg-navy-700 text-surface'
-                : 'bg-orange-500/15 text-orange-700',
-            )}
-          >
-            {split.protectionLabel}
-          </div>
+          {escrowUi.acceptPayment ? (
+            <>
+              <Slider
+                label="Later release %"
+                min={0}
+                max={100}
+                step={1}
+                value={holdPct}
+                valueLabel={`${split.effectiveHoldPct}% after confirmation`}
+                onChange={(event) => setHoldPct(Number(event.target.value))}
+              />
+              <div
+                className={cn(
+                  'inline-flex rounded-full px-3 py-1 text-xs font-bold',
+                  split.heldMinor > 0
+                    ? 'bg-navy-700 text-surface'
+                    : 'bg-orange-500/15 text-orange-700',
+                )}
+              >
+                {split.protectionLabel}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-orange-500/30 bg-orange-500/10 p-4">
+              <p className="text-sm font-extrabold text-navy-950">{escrowUi.title}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {escrowUi.body}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 rounded-[1.35rem] border border-border/60 bg-card-muted/60 p-4 lg:sticky lg:top-2 lg:p-5">
-          <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Live summary</p>
-          <p className="text-sm leading-relaxed text-foreground">
-            Vendor receives{' '}
-            <span className="font-extrabold">
-              {formatNaira(createMoney(split.releasedNowMinor))}
-            </span>{' '}
-            now. The remaining{' '}
-            <span className="font-extrabold">{formatNaira(createMoney(split.heldMinor))}</span>{' '}
-            is released after you confirm the job.
+          <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
+            {escrowUi.acceptPayment ? 'Live summary' : 'Booking summary'}
           </p>
+          {escrowUi.acceptPayment ? (
+            <p className="text-sm leading-relaxed text-foreground">
+              Vendor receives{' '}
+              <span className="font-extrabold">
+                {formatNaira(createMoney(split.releasedNowMinor))}
+              </span>{' '}
+              now. The remaining{' '}
+              <span className="font-extrabold">
+                {formatNaira(createMoney(split.heldMinor))}
+              </span>{' '}
+              is released after you confirm the job.
+            </p>
+          ) : (
+            <p className="text-sm leading-relaxed text-foreground">
+              Quote total{' '}
+              <span className="font-extrabold">
+                {formatNaira(createMoney(quote.priceMinor))}
+              </span>
+              . No payment is collected yet.
+            </p>
+          )}
 
-          {split.warnings.length > 0 ? (
+          {escrowUi.partnerLine ? (
+            <p className="text-xs font-semibold text-muted-foreground">{escrowUi.partnerLine}</p>
+          ) : null}
+
+          {escrowUi.acceptPayment && split.warnings.length > 0 ? (
             <ul className="space-y-2 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-sm text-foreground">
               {split.warnings.map((warning) => (
                 <li key={warning}>{warning}</li>
@@ -121,8 +165,10 @@ export function CheckoutSheet({
             </ul>
           ) : null}
 
-          <Button className="w-full" loading={paying} onClick={onPay}>
-            Pay {formatNaira(createMoney(quote.priceMinor))}
+          <Button className="w-full" loading={paying} onClick={onConfirm}>
+            {escrowUi.acceptPayment
+              ? `Pay ${formatNaira(createMoney(quote.priceMinor))}`
+              : 'Confirm quote — payment soon'}
           </Button>
         </div>
       </div>

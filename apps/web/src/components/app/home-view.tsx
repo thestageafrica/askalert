@@ -251,7 +251,7 @@ export function HomeView() {
         <section className="hidden gap-5 lg:grid lg:grid-cols-3">
           {[
             { title: 'Verified', body: 'Vendors are checked before they quote.' },
-            { title: 'Protected', body: 'Staged payouts keep your money safe.' },
+            { title: 'Fair quotes', body: 'Compare offers before you choose.' },
             { title: 'Private', body: 'Your number stays off public listings.' },
           ].map((item) => (
             <div
@@ -272,7 +272,7 @@ export function HomeView() {
             {[
               'Tell AskAlert what you need.',
               'We ask verified vendors and compare offers.',
-              'You choose, then protect your payment.',
+              'You choose the offer that fits.',
             ].map((step, index) => (
               <li
                 key={step}

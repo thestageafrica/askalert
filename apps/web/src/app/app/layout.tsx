@@ -9,7 +9,7 @@ import { PlanStoreProvider } from '../../lib/app/plan-store';
 
 export const metadata: Metadata = {
   title: 'AskAlert app',
-  description: 'Ask verified vendors in Lagos Nigeria. Compare offers. Protect your payment.',
+  description: 'Ask verified vendors in Lagos Nigeria. Compare offers. Book with confidence.',
 };
 
 export default function AppSectionLayout({ children }: { children: ReactNode }) {

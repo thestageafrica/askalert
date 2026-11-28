@@ -9,7 +9,7 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 
 const labels: Record<BadgeVariant, string> = {
   verified: 'Verified',
-  protected: 'Protected by AskAlert',
+  protected: 'Paid on AskAlert',
   'direct-payment': 'Direct payment',
 };
 

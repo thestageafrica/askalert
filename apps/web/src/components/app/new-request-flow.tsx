@@ -539,7 +539,7 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
             <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-surface/75">
               <li>We match vendors that cover this service and location.</li>
               <li>Instant quotes come from their rate cards.</li>
-              <li>You compare, choose, and protect payment.</li>
+              <li>You compare offers and choose the best fit.</li>
             </ol>
           </div>
         </aside>

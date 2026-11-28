@@ -36,6 +36,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Copy lint (escrow wording)
+        run: pnpm copy-lint
+
       - name: Build
         env:
           NEXT_PUBLIC_SITE_URL: https://www.askalert.com

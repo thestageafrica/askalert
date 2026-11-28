@@ -93,6 +93,6 @@ export const plansFaqItems = [
     id: 'hold-plans',
     title: 'When is the vendor paid in full?',
     content:
-      'You pay once. You choose how much goes to the vendor now, and how much is released after you confirm the job is complete. Payments are processed by our payment partner. AskAlert is not a bank and does not keep customer funds in an AskAlert escrow account.',
+      'You pay once through our payment partner. You choose how much goes to the vendor now, and how much is paid after you confirm the job is complete. AskAlert is not a bank and does not keep customer funds.',
   },
 ] as const;

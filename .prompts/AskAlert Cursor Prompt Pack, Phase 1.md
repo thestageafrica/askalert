@@ -885,3 +885,164 @@ Build the channel-agnostic request capture engine (packages/conversation) so the
 4. **45** (admin managers), then **46** (WhatsApp capture).
 
 Tip: run the Review prompt from Phase 1 after each one, and test with real examples (a wedding caterer in Lekki Phase 1 with a 100 to 150 guest band, and a buyer asking for 120 guests).
+
+## Prompt 47: Payment router (Paystack for direct, Payluk for held payments)
+
+Run after Prompt 38 (escrow layer) and when you have Payluk's API documentation and sandbox keys. **Paste the Payluk API documentation into Cursor with this prompt** so it does not guess endpoints. Prompts 35 to 37 stay on hold; this prompt replaces them. See section 45 of the Product Spec.
+
+```
+Build the payment router in packages/payments with three modes: DIRECT_PAYSTACK, ESCROW_FULL and ESCROW_PARTIAL.
+
+- payment_mode is set per booking at checkout, within the category's bounds (the allowed modes and the minimum share released up front) and the plan rules.
+- DIRECT_PAYSTACK: Paystack split payments with vendor subaccounts. The vendor share settles to the vendor's subaccount and AskAlert's commission to AskAlert. AskAlert and Paystack hold nothing and release nothing conditionally. Use test mode only until Paystack approves the final flow and wording.
+- ESCROW_FULL and ESCROW_PARTIAL: one checkout with the escrow partner (Payluk) through the EscrowProvider interface from Prompt 38. ESCROW_PARTIAL creates two milestones: the 'release share' at funding, and the remainder on buyer confirmation or auto-release after the category's auto_release_hours unless a claim is open. Do not split one order across two payment gateways.
+- Implement PayrukEscrowProvider against the partner's sandbox using the API documentation I paste into this chat. Do not guess endpoints or fields; ask me about anything missing. Releases are API calls from AskAlert to the partner; the partner's webhooks update our state. All amounts are integers in kobo.
+- Unified tables: payments (provider, mode, status, reference), escrow_milestones, payment_events (idempotent by provider event id) and ledger_entries. A reconciliation job per provider, and an admin Payments page filtered by provider.
+- Cloudflare Worker (Prompt 14): add a /payluk webhook endpoint with signature verification, event normalisation, noise filtering and idempotent forwarding, next to /paystack.
+- Claims: opening a claim pauses the pending milestone through the partner's API; claim outcomes call release or refund on the correct provider. Mark refund mechanics for Paystack split payments as 'needs confirmation from Paystack' in DEPLOY.md.
+- Checkout UI with three plain-language choices: 'Pay the vendor directly', 'Pay now, confirm later' (with a release-share slider within bounds), and 'Hold everything until done'. Show the partner's legal name and licence text from configuration, the auto-release time and the claim rules.
+- Copy rules: no wording that suggests AskAlert holds funds. Hold wording appears only when the partner details are configured and the escrow_enabled flag is on. Keep the copy-lint check from Prompt 38.
+- Feature flags per mode, and visible SANDBOX banners in test mode.
+- Tests: split maths for each mode, milestone mapping, webhook idempotency, claim pause, refund paths and reconciliation.
+```
+
+**Checks:** in the sandbox, run all three modes end to end, open a claim during a pending milestone, and confirm the ledger balances.
+
+## UPDATE: Flutterwave replaces Paystack and Payluk (Prompts 48 and 49)
+
+Flutterwave has approved AskAlert's onboarding and is now the payment provider. **Prompts 30, 36 and 47 (the Paystack and Payluk versions) are superseded by Prompt 48.** Prompt 38 (the EscrowProvider layer) stays, because held payments are not confirmed with Flutterwave yet (see section 47 of the Product Spec). Prompt 49 builds the AskAlert Ivy Business Club module and belongs to Phase 4, after the core marketplace launches.
+
+**Before running Prompt 48:** get Flutterwave's current API documentation and sandbox keys, and paste the relevant pages into Cursor so it does not guess endpoints or fields. Send Flutterwave the written questions in section 47.4 of the Spec, especially whether delayed or partial release is permitted.
+
+## Prompt 48: Flutterwave payment layer (sandbox first)
+
+```
+Build the Flutterwave payment layer (packages/payments, Supabase Edge Functions, and the Cloudflare Worker from Prompt 14). Flutterwave replaces Paystack and Payluk. Use Flutterwave's current API documentation, which I will paste into this chat. Do not guess endpoints or fields; ask me about anything missing. Work in TEST/sandbox mode only.
+
+- Implement FlutterwaveProvider behind the PaymentProvider interface: hosted checkout initialisation (NGN and, where enabled for our account, USD), transaction verification BEFORE anything is marked paid, refunds, transfers (payouts) to bank accounts including USD domiciliary accounts, balance queries, and FX rates and conversion between currency balances. All amounts are integers in minor units, and every amount carries its currency.
+- Vendor subaccounts: create a Flutterwave subaccount for each approved vendor (bank code, account number, account name verified through Flutterwave). Split each payment so the vendor share goes to the subaccount and AskAlert's commission is kept, with flat or percentage overrides per transaction. Store subaccount ids and never log full account numbers.
+- Marketplace risk controls (disputes and chargebacks are logged against our own account): only vendors who pass their verification tier can take bookings that need payment; new vendors have a booking-value limit set in admin; a per-vendor risk view showing claims, refunds and chargebacks; and a chargeback evidence pack builder (terms accepted, messages, receipts, proof of service) with deadlines and status.
+- Payment modes: DIRECT_SPLIT is the default. Any DELAYED or PARTIAL RELEASE mode stays behind a feature flag that is OFF until Flutterwave confirms in writing that conditional or delayed release is permitted for our business, or until a licensed EscrowProvider (Prompt 38) is configured. While the flag is off, no screen or message may use hold, held, escrow, protected funds or release wording (keep the copy-lint check).
+- Webhooks: a /flutterwave endpoint in the Worker verifies the signature or secret-hash header exactly as the documentation describes, drops noise, deduplicates by event id, and forwards to an Edge Function that verifies the transaction through the API before updating payments, payment_events and ledger_entries (debits equal credits). Writes must be idempotent.
+- Plans and credits: Starter pass and credit-pack purchases use the same provider.
+- A reconciliation job comparing our ledger with Flutterwave records, an admin Payments page (payments, splits, failures, refunds queue, chargebacks), settlement-cycle configuration, and handling for failed and pending payments.
+- Keys and webhook secrets only in server-side secrets, never in the browser or the repository. Show SANDBOX banners in test mode, and update DEPLOY.md and .env.example.
+- Tests: split maths, verify-before-paid, idempotency, webhook signature failures, refund paths, reconciliation, and the risk limits for new vendors.
+```
+
+**Checks:** in the sandbox, complete a split payment, a refund, and a payout. Confirm the ledger balances, and that no hold or release wording appears anywhere.
+
+## Prompt 49: AskAlert Ivy Business Club (Phase 4)
+
+Follow sections 47 and 48 of the Product Spec. Run after Prompt 48 and after the core marketplace has launched.
+
+```
+Build the AskAlert Ivy Business Club module (group shipments) as a separate tab. Pay at join, no pledge and no waitlist. Sandbox mode only.
+
+- Objects: products (admin), batches (target_units, per-person limits, deadline, state), batch_slots, orders (member, units, price card snapshot), supplier_orders, shipments with milestone events, refunds, fx_rates and batch_ledger.
+- Member flow: browse products; a batch card with the price, 'X spots left in this shipment' (real numbers only), and a deadline countdown; 'Join shipment': choose units within limits, see the locked price card, accept the pre-order terms, pay in NGN or in USD (if enabled for our account), and receive a confirmation and receipt. Reserve the slots during checkout for 10 minutes and release them if unpaid, so a batch cannot be oversold under concurrent joins. 'Notify me' alerts for new batches and 'almost full' (no payment).
+- Batch states: DRAFT, OPEN, FILLED, ORDERED, IN_TRANSIT, ARRIVED_HUB, READY, COMPLETED, EXPIRED, CANCELLED, REFUNDING, REFUNDED. Close the batch atomically when the target is reached. A deadline job: allow one configured extension, otherwise cancel and refund automatically.
+- Price card engine: (product + shipping + duty and clearing estimate + handling, in USD) x locked reference rate x (1 + FX buffer) + local costs + AskAlert fee, producing an NGN price and a USD price. Store the rate, its source, the timestamp and 'price locked at join' on every order. The buffer is configurable per batch, with a suggestion based on recent volatility.
+- FX with Flutterwave: an option convert_on_payment converts each NGN payment into the USD balance through the conversion endpoint and records the rate, the USD amount and the spread; USD payments settle to the USD balance. Add a daily FX tracker and a reserve view in admin.
+- Refund engine: automatic refunds in the ORIGINAL currency when a batch expires or is cancelled, a supplier fails, or a member cancels before the batch closes (rule configurable), with status tracking.
+- Shipment tracker with milestones (ordered, warehouse, consolidated, shipped, customs, arrived at the Lagos hub, ready for pickup, delivered) and notifications through the notification router.
+- Admin: product and batch manager, a cost sheet per batch (product, freight, duty, clearing, last mile, FX buffer, margin), batch profit and loss, FX tracker, supplier manager, refund queue, limits and a restricted-items list.
+- Terms and copy: clear pre-order terms (delivery estimate range, batch deadline, price lock, cancellation and refund rules) shown and accepted at join. No fake scarcity. Add copy-lint rules for this module.
+- Business features: per-unit and per-carton pricing, business profile for members, invoices and receipts, and a 'Request a product' form that feeds the next batches.
+- Tests: atomic slot reservation under concurrent joins, price-card maths, FX conversion records, deadline and refund jobs, and cancellation rules.
+```
+
+**Checks:** run two simultaneous joins on the last spot, let a batch expire and confirm the automatic refund, and compare the stored rate and USD amount with the price card.
+
+## Order for the payment-related prompts now
+
+1. **38** (EscrowProvider layer with sandbox mock).
+2. **48** (Flutterwave layer).
+3. Core marketplace work continues with Prompts 32 to 34 and 41 to 46.
+4. **49** (Ivy Business Club) only after launch and a manual pilot batch.
+
+## UPDATE: Prompt 49 revised (interest phase, then payment window)
+
+The Ivy Business Club now uses an **interest phase followed by a payment window** (section 49 of the Product Spec), not pay-at-join. **Use this revised Prompt 49 instead of the earlier one.** It is still a Phase 4 prompt, to be run after the core marketplace launches, after Prompt 48, and after a manual pilot batch.
+
+## Prompt 49 (revised): AskAlert Ivy Business Club
+
+```
+Build the AskAlert Ivy Business Club module (group shipments) as a separate tab, following sections 47 to 49 of the Product Spec. Sandbox mode only.
+
+Phases and states: DRAFT, INTEREST, GATE_READY, PAYMENT_OPEN, LOCKED, ORDERED, IN_TRANSIT, ARRIVED_HUB, READY, COMPLETED, UNDER_TARGET, CANCELLED, REFUNDING, REFUNDED.
+
+- Interest phase (no payment): members register interest with quantity (within a per-person limit), an optional 'highest price I would pay', and a verified phone number. Show an estimated, non-binding price range. Show interest counts to admins only (members see 'X people interested' only if admin enables it, and only real numbers). Fake or bot interest controls: verified phone, rate limits, one registration per product and batch.
+- Gate: a batch can move to PAYMENT_OPEN only when qualified interest (ceiling at or above the quoted price) reaches a configurable multiple of the target (default 2.5 times) AND an admin has confirmed the supplier quote. Provide an admin gate checklist and demand-curve view (interest by price ceiling).
+- Payment window: up to 10 days (configurable, shorter recommended). Interested members get priority access for the first 24 to 48 hours (configurable) before it opens to everyone. The target counts PAID UNITS. The first N paid units lock the batch atomically; further payment is blocked at that moment. Reserve slots during checkout for 10 minutes and release them if unpaid, so concurrent payments cannot oversell the batch.
+- Overflow: members who miss the lock are told clearly and moved to the next batch's interest list with priority. The next batch is created automatically as an INTEREST batch.
+- Price card engine: (product + shipping + duty and clearing estimate + handling, in USD) x reference rate x (1 + FX buffer) + local costs + AskAlert fee, producing an NGN price and a USD price. Store the rate, its source, the timestamp and 'price locked when you pay' on each order. Reprice rule for UNPAID slots: if the reference rate moves beyond a configurable threshold (default 2%), update the displayed price for members who have not paid; paid members keep their price. Show the reference rate and the update clearly.
+- Pay in NGN or in USD (if enabled for our Flutterwave account). Option convert_on_payment (default on) converts each NGN payment into the USD balance through Flutterwave's conversion endpoint and records the rate, USD amount and spread. Keep an FX reserve view and a daily FX tracker in admin.
+- Under-target rule configurable per batch: extend once, AskAlert tops up units (admin confirms inventory risk), reduce the batch (if supplier minimum allows), or cancel and refund. Automatic refunds in the ORIGINAL currency for expired or cancelled batches, supplier failures, and member cancellations before the batch locks. A payment arriving after the lock is refunded automatically. Refund status tracking.
+- Shipment tracker with milestones (ordered, warehouse, consolidated, shipped, customs, arrived at the Lagos hub, ready for pickup, delivered) and notifications through the notification router (interest confirmed, window opens in 24 hours, almost full, locked, shipped), respecting plan budgets.
+- Admin: product and batch manager, cost sheet per batch (product, freight, duty, clearing, last mile, FX buffer, margin), batch profit and loss, FX tracker, supplier manager, refund queue, restricted-items list, per-member limits, and metrics (interest-to-payment conversion, time to lock, share who miss the lock, refund rate, FX slippage versus buffer).
+- Terms and copy: clear pre-order terms (what a pre-order is, delivery estimate range, batch rules, price lock when paid, cancellation and refund rules) shown and accepted at payment. State plainly that AskAlert is the seller. No fake scarcity: counts shown to members must be real. Add copy-lint rules for this module.
+- Business features: per-unit and per-carton pricing, business profile for members, invoices and receipts, and a 'Request a product' form that feeds the next batches.
+- Tests: atomic locking under concurrent payments at the last slot, slot reservation release, price-card maths and the reprice rule, FX conversion records, late-payment refunds, under-target rules, and the carry-over of overflow interest.
+```
+
+**Checks:** simulate 40 interested members and 30 paying members, send 5 simultaneous payments for the last 2 slots, confirm exactly 2 succeed and the rest are refunded and carried over, then let a second batch expire under target and confirm automatic refunds.
+
+## UPDATE: Flutterwave for direct and escrow payments, with a swappable escrow layer (Prompts 48 revised and 50)
+
+Flutterwave is now the provider for **both** direct payments and escrow-style payments. The escrow side is built as a **provider-agnostic layer** with normalised states and events, a capability check, a provider registry, and a shared contract test suite. To switch to Payluk or any other provider later, you write one adapter (Prompt 50) and change a setting. No booking, claim or ledger code changes.
+
+**This replaces:** the earlier Prompt 48 (Flutterwave layer), Prompt 47 (Paystack and Payluk router), Prompt 36, and Prompt 30. **Prompt 38** (EscrowProvider with a sandbox mock) stays as the base that the revised Prompt 48 extends. See section 50 of the Product Spec.
+
+**An honest note before you run it:** Flutterwave has not confirmed in writing that it supports holding customer funds or delayed release, and I found no such feature in its public documentation. The prompt therefore builds the Flutterwave escrow adapter with two strategies, both **off by default and gated**, so nothing can go live, and no screen can use escrow wording, until the confirmation and the legal opinion are on file. Send Flutterwave the questions in section 47.4 of the Spec first.
+
+## Prompt 48 (revised): Payments with Flutterwave, and a swappable escrow layer
+
+Paste Flutterwave's current API documentation into Cursor with this prompt.
+
+```
+Build the payment system with Flutterwave for both direct and escrow-style payments, using a provider-agnostic escrow layer so another provider (for example Payluk) can be plugged in later by writing one adapter. Work in sandbox/TEST mode only. Use Flutterwave's current API documentation, which I will paste into this chat. Do not guess endpoints or fields; ask me about anything missing.
+
+Architecture (packages/payments):
+1. DirectPaymentProvider interface and FlutterwaveDirectProvider: hosted checkout (NGN, and USD where enabled for our account), transaction verification BEFORE anything is marked paid, split payments with vendor subaccounts (vendor share to the subaccount, AskAlert's commission kept), refunds, transfers (payouts), balance queries, and FX rates and conversion. Vendor subaccounts are created for approved vendors (bank code, account number, name verified through Flutterwave). Never log full account numbers.
+2. EscrowProvider interface (extending Prompt 38) with a capabilities() method that returns { nativeHold, partialRelease, autoRelease, claimPause, partialRefund, multiPartyPayout, commissionDeduction, payInMethods, currencies, limits }. Methods: createEscrow, getFundingInstructions, releaseMilestone, releaseAll, refund, pause(reason), resume, getStatus, verifyWebhook, parseWebhook(rawBody, headers) that returns NORMALISED events. The router must check capabilities before offering a mode (for example it must not offer partial release if the selected provider cannot do it).
+3. A normalised domain model that is independent of any provider: EscrowStatus (CREATED, AWAITING_FUNDS, FUNDED, PARTIALLY_RELEASED, RELEASED, PAUSED, REFUND_PENDING, REFUNDED, EXPIRED, FAILED), MilestoneStatus, and normalised events (EscrowFunded, MilestoneReleased, ReleaseFailed, RefundCompleted, EscrowPaused, ProviderError). No provider-specific names, fields or enum values may appear outside the adapter folders.
+4. A provider registry and routing: an escrow_providers table or configuration (key, enabled, mode sandbox|live, capabilities snapshot, fee model, webhook path), a default provider and per-category overrides editable in admin. Each escrow stores provider_key and an external_refs record (provider-side ids and references to raw payloads), with no provider-specific columns in core tables. In-flight escrows stay pinned to the provider that created them. Add a kill switch per provider (stop creating new escrows) and a drain mode (finish existing ones only).
+5. FlutterwaveEscrowProvider with two strategies chosen by configuration, BOTH OFF by default:
+   a. native: uses a Flutterwave hold or delayed-release feature ONLY if Flutterwave confirms one exists and I paste its documentation. Do not invent one.
+   b. ledger_hold: collect the full payment through Flutterwave, record the obligation in our ledger, and pay the vendor later through Flutterwave transfers when milestones are met. This strategy can only be enabled when BOTH config flags are true: flutterwave_hold_confirmed (written confirmation from Flutterwave, stored with its date and reference) and legal_opinion_on_file. Show a prominent admin warning that holding customer funds may be regulated, and that user-facing wording must be lawyer-approved.
+6. Copy rules: user-facing text may use 'escrow', 'hold' or 'protected' ONLY when the selected provider and strategy are enabled in live mode AND approved wording from configuration is present (the institution's legal name where relevant, or approved neutral phrasing). Extend the copy-lint check so the production build fails otherwise.
+7. Webhooks: Cloudflare Worker endpoints per provider (/flutterwave now, /payluk later) with signature verification, noise filtering and idempotent forwarding. The Edge Function resolves provider_key, calls the adapter's parseWebhook, then updates the normalised escrow state, payment_events (idempotent by provider event id) and ledger entries (debits equal credits).
+8. Claims: opening a claim calls pause() on the right adapter; claim outcomes call release or refund through the adapter. Reuse the claims flow, with no provider-specific logic in it.
+9. Ledger and fees: provider-neutral ledger accounts. Each provider's fee model lives in configuration, not in code.
+10. Reliability: idempotency keys on every provider call, an outbox table for provider requests with retries and backoff, and a dead-letter queue that alerts.
+11. Contract test suite (packages/payments/contract-tests): a shared suite that every EscrowProvider must pass using a fake server: funding, partial release, full release, refund, pause and resume, duplicate webhook, out-of-order webhook, and provider error with retry. Run it against MockEscrowProvider and FlutterwaveEscrowProvider (ledger_hold strategy, sandbox). Write ESCROW_ADAPTER_GUIDE.md explaining how to add a new provider in six steps.
+12. Admin: a Payments page filtered by provider and strategy, reconciliation per provider, and a Provider settings page (enable or disable, mode, default provider, per-category override, kill switch, drain mode).
+13. Starter pass and credit-pack purchases use the direct provider. SANDBOX banners in test mode. Secrets only on the server. Update DEPLOY.md and .env.example.
+Tests: routing, capability checks, provider pinning, kill switch and drain mode, the copy-lint rule, webhook idempotency, the contract suite, and ledger balance.
+```
+
+**Checks:** in the sandbox, run direct split, full escrow and partial escrow through the mock and the ledger\_hold strategy; open a claim during a pending milestone; switch the default provider in admin; confirm existing escrows stay with their original provider; and confirm the production build fails if escrow wording appears with the flags off.
+
+## Prompt 50: Add another escrow provider (for example Payluk) without touching core code
+
+Run when you decide to plug in another provider. Paste that provider's API documentation with the prompt.
+
+```
+Add a new escrow provider adapter (for example PayrukEscrowProvider) without changing core code. Use the provider's API documentation, which I will paste into this chat. Do not guess endpoints, fields or behaviour; ask me.
+
+1. Read ESCROW_ADAPTER_GUIDE.md and implement the EscrowProvider interface in packages/payments/providers/<name>: capabilities() reflecting what the provider really supports, webhook verification and parsing into normalised events, idempotency keys, error mapping, and the provider's fee model in configuration.
+2. Make the adapter pass the shared contract test suite against a fake server and the provider's sandbox.
+3. Add the Worker webhook endpoint (/<name>), the registry entry (disabled by default), the admin provider settings, and the Terms and Privacy placeholders for the institution's legal name and licence text.
+4. Write a migration plan document: how to switch the default provider, how existing escrows stay pinned to their original provider, how to run two providers in parallel by category, how to use the kill switch and drain mode, and how to update the wording and terms.
+5. Do not change booking, claim or ledger code. If a change there seems necessary, stop and explain why before proceeding.
+```
+
+**Checks:** the contract suite passes for the new adapter; flipping one category to the new provider in admin routes only new escrows to it.
+
+## Final order for the payment prompts
+
+1. **38** (escrow layer and sandbox mock).
+2. **48 (revised)** (Flutterwave direct and escrow, with the swappable layer).
+3. **50** only when switching to or adding another provider.
+4. **49 (revised)** (Ivy Business Club) in Phase 4.

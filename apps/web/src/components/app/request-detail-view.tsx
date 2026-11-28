@@ -234,7 +234,7 @@ export function RequestDetailView({ requestId }: { requestId: string }) {
           <div className="rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-orange-600">Checkout summary</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Pick a quote, then hold payment until the booking is confirmed.
+              Pick a quote, then confirm your booking.
             </p>
             <Button
               className="mt-4 w-full"

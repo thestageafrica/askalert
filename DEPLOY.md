@@ -9,6 +9,21 @@ AskAlert is a pnpm + Turborepo monorepo. Production uses **two Cloudflare Pages 
 
 Framework preset: **None** (or static assets). Cloudflare serves the `out/` folder.
 
+## Escrow layer (Prompt 38)
+
+AskAlert never holds customer funds. The `EscrowProvider` interface lives in `@askalert/payments` with a `MockEscrowProvider` for sandbox and a `PartnerEscrowProvider` skeleton for a licensed partner.
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `ESCROW_ENABLED` / `NEXT_PUBLIC_ESCROW_ENABLED` | `false` | Master switch. Off in production until a partner is live. |
+| `ESCROW_LIVE` | unset/false | When unset, sandbox mode (SANDBOX banners). |
+| `ESCROW_PROVIDER` | `mock` | `mock` or `partner`. |
+| `ESCROW_PARTNER_API_KEY` | — | Server-only; never in the browser. |
+| `ESCROW_PARTNER_WEBHOOK_SECRET` | — | Server-only. |
+| `ESCROW_PARTNER_LEGAL_NAME` / `LICENCE_*` / `INSTITUTION_NAME` | empty | Required before any user-facing hold wording. |
+
+Checkout shows **Protected payments are coming soon** while the flag is off. Run `pnpm copy-lint` (also in CI) to block banned hold/protect wording in user-facing source.
+
 ## Environment variables
 
 Set these on each Pages project (Production + Preview):
