@@ -5,6 +5,7 @@ import {
   createAdminSignedUrlPlaceholder,
   isAllowedVendorDocumentMime,
   maskAccountNumber,
+  maskIdentityNumber,
   vendorOwnsDocument,
 } from './documents';
 import type { VendorDocument } from './types';
@@ -48,5 +49,6 @@ describe('vendor document access rules', () => {
       'user-a/doc_1-my_id.jpg',
     );
     expect(maskAccountNumber('0123456789')).toBe('••••••6789');
+    expect(maskIdentityNumber('12345678901')).toBe('•••••••8901');
   });
 });

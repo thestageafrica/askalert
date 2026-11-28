@@ -5,6 +5,7 @@ import {
   areasStepSchemaWithLimit,
   categoriesStepSchema,
   documentsStepSchema,
+  computeOnboardingCompleteness,
   listServiceRateCardIssues,
   payoutStepSchema,
   rateCardSchema,
@@ -191,6 +192,36 @@ describe('vendor onboarding validation', () => {
       }).success,
     ).toBe(true);
     expect(documentsStepSchema.safeParse({ documents: [] }).success).toBe(false);
+  });
+
+  it('treats payout as optional in review completeness', () => {
+    const completeness = computeOnboardingCompleteness({
+      entityType: 'individual',
+      displayName: 'Ada',
+      legalName: 'Ada Okoro',
+      dateOfBirth: '1990-05-12',
+      address: 'Lekki',
+      businessName: '',
+      businessAddress: '',
+      ninOrBvn: '12345678901',
+      categorySlugs: [],
+      typeSlugsByCategory: {},
+      serviceSlugsByCategory: {},
+      serviceRateCards: [],
+      rateCards: [],
+      areaSlugs: [],
+      weeklyHours: [],
+      blackoutDates: [],
+      documents: [],
+      payout: { bankName: '', accountName: '', accountNumber: '' },
+      status: 'draft',
+      verificationTiers: ['phone'],
+      currentStep: 'review',
+      submittedAt: null,
+      updatedAt: new Date().toISOString(),
+    });
+    expect(completeness.items.find((item) => item.id === 'payout')?.optional).toBe(true);
+    expect(completeness.percent).toBeLessThan(100);
   });
 
   it('requires photo ID, selfie with ID, and business proof for businesses', () => {

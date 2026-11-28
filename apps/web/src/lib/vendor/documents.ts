@@ -57,6 +57,18 @@ export function createAdminSignedUrlPlaceholder(path: string, expiresInSeconds =
   };
 }
 
+/** Mask NIN/BVN for review screens — keep last 4 digits. */
+export function maskIdentityNumber(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 0) {
+    return '—';
+  }
+  if (digits.length <= 4) {
+    return '•'.repeat(digits.length);
+  }
+  return `${'•'.repeat(Math.max(7, digits.length - 4))}${digits.slice(-4)}`;
+}
+
 export function maskAccountNumber(accountNumber: string): string {
   const digits = accountNumber.replace(/\D/g, '');
   if (digits.length < 4) {

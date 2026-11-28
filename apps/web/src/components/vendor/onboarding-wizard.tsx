@@ -8,7 +8,7 @@ import {
   regulatedRequiredDocuments,
 } from '../../lib/vendor/vendor-catalog';
 import { getActivePlan, getPlanById, resolveCoveragePlanCaps } from '@askalert/core';
-import { areaDisplayName, rowsFromAreaSlugs } from '@askalert/db';
+import { rowsFromAreaSlugs } from '@askalert/db';
 import { Button, Input, cn } from '@askalert/ui';
 import { useAuth } from '../../lib/auth/auth-provider';
 import { usePlanStore } from '../../lib/app/plan-store';
@@ -37,6 +37,7 @@ import {
   type VendorProfileDraft,
 } from '../../lib/vendor/types';
 import { useVendorStore } from '../../lib/vendor/vendor-store';
+import { ReviewStep } from './review-step';
 import { ServiceAreasStep } from './service-areas-step';
 import { ServiceRateCardEditor } from './service-rate-card-editor';
 import { ServicesStep } from './services-step';
@@ -122,6 +123,14 @@ export function OnboardingWizard() {
           regulatedDocCount: regulatedDocs.length,
         });
       case 'payout': {
+        // Optional until payment gateway is live — empty is fine; partial must be valid.
+        const empty =
+          !draft.payout.bankName.trim() &&
+          !draft.payout.accountName.trim() &&
+          !draft.payout.accountNumber.trim();
+        if (empty) {
+          return null;
+        }
         const result = payoutStepSchema.safeParse(draft.payout);
         return result.success ? null : result.error.issues[0]?.message ?? 'Check payout details.';
       }
@@ -226,9 +235,11 @@ export function OnboardingWizard() {
         key={step}
         className="mt-5 rounded-[1.5rem] border border-border/60 bg-card p-5 shadow-sm transition-opacity duration-300 ease-out lg:p-7"
       >
-        <h2 className="mb-4 text-lg font-extrabold tracking-tight text-foreground">
-          {labelFor(step)}
-        </h2>
+        {step !== 'review' ? (
+          <h2 className="mb-4 text-lg font-extrabold tracking-tight text-foreground">
+            {labelFor(step)}
+          </h2>
+        ) : null}
 
         {step === 'who' ? <WhoStep draft={draft} updateDraft={updateDraft} /> : null}
         {step === 'categories' ? (
@@ -292,7 +303,15 @@ export function OnboardingWizard() {
           />
         ) : null}
         {step === 'payout' ? <PayoutStep draft={draft} updateDraft={updateDraft} /> : null}
-        {step === 'review' ? <ReviewStep draft={draft} rateCardBlocks={rateCardBlocks.length} /> : null}
+        {step === 'review' ? (
+          <ReviewStep
+            draft={draft}
+            onEditStep={(next) => {
+              setError(null);
+              setStep(next);
+            }}
+          />
+        ) : null}
 
         {error ? <p className="mt-4 text-sm font-medium text-danger">{error}</p> : null}
 
@@ -920,59 +939,13 @@ function PayoutStep({
         hint={
           draft.payout.accountNumber
             ? `Stored masked as ${maskAccountNumber(draft.payout.accountNumber)}. Paystack verification comes later.`
-            : '10 digits. Verified later with Paystack.'
+            : 'Optional for now. 10 digits — verified later when payments go live.'
         }
       />
-    </div>
-  );
-}
-
-function ReviewStep({
-  draft,
-  rateCardBlocks,
-}: {
-  draft: VendorProfileDraft;
-  rateCardBlocks: number;
-}) {
-  return (
-    <div className="space-y-3 text-sm">
-      {draft.status === 'pending_review' ? (
-        <p className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-3 font-medium text-navy-950">
-          Submitted for review. We will alert you when you are approved.
-        </p>
-      ) : null}
-      <Row label="Display name" value={draft.displayName} />
-      <Row label="Legal name" value={draft.legalName} />
-      <Row label="Type" value={draft.entityType} />
-      <Row
-        label="Address"
-        value={
-          draft.entityType === 'business'
-            ? draft.businessAddress || '—'
-            : draft.address || '—'
-        }
-      />
-      <Row label="Categories" value={draft.categorySlugs.join(', ') || '—'} />
-      <Row label="Services" value={String(rateCardBlocks)} />
-      <Row
-        label="Areas"
-        value={draft.areaSlugs.map((slug) => areaDisplayName(slug)).join(', ') || '—'}
-      />
-      <Row label="Documents" value={`${draft.documents.length} uploaded`} />
-      <Row
-        label="Payout"
-        value={`${draft.payout.bankName} · ${maskAccountNumber(draft.payout.accountNumber)}`}
-      />
-      <Row label="Status" value={draft.status.replace('_', ' ')} />
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-3 border-b border-border/50 py-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-semibold capitalize text-foreground">{value}</dd>
+      <p className="rounded-2xl border border-border/60 bg-background/80 px-3 py-3 text-sm text-muted-foreground">
+        You can skip this step and continue. Bank payout setup will finish after the payment
+        gateway is connected.
+      </p>
     </div>
   );
 }

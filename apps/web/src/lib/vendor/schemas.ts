@@ -509,6 +509,71 @@ export const payoutStepSchema = z.object({
     .regex(/^\d{10}$/, 'Account number must be 10 digits.'),
 });
 
+export type OnboardingCompletenessItem = {
+  id: OnboardingStepId;
+  label: string;
+  done: boolean;
+  /** Payout can wait until the payment gateway is live. */
+  optional?: boolean;
+};
+
+/** Profile readiness for the review ring. Payout is optional for now. */
+export function computeOnboardingCompleteness(
+  draft: VendorProfileDraft,
+  regulatedDocCount = 0,
+): { percent: number; items: OnboardingCompletenessItem[] } {
+  const identityOk =
+    whoYouAreSchema.safeParse({
+      entityType: draft.entityType,
+      displayName: draft.displayName,
+      legalName: draft.legalName,
+      dateOfBirth: draft.dateOfBirth,
+      address: draft.address,
+      businessName: draft.businessName,
+      businessAddress: draft.businessAddress,
+      ninOrBvn: draft.ninOrBvn,
+    }).success;
+
+  const categoriesOk = draft.categorySlugs.length > 0;
+  const typesOk =
+    categoriesOk && validateTypesStep(draft.categorySlugs, draft.typeSlugsByCategory) === null;
+  const servicesOk =
+    categoriesOk &&
+    validateServicesStep(
+      draft.categorySlugs,
+      draft.serviceSlugsByCategory,
+      DEFAULT_MAX_VENDOR_SERVICES,
+    ) === null;
+  const rateCardsOk = categoriesOk && validateServiceRateCardsStep(draft) === null;
+  const areasOk = draft.areaSlugs.length > 0;
+  const availabilityOk = draft.weeklyHours.some((day) => day.open);
+  const documentsOk =
+    validateDocumentsStep(draft.documents, {
+      entityType: draft.entityType,
+      regulatedDocCount,
+    }) === null;
+  const payoutOk = payoutStepSchema.safeParse(draft.payout).success;
+
+  const items: OnboardingCompletenessItem[] = [
+    { id: 'who', label: 'Identity', done: identityOk },
+    { id: 'categories', label: 'Categories', done: categoriesOk },
+    { id: 'types', label: 'Types', done: typesOk },
+    { id: 'services', label: 'Services', done: servicesOk },
+    { id: 'rate_cards', label: 'Rate cards', done: rateCardsOk },
+    { id: 'areas', label: 'Service areas', done: areasOk },
+    { id: 'availability', label: 'Availability', done: availabilityOk },
+    { id: 'documents', label: 'Documents', done: documentsOk },
+    { id: 'payout', label: 'Payout', done: payoutOk, optional: true },
+  ];
+
+  const required = items.filter((item) => !item.optional);
+  const doneCount = required.filter((item) => item.done).length;
+  const percent =
+    required.length === 0 ? 0 : Math.round((doneCount / required.length) * 100);
+
+  return { percent, items };
+}
+
 export const STEP_ORDER: OnboardingStepId[] = [...ONBOARDING_STEPS];
 
 export function stepIndex(step: OnboardingStepId): number {
