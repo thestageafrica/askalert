@@ -27,6 +27,7 @@ const operations: NavItem[] = [
   { href: '/users', label: 'Users', icon: <PersonIcon /> },
   { href: '/audit', label: 'Audit log', icon: <AuditIcon /> },
   { href: '/requests', label: 'Requests', icon: <BellIcon /> },
+  { href: '/simulator', label: 'Capture sim', icon: <ChatIcon /> },
   { href: '/disputes', label: 'Disputes', icon: <AlertIcon /> },
   { href: '/payouts', label: 'Payouts', icon: <CashIcon /> },
   { href: '/plans', label: 'Plans', icon: <PlansIcon /> },
@@ -309,6 +310,20 @@ function CatalogIcon() {
         strokeLinejoin="round"
       />
       <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7A2.5 2.5 0 0 1 16.5 16H11l-4 3v-3H7.5A2.5 2.5 0 0 1 5 13.5v-7Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M8.5 9h7M8.5 12h4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

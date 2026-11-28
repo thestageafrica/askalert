@@ -14,6 +14,7 @@
   "dependencies": {
     "@askalert/catalog": "workspace:*",
     "@askalert/category-engine": "workspace:*",
+    "@askalert/conversation": "workspace:*",
     "@askalert/core": "workspace:*",
     "@askalert/db": "workspace:*",
     "@askalert/geo": "workspace:*",
