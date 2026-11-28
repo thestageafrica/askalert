@@ -1633,7 +1633,6 @@ export type Database = {
 
 export type AreaRow = Database['public']['Tables']['areas']['Row'];
 export type GeoNodeRow = Database['public']['Tables']['geo_nodes']['Row'];
-export type GeoNodeRow = Database['public']['Tables']['geo_nodes']['Row'];
 export type RequestRow = Database['public']['Tables']['requests']['Row'];
 export type MissionRow = Database['public']['Tables']['missions']['Row'];
 export type MissionCandidateRow = Database['public']['Tables']['mission_candidates']['Row'];
