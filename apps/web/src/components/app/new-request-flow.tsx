@@ -11,7 +11,7 @@ import {
   type CatalogCategorySeed,
   type ResolvedCatalogTree,
 } from '@askalert/catalog';
-import { listGeoSeedNodes, type LocationRule } from '@askalert/geo';
+import { buildGeoLookup, findNode, listGeoSeedNodes, type LocationRule } from '@askalert/geo';
 import { createMoney, formatNaira, formatNairaInput, parseNairaInput } from '@askalert/payments';
 import { Button, Input, LocationSelect, cn } from '@askalert/ui';
 import {
@@ -503,6 +503,7 @@ export function NewRequestFlow({ categorySlug }: { categorySlug: string }) {
                 tree={tree}
                 draft={draft}
                 matchPreview={matchPreview}
+                geoNodes={geoNodes}
                 onEdit={(next) => patchDraft({ currentStep: next })}
               />
             ) : null}
@@ -693,11 +694,16 @@ function DetailsStep({
   onQuantity: (serviceSlug: string, quantity: number) => void;
   onAttribute: (key: string, value: string | number | boolean) => void;
 }) {
+  // Date and area belong in their own steps — skip them here.
+  const extraAttributes = attributeQuestions.filter(
+    (attr) => attr.type !== 'date' && attr.type !== 'area',
+  );
+
   return (
     <div className="space-y-5">
       <StepIntro
-        title="Details for each service"
-        body="Quantity drives band hints and instant quotes."
+        title="How much for each service?"
+        body="Enter the quantity. Date and location come next."
       />
       {dimensionQuestions.map((question) => {
         const item = draft.items.find((row) => row.serviceSlug === question.scopeSlug);
@@ -727,7 +733,7 @@ function DetailsStep({
             />
             {bands.length > 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">
-                Bands:{' '}
+                Price bands:{' '}
                 {bands
                   .slice(0, 3)
                   .map((band) => `${band.dimMin}–${band.dimMax}`)
@@ -738,12 +744,12 @@ function DetailsStep({
           </div>
         );
       })}
-      {attributeQuestions.length > 0 ? (
+      {extraAttributes.length > 0 ? (
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Extra details
           </p>
-          {attributeQuestions.map((attr) => (
+          {extraAttributes.map((attr) => (
             <Input
               key={attr.key}
               label={attr.label}
@@ -878,88 +884,167 @@ function ReviewAskStep({
   tree,
   draft,
   matchPreview,
+  geoNodes,
   onEdit,
 }: {
   tree: ResolvedCatalogTree;
   draft: BuyerRequestDraft;
   matchPreview: ReturnType<typeof matchBuyerRequest> | null;
+  geoNodes: ReturnType<typeof listGeoSeedNodes>;
   onEdit: (step: BuyerRequestStepId) => void;
 }) {
   const typeName = tree.types.find((type) => type.slug === draft.typeSlug)?.name ?? draft.typeSlug;
+  const involvement = involvementOptions.find((option) => option.id === draft.involvement);
+  const lookup = buildGeoLookup(geoNodes);
+  const locationNode = draft.locationSlug ? findNode(lookup, draft.locationSlug) : null;
+  const stateNode = draft.stateSlug ? findNode(lookup, draft.stateSlug) : null;
+  const locationLabel = locationNode?.name ?? draft.locationSlug.replaceAll('-', ' ');
+  const stateLabel = stateNode?.name ?? draft.stateSlug.replaceAll('-', ' ');
+  const whenLabel = formatReviewWhen(draft.startDate, draft.endDate, draft.startTime);
+  const budgetLabel =
+    draft.budgetMinMinor === null && draft.budgetMaxMinor === null
+      ? 'No budget set'
+      : `${draft.budgetMinMinor != null ? formatNaira(createMoney(draft.budgetMinMinor)) : '—'} – ${draft.budgetMaxMinor != null ? formatNaira(createMoney(draft.budgetMaxMinor)) : '—'}`;
+
+  const extraAttributes = Object.entries(draft.attributes).filter(([, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-4">
-      <StepIntro
-        title="Review your ask"
-        body="Check once. Then AskAlert starts matching vendors."
-      />
-
-      {matchPreview?.typicalPrice.showEstimate ? (
-        <div className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-4 text-navy-950">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-orange-700">
-            Typical price
-          </p>
-          <p className="mt-1 text-lg font-extrabold">
-            {formatNaira(createMoney(matchPreview.typicalPrice.minMinor))} –{' '}
-            {formatNaira(createMoney(matchPreview.typicalPrice.maxMinor))}
-          </p>
-          <p className="mt-1 text-sm font-medium">
-            {matchPreview.typicalPrice.vendorCount} vendors cover this
-          </p>
-        </div>
-      ) : matchPreview && matchPreview.vendorsCovering > 0 ? (
-        <p className="rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm text-muted-foreground">
-          {matchPreview.vendorsCovering} vendor
-          {matchPreview.vendorsCovering === 1 ? '' : 's'} may cover this. Typical price shows when
-          at least 3 match.
+      <div className="relative overflow-hidden rounded-[1.5rem] border border-orange-500/25 bg-[radial-gradient(120%_90%_at_100%_0%,_color-mix(in_srgb,var(--orange-500)_22%,transparent),_transparent_55%),linear-gradient(160deg,_color-mix(in_srgb,var(--navy-950)_6%,transparent),_transparent_50%),var(--card)] p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-600">
+          Ready to send
         </p>
-      ) : null}
+        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-foreground">
+          {typeName} · {tree.categoryName}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Check each section. Tap Edit to jump back and fix anything.
+        </p>
 
-      <ReviewBlock title="Type" onEdit={() => onEdit('type')}>
-        <p className="text-sm font-semibold">{typeName}</p>
-      </ReviewBlock>
-      <ReviewBlock title="Services" onEdit={() => onEdit('services')}>
-        <ul className="space-y-1 text-sm">
+        {matchPreview?.typicalPrice.showEstimate ? (
+          <div className="mt-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-navy-950">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-orange-700">
+                  Typical price
+                </p>
+                <p className="mt-1 text-xl font-extrabold tabular-nums">
+                  {formatNaira(createMoney(matchPreview.typicalPrice.minMinor))} –{' '}
+                  {formatNaira(createMoney(matchPreview.typicalPrice.maxMinor))}
+                </p>
+              </div>
+              <p className="rounded-full bg-orange-500/20 px-3 py-1.5 text-xs font-bold text-navy-950">
+                {matchPreview.typicalPrice.vendorCount} vendors cover this
+              </p>
+            </div>
+          </div>
+        ) : matchPreview && matchPreview.vendorsCovering > 0 ? (
+          <p className="mt-4 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+            {matchPreview.vendorsCovering} vendor
+            {matchPreview.vendorsCovering === 1 ? '' : 's'} may cover this. Typical price shows when
+            at least 3 match.
+          </p>
+        ) : (
+          <p className="mt-4 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+            We will still send your ask. Supply looks thin in this spot right now.
+          </p>
+        )}
+      </div>
+
+      <ReviewBlock title="What you need" onEdit={() => onEdit('services')}>
+        <p className="text-sm font-semibold text-muted-foreground">{typeName}</p>
+        <ul className="mt-3 space-y-2">
           {draft.items.map((item) => {
             const service = tree.types
               .flatMap((type) => type.services)
               .find((row) => row.slug === item.serviceSlug);
             return (
-              <li key={item.serviceSlug} className="font-semibold">
-                {service?.name ?? item.serviceSlug} · {item.quantity}{' '}
-                {service ? dimensionLabel(service.dimension) : ''}
+              <li
+                key={item.serviceSlug}
+                className="flex items-center justify-between gap-3 rounded-xl bg-background/80 px-3 py-2.5"
+              >
+                <span className="text-sm font-extrabold text-foreground">
+                  {service?.name ?? item.serviceSlug}
+                </span>
+                <span className="text-sm font-semibold text-muted-foreground">
+                  {item.quantity} {service ? dimensionLabel(service.dimension) : ''}
+                </span>
               </li>
             );
           })}
         </ul>
+        {extraAttributes.length > 0 ? (
+          <dl className="mt-3 space-y-2 border-t border-border/50 pt-3">
+            {extraAttributes.map(([key, value]) => (
+              <div key={key} className="flex justify-between gap-3 text-sm">
+                <dt className="capitalize text-muted-foreground">{key.replaceAll('_', ' ')}</dt>
+                <dd className="font-semibold text-foreground">{String(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
       </ReviewBlock>
-      <ReviewBlock title="When" onEdit={() => onEdit('date')}>
-        <p className="text-sm font-semibold">
-          {draft.startDate}
-          {draft.endDate ? ` → ${draft.endDate}` : ''}
-          {draft.startTime ? ` · ${draft.startTime}` : ''}
-        </p>
-      </ReviewBlock>
-      <ReviewBlock title="Where" onEdit={() => onEdit('location')}>
-        <p className="text-sm font-semibold">
-          {draft.locationSlug.replaceAll('-', ' ')}
-          {draft.venueText ? ` · ${draft.venueText}` : ''}
-        </p>
-      </ReviewBlock>
-      <ReviewBlock title="Budget" onEdit={() => onEdit('budget')}>
-        <p className="text-sm font-semibold">
-          {draft.budgetMinMinor === null && draft.budgetMaxMinor === null
-            ? 'Not set'
-            : `${draft.budgetMinMinor != null ? formatNaira(createMoney(draft.budgetMinMinor)) : '—'} – ${draft.budgetMaxMinor != null ? formatNaira(createMoney(draft.budgetMaxMinor)) : '—'}`}
-        </p>
-      </ReviewBlock>
-      <ReviewBlock title="AskAlert role" onEdit={() => onEdit('involvement')}>
-        <p className="text-sm font-semibold">
-          {involvementOptions.find((option) => option.id === draft.involvement)?.label}
-        </p>
-      </ReviewBlock>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ReviewBlock title="When" onEdit={() => onEdit('date')}>
+          <p className="text-sm font-extrabold text-foreground">{whenLabel}</p>
+        </ReviewBlock>
+        <ReviewBlock title="Where" onEdit={() => onEdit('location')}>
+          <p className="text-sm font-extrabold capitalize text-foreground">{locationLabel}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{stateLabel}</p>
+          {draft.venueText ? (
+            <p className="mt-2 text-sm text-muted-foreground">Venue: {draft.venueText}</p>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">No private venue text</p>
+          )}
+        </ReviewBlock>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ReviewBlock title="Budget" onEdit={() => onEdit('budget')}>
+          <p className="text-sm font-extrabold text-foreground">{budgetLabel}</p>
+        </ReviewBlock>
+        <ReviewBlock title="AskAlert role" onEdit={() => onEdit('involvement')}>
+          <p className="text-sm font-extrabold text-foreground">
+            {involvement?.title ?? draft.involvement}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{involvement?.blurb}</p>
+        </ReviewBlock>
+      </div>
     </div>
   );
+}
+
+function formatReviewWhen(startDate: string, endDate: string, startTime: string): string {
+  if (!startDate) {
+    return '—';
+  }
+  const start = formatFriendlyDate(startDate);
+  if (endDate && endDate !== startDate) {
+    return `${start} → ${formatFriendlyDate(endDate)}${startTime ? ` · ${startTime}` : ''}`;
+  }
+  return `${start}${startTime ? ` · ${startTime}` : ''}`;
+}
+
+function formatFriendlyDate(value: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return new Intl.DateTimeFormat('en-NG', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
 }
 
 function ReviewBlock({
@@ -972,21 +1057,19 @@ function ReviewBlock({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          {title}
-        </p>
+    <section className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-extrabold tracking-tight text-foreground">{title}</h3>
         <button
           type="button"
-          className="min-h-11 px-2 text-xs font-bold text-orange-700"
+          className="min-h-11 shrink-0 rounded-xl px-3 text-xs font-bold text-orange-700 hover:bg-orange-500/10"
           onClick={onEdit}
         >
           Edit
         </button>
       </div>
       {children}
-    </div>
+    </section>
   );
 }
 
