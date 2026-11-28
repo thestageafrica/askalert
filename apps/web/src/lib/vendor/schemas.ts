@@ -45,18 +45,72 @@ export const onboardingStepSchema = z.enum(ONBOARDING_STEPS);
 /** Free / starter cap on how many services a vendor can publish. */
 export const DEFAULT_MAX_VENDOR_SERVICES = 12;
 
+function isAtLeast18(isoDate: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) {
+    return false;
+  }
+  const born = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  if (Number.isNaN(born.getTime())) {
+    return false;
+  }
+  const today = new Date();
+  let age = today.getFullYear() - born.getFullYear();
+  const monthDiff = today.getMonth() - born.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() - born.getDate() < 0)) {
+    age -= 1;
+  }
+  return age >= 18;
+}
+
 export const whoYouAreSchema = z
   .object({
     entityType: z.enum(['individual', 'business']),
     displayName: z.string().trim().min(2, 'Enter your display name.').max(80),
+    legalName: z
+      .string()
+      .trim()
+      .min(2, 'Enter your legal name as it appears on your ID.')
+      .max(120),
+    dateOfBirth: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter your date of birth.'),
+    address: z.string().trim().max(240).optional().or(z.literal('')),
     businessName: z.string().trim().max(120).optional().or(z.literal('')),
+    businessAddress: z.string().trim().max(240).optional().or(z.literal('')),
+    ninOrBvn: z
+      .string()
+      .trim()
+      .transform((value) => value.replace(/\D/g, ''))
+      .pipe(z.string().length(11, 'Enter an 11-digit NIN or BVN.')),
   })
   .superRefine((value, ctx) => {
+    if (!isAtLeast18(value.dateOfBirth)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'You must be at least 18 years old.',
+        path: ['dateOfBirth'],
+      });
+    }
+    if (value.entityType === 'individual' && !value.address?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Enter your residential address.',
+        path: ['address'],
+      });
+    }
     if (value.entityType === 'business' && !value.businessName?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Business name is required for a business profile.',
         path: ['businessName'],
+      });
+    }
+    if (value.entityType === 'business' && !value.businessAddress?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Enter the business address.',
+        path: ['businessAddress'],
       });
     }
   });
@@ -381,7 +435,13 @@ export const availabilityStepSchema = z.object({
   blackoutDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
 });
 
-export const documentKindSchema = z.enum(['id', 'business_proof', 'licence', 'portfolio']);
+export const documentKindSchema = z.enum([
+  'id',
+  'id_selfie',
+  'business_proof',
+  'licence',
+  'portfolio',
+]);
 
 export const vendorDocumentSchema = z.object({
   id: z.string().min(1),
@@ -411,6 +471,11 @@ export function validateDocumentsStep(
   const hasId = documents.some((doc) => doc.kind === 'id');
   if (!hasId) {
     return 'Upload a clear photo of your government ID.';
+  }
+
+  const hasIdSelfie = documents.some((doc) => doc.kind === 'id_selfie');
+  if (!hasIdSelfie) {
+    return 'Upload a photo of yourself holding the same ID.';
   }
 
   if (options.entityType === 'business') {

@@ -98,6 +98,7 @@ export type DayHours = {
 
 export type VendorDocumentKind =
   | 'id'
+  | 'id_selfie'
   | 'business_proof'
   | 'licence'
   | 'portfolio';
@@ -125,7 +126,16 @@ export type PayoutDetails = {
 export type VendorProfileDraft = {
   entityType: VendorEntityType;
   displayName: string;
+  /** Full name exactly as it appears on the government ID. */
+  legalName: string;
+  dateOfBirth: string;
+  /** Residential address for individual vendors. */
+  address: string;
   businessName: string;
+  /** Registered / operating address for business vendors. */
+  businessAddress: string;
+  /** 11-digit NIN or BVN (digits only in validation). */
+  ninOrBvn: string;
   categorySlugs: string[];
   typeSlugsByCategory: Record<string, string[]>;
   serviceSlugsByCategory: Record<string, string[]>;

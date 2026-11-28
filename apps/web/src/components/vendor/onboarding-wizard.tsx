@@ -79,7 +79,12 @@ export function OnboardingWizard() {
         const result = whoYouAreSchema.safeParse({
           entityType: draft.entityType,
           displayName: draft.displayName,
+          legalName: draft.legalName,
+          dateOfBirth: draft.dateOfBirth,
+          address: draft.address,
           businessName: draft.businessName,
+          businessAddress: draft.businessAddress,
+          ninOrBvn: draft.ninOrBvn,
         });
         return result.success ? null : result.error.issues[0]?.message ?? 'Check this step.';
       }
@@ -382,14 +387,52 @@ function WhoStep({
         label="Display name"
         value={draft.displayName}
         onChange={(event) => updateDraft({ displayName: event.target.value })}
+        hint="Shown to buyers on your profile."
       />
-      {draft.entityType === 'business' ? (
+      <Input
+        label="Legal name"
+        value={draft.legalName}
+        onChange={(event) => updateDraft({ legalName: event.target.value })}
+        hint="Exactly as it appears on your government ID."
+      />
+      <Input
+        label="Date of birth"
+        type="date"
+        value={draft.dateOfBirth}
+        onChange={(event) => updateDraft({ dateOfBirth: event.target.value })}
+        hint="You must be 18 or older."
+      />
+      <Input
+        label="NIN or BVN"
+        inputMode="numeric"
+        value={draft.ninOrBvn}
+        onChange={(event) =>
+          updateDraft({ ninOrBvn: event.target.value.replace(/\D/g, '').slice(0, 11) })
+        }
+        hint="11 digits. Used for verification only — not shown to buyers."
+      />
+      {draft.entityType === 'individual' ? (
         <Input
-          label="Business name"
-          value={draft.businessName}
-          onChange={(event) => updateDraft({ businessName: event.target.value })}
+          label="Residential address"
+          value={draft.address}
+          onChange={(event) => updateDraft({ address: event.target.value })}
+          hint="Street, area, and city where you live."
         />
-      ) : null}
+      ) : (
+        <>
+          <Input
+            label="Business name"
+            value={draft.businessName}
+            onChange={(event) => updateDraft({ businessName: event.target.value })}
+          />
+          <Input
+            label="Business address"
+            value={draft.businessAddress}
+            onChange={(event) => updateDraft({ businessAddress: event.target.value })}
+            hint="Registered or operating address of the business."
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -642,6 +685,7 @@ function DocumentsStep({
 }) {
   const isBusiness = draft.entityType === 'business';
   const hasId = draft.documents.some((doc) => doc.kind === 'id');
+  const hasIdSelfie = draft.documents.some((doc) => doc.kind === 'id_selfie');
   const hasBusinessProof = draft.documents.some((doc) => doc.kind === 'business_proof');
   const licenceCount = draft.documents.filter((doc) => doc.kind === 'licence').length;
 
@@ -651,6 +695,8 @@ function DocumentsStep({
     detail: string;
     required: boolean;
     done: boolean;
+    capture?: 'user' | 'environment';
+    accept?: string;
   }> = [
     {
       kind: 'id',
@@ -660,6 +706,16 @@ function DocumentsStep({
         : 'Clear photo of your NIN slip, driver’s licence, international passport, or national ID.',
       required: true,
       done: hasId,
+    },
+    {
+      kind: 'id_selfie',
+      title: 'Selfie holding your ID',
+      detail:
+        'Take a live photo of your face while holding the same ID you just uploaded. Your face and the ID details must both be clear.',
+      required: true,
+      done: hasIdSelfie,
+      capture: 'user',
+      accept: 'image/jpeg,image/png,image/webp',
     },
   ];
 
@@ -715,11 +771,11 @@ function DocumentsStep({
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         {isBusiness
-          ? 'As a business, upload the owner’s ID and proof the business is registered. Files stay private.'
-          : 'As an individual vendor, upload a clear government ID so we can verify you. Files stay private.'}
+          ? 'As a business, upload the owner’s ID, a selfie holding that ID, and proof the business is registered. Files stay private.'
+          : 'As an individual vendor, upload a clear government ID and a selfie holding that same ID. Files stay private.'}
       </p>
       <p className="text-xs text-muted-foreground">
-        JPEG, PNG, WebP or PDF. Max 5 MB each.
+        JPEG, PNG, WebP or PDF. Max 5 MB each. The selfie must be a photo, not a PDF.
       </p>
 
       <ul className="space-y-3">
@@ -752,10 +808,19 @@ function DocumentsStep({
               ) : null}
             </div>
             <label className="mt-3 flex min-h-11 cursor-pointer items-center rounded-xl border border-dashed border-border/80 bg-background px-3 text-sm font-semibold text-foreground">
-              <span>{busy ? 'Uploading…' : slot.done ? 'Add another file' : 'Choose file'}</span>
+              <span>
+                {busy
+                  ? 'Uploading…'
+                  : slot.done
+                    ? 'Add another file'
+                    : slot.capture
+                      ? 'Take or choose photo'
+                      : 'Choose file'}
+              </span>
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
+                accept={slot.accept ?? 'image/jpeg,image/png,image/webp,application/pdf'}
+                capture={slot.capture}
                 className="sr-only"
                 disabled={busy}
                 onChange={(event) => {
@@ -806,6 +871,8 @@ function documentKindLabel(kind: VendorDocument['kind']): string {
   switch (kind) {
     case 'id':
       return 'Photo ID';
+    case 'id_selfie':
+      return 'Selfie with ID';
     case 'business_proof':
       return 'Business proof';
     case 'licence':
@@ -874,8 +941,17 @@ function ReviewStep({
           Submitted for review. We will alert you when you are approved.
         </p>
       ) : null}
-      <Row label="Name" value={draft.displayName} />
+      <Row label="Display name" value={draft.displayName} />
+      <Row label="Legal name" value={draft.legalName} />
       <Row label="Type" value={draft.entityType} />
+      <Row
+        label="Address"
+        value={
+          draft.entityType === 'business'
+            ? draft.businessAddress || '—'
+            : draft.address || '—'
+        }
+      />
       <Row label="Categories" value={draft.categorySlugs.join(', ') || '—'} />
       <Row label="Services" value={String(rateCardBlocks)} />
       <Row

@@ -47,7 +47,15 @@ function hasRateCardsFilled(draft: VendorProfileDraft): boolean {
 
 /** Pick the first incomplete step for v2 onboarding. */
 export function suggestResumeStep(draft: VendorProfileDraft): OnboardingStepId {
-  if (!draft.displayName.trim()) {
+  if (
+    !draft.displayName.trim() ||
+    !draft.legalName.trim() ||
+    !draft.dateOfBirth ||
+    !draft.ninOrBvn.trim() ||
+    (draft.entityType === 'individual' && !draft.address.trim()) ||
+    (draft.entityType === 'business' &&
+      (!draft.businessName.trim() || !draft.businessAddress.trim()))
+  ) {
     return 'who';
   }
   if (draft.categorySlugs.length === 0) {
@@ -121,7 +129,12 @@ export function normalizePersistedDraft(
   const merged: VendorProfileDraft = {
     entityType: partial.entityType ?? 'individual',
     displayName: partial.displayName ?? '',
+    legalName: partial.legalName ?? '',
+    dateOfBirth: partial.dateOfBirth ?? '',
+    address: partial.address ?? '',
     businessName: partial.businessName ?? '',
+    businessAddress: partial.businessAddress ?? '',
+    ninOrBvn: partial.ninOrBvn ?? '',
     categorySlugs: partial.categorySlugs ?? [],
     typeSlugsByCategory: partial.typeSlugsByCategory ?? {},
     serviceSlugsByCategory: partial.serviceSlugsByCategory ?? {},

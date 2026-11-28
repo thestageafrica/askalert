@@ -62,7 +62,12 @@ function emptyDraft(): VendorProfileDraft {
   return {
     entityType: 'individual',
     displayName: '',
+    legalName: '',
+    dateOfBirth: '',
+    address: '',
     businessName: '',
+    businessAddress: '',
+    ninOrBvn: '',
     categorySlugs: [],
     typeSlugsByCategory: {},
     serviceSlugsByCategory: {},

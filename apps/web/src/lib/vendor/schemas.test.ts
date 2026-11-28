@@ -16,22 +16,59 @@ import {
 } from './schemas';
 
 describe('vendor onboarding validation', () => {
-  it('requires business name for business entity', () => {
+  it('requires business name and address for business entity', () => {
     const result = whoYouAreSchema.safeParse({
       entityType: 'business',
       displayName: 'Ada',
+      legalName: 'Ada Okoro',
+      dateOfBirth: '1990-05-12',
+      address: '',
       businessName: '',
+      businessAddress: '',
+      ninOrBvn: '12345678901',
     });
     expect(result.success).toBe(false);
   });
 
-  it('accepts individual without business name', () => {
+  it('accepts individual with legal identity fields', () => {
     const result = whoYouAreSchema.safeParse({
       entityType: 'individual',
       displayName: 'Ada Okoro',
+      legalName: 'Ada Okoro',
+      dateOfBirth: '1990-05-12',
+      address: '12 Admiralty Way, Lekki Phase 1',
       businessName: '',
+      businessAddress: '',
+      ninOrBvn: '12345678901',
     });
     expect(result.success).toBe(true);
+  });
+
+  it('rejects under-18 and short NIN or BVN', () => {
+    expect(
+      whoYouAreSchema.safeParse({
+        entityType: 'individual',
+        displayName: 'Ada',
+        legalName: 'Ada Okoro',
+        dateOfBirth: '2015-01-01',
+        address: 'Lekki',
+        businessName: '',
+        businessAddress: '',
+        ninOrBvn: '12345678901',
+      }).success,
+    ).toBe(false);
+    expect(
+      whoYouAreSchema.safeParse({
+        entityType: 'individual',
+        displayName: 'Ada',
+        legalName: 'Ada Okoro',
+        dateOfBirth: '1990-05-12',
+        address: 'Lekki',
+        businessName: '',
+        businessAddress: '',
+        ninOrBvn: '12345',
+      }).success,
+    ).toBe(false);
   });
 
   it('requires at least one category and area', () => {
@@ -111,7 +148,12 @@ describe('vendor onboarding validation', () => {
     const issues = listServiceRateCardIssues({
       entityType: 'individual',
       displayName: 'Ada',
+      legalName: 'Ada Okoro',
+      dateOfBirth: '1990-05-12',
+      address: 'Lekki',
       businessName: '',
+      businessAddress: '',
+      ninOrBvn: '12345678901',
       categorySlugs: ['events'],
       typeSlugsByCategory: { events: ['wedding'] },
       serviceSlugsByCategory: { events: ['catering', 'dj'] },
@@ -151,7 +193,7 @@ describe('vendor onboarding validation', () => {
     expect(documentsStepSchema.safeParse({ documents: [] }).success).toBe(false);
   });
 
-  it('requires photo ID for individuals and business proof for businesses', () => {
+  it('requires photo ID, selfie with ID, and business proof for businesses', () => {
     const idDoc = {
       id: 'doc_1',
       kind: 'id' as const,
@@ -163,19 +205,35 @@ describe('vendor onboarding validation', () => {
       scanned: true,
       createdAt: new Date().toISOString(),
     };
+    const selfieDoc = {
+      ...idDoc,
+      id: 'doc_selfie',
+      kind: 'id_selfie' as const,
+      fileName: 'selfie.jpg',
+    };
     expect(
       validateDocumentsStep([], { entityType: 'individual', regulatedDocCount: 0 }),
     ).toMatch(/government ID/i);
     expect(
       validateDocumentsStep([idDoc], { entityType: 'individual', regulatedDocCount: 0 }),
+    ).toMatch(/holding the same ID/i);
+    expect(
+      validateDocumentsStep([idDoc, selfieDoc], {
+        entityType: 'individual',
+        regulatedDocCount: 0,
+      }),
     ).toBeNull();
     expect(
-      validateDocumentsStep([idDoc], { entityType: 'business', regulatedDocCount: 0 }),
+      validateDocumentsStep([idDoc, selfieDoc], {
+        entityType: 'business',
+        regulatedDocCount: 0,
+      }),
     ).toMatch(/business proof/i);
     expect(
       validateDocumentsStep(
         [
           idDoc,
+          selfieDoc,
           { ...idDoc, id: 'doc_2', kind: 'business_proof', fileName: 'cac.pdf' },
         ],
         { entityType: 'business', regulatedDocCount: 0 },
