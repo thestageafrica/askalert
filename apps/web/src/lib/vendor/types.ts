@@ -14,8 +14,10 @@ export type VerificationTier = (typeof VERIFICATION_TIERS)[number];
 export const ONBOARDING_STEPS = [
   'who',
   'categories',
-  'areas',
+  'types',
+  'services',
   'rate_cards',
+  'areas',
   'availability',
   'documents',
   'payout',
@@ -26,6 +28,7 @@ export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
 
 export type VendorEntityType = 'individual' | 'business';
 
+/** Legacy per-category rate card (v1 onboarding). */
 export type RateCard = {
   categorySlug: string;
   startingPriceMinor: number;
@@ -33,6 +36,48 @@ export type RateCard = {
   maxPriceMinor: number;
   unit: string;
   notes: string;
+};
+
+export type ServiceRateCardBand = {
+  dimMin: number;
+  dimMax: number;
+  basis: 'per_unit' | 'total';
+  priceMinor: number;
+  currency: 'NGN';
+  label?: string;
+};
+
+export type ServiceRateCardPackage = {
+  slug: string;
+  name: string;
+  priceMinor: number;
+  inclusions: string[];
+};
+
+export type ServiceRateCardAddon = {
+  id: string;
+  name: string;
+  priceMinor: number;
+  basis: 'per_unit' | 'total' | 'flat';
+};
+
+export type ServiceRateCard = {
+  categorySlug: string;
+  serviceSlug: string;
+  appliesToTypeSlugs: string[] | 'all';
+  bands: ServiceRateCardBand[];
+  priceMinor?: number;
+  minChargeMinor?: number;
+  packages: ServiceRateCardPackage[];
+  allowCustomQuoteLarger: boolean;
+  addons: ServiceRateCardAddon[];
+  minNoticeHours: number;
+  depositPct: number;
+  inclusions: string[];
+  exclusions: string[];
+  notes: string;
+  status: 'draft' | 'active' | 'paused';
+  updatedAt: string;
 };
 
 export type WeekDay =
@@ -82,8 +127,12 @@ export type VendorProfileDraft = {
   displayName: string;
   businessName: string;
   categorySlugs: string[];
+  typeSlugsByCategory: Record<string, string[]>;
+  serviceSlugsByCategory: Record<string, string[]>;
+  serviceRateCards: ServiceRateCard[];
   areaSlugs: string[];
-  rateCards: RateCard[];
+  /** Legacy v1 rate cards — kept for migration display only. */
+  rateCards?: RateCard[];
   weeklyHours: DayHours[];
   blackoutDates: string[];
   documents: VendorDocument[];

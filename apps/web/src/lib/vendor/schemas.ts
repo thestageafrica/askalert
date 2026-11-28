@@ -1,14 +1,21 @@
 import { z } from 'zod';
+import { computeQuote, validateRateCard, type PricingModel } from '@askalert/catalog';
 import {
   ONBOARDING_STEPS,
   VERIFICATION_TIERS,
   VENDOR_STATUSES,
   type OnboardingStepId,
+  type ServiceRateCard,
+  type VendorProfileDraft,
 } from './types';
+import { findCatalogService } from './vendor-catalog';
 
 export const vendorStatusSchema = z.enum(VENDOR_STATUSES);
 export const verificationTierSchema = z.enum(VERIFICATION_TIERS);
 export const onboardingStepSchema = z.enum(ONBOARDING_STEPS);
+
+/** Free / starter cap on how many services a vendor can publish. */
+export const DEFAULT_MAX_VENDOR_SERVICES = 12;
 
 export const whoYouAreSchema = z
   .object({
@@ -29,6 +36,197 @@ export const whoYouAreSchema = z
 export const categoriesStepSchema = z.object({
   categorySlugs: z.array(z.string().min(1)).min(1, 'Pick at least one category.'),
 });
+
+export const typesStepSchema = z.object({
+  categorySlugs: z.array(z.string().min(1)),
+  typeSlugsByCategory: z.record(z.string(), z.array(z.string())),
+});
+
+export function validateTypesStep(
+  categorySlugs: string[],
+  typeSlugsByCategory: Record<string, string[]>,
+): string | null {
+  for (const slug of categorySlugs) {
+    const types = typeSlugsByCategory[slug] ?? [];
+    if (types.length === 0) {
+      return 'Pick at least one type for each category.';
+    }
+  }
+  const result = typesStepSchema.safeParse({ categorySlugs, typeSlugsByCategory });
+  return result.success ? null : result.error.issues[0]?.message ?? 'Check event types.';
+}
+
+export const servicesStepSchema = z.object({
+  categorySlugs: z.array(z.string().min(1)),
+  serviceSlugsByCategory: z.record(z.string(), z.array(z.string())),
+});
+
+export function countSelectedServices(serviceSlugsByCategory: Record<string, string[]>): number {
+  let total = 0;
+  for (const slugs of Object.values(serviceSlugsByCategory)) {
+    total += slugs.length;
+  }
+  return total;
+}
+
+export function validateServicesStep(
+  categorySlugs: string[],
+  serviceSlugsByCategory: Record<string, string[]>,
+  maxServices = DEFAULT_MAX_VENDOR_SERVICES,
+): string | null {
+  for (const slug of categorySlugs) {
+    const services = serviceSlugsByCategory[slug] ?? [];
+    if (services.length === 0) {
+      return 'Pick at least one service for each category.';
+    }
+  }
+  const total = countSelectedServices(serviceSlugsByCategory);
+  if (total > maxServices) {
+    return `Your plan allows up to ${maxServices} services. Remove some to continue.`;
+  }
+  return null;
+}
+
+const serviceRateCardBandSchema = z.object({
+  dimMin: z.number().int().nonnegative(),
+  dimMax: z.number().int().positive(),
+  basis: z.enum(['per_unit', 'total']),
+  priceMinor: z.number().int().positive(),
+  currency: z.literal('NGN'),
+  label: z.string().optional(),
+});
+
+const serviceRateCardPackageSchema = z.object({
+  slug: z.string().min(1),
+  name: z.string().min(1),
+  priceMinor: z.number().int().positive(),
+  inclusions: z.array(z.string()),
+});
+
+export const serviceRateCardSchema = z.object({
+  categorySlug: z.string().min(1),
+  serviceSlug: z.string().min(1),
+  appliesToTypeSlugs: z.union([z.literal('all'), z.array(z.string().min(1))]),
+  bands: z.array(serviceRateCardBandSchema),
+  priceMinor: z.number().int().positive().optional(),
+  minChargeMinor: z.number().int().positive().optional(),
+  packages: z.array(serviceRateCardPackageSchema),
+  allowCustomQuoteLarger: z.boolean(),
+  addons: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      priceMinor: z.number().int().positive(),
+      basis: z.enum(['per_unit', 'total', 'flat']),
+    }),
+  ),
+  minNoticeHours: z.number().int().nonnegative(),
+  depositPct: z.number().int().min(0).max(100),
+  inclusions: z.array(z.string()),
+  exclusions: z.array(z.string()),
+  notes: z.string().max(500),
+  status: z.enum(['draft', 'active', 'paused']),
+  updatedAt: z.string(),
+});
+
+export function serviceRateCardHasPricing(card: ServiceRateCard): boolean {
+  const catalog = findCatalogService(card.categorySlug, card.serviceSlug);
+  if (catalog?.pricing_model === 'quote_only') {
+    return true;
+  }
+  if (card.bands.length > 0) {
+    return true;
+  }
+  if (card.priceMinor !== undefined && card.priceMinor > 0) {
+    return true;
+  }
+  if (card.packages.some((pkg) => pkg.priceMinor > 0)) {
+    return true;
+  }
+  return false;
+}
+
+export function validateServiceRateCard(card: ServiceRateCard): string | null {
+  const catalog = findCatalogService(card.categorySlug, card.serviceSlug);
+  if (!catalog) {
+    return 'Unknown service.';
+  }
+
+  const parsed = serviceRateCardSchema.safeParse(card);
+  if (!parsed.success) {
+    return parsed.error.issues[0]?.message ?? 'Fix this rate card.';
+  }
+
+  const model = catalog.pricing_model as PricingModel;
+
+  if (model === 'quote_only') {
+    return null;
+  }
+
+  switch (model) {
+    case 'banded': {
+      const check = validateRateCard(card.bands, {
+        minValue: catalog.min_value,
+        maxValue: catalog.max_value,
+        minChargeMinor: card.minChargeMinor,
+      });
+      if (!check.ok) {
+        return check.errors[0] ?? 'Fix band pricing.';
+      }
+      break;
+    }
+    case 'per_unit':
+    case 'flat': {
+      if (!card.priceMinor || card.priceMinor < 100_00) {
+        return 'Enter a price of at least ₦100.';
+      }
+      break;
+    }
+    case 'package': {
+      if (!card.packages.length || card.packages.some((pkg) => pkg.priceMinor < 100_00)) {
+        return 'Add at least one package priced at ₦100 or more.';
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  if (
+    card.appliesToTypeSlugs !== 'all' &&
+    card.appliesToTypeSlugs.length === 0
+  ) {
+    return 'Choose which types this rate applies to.';
+  }
+
+  return null;
+}
+
+export function validateServiceRateCardsStep(draft: VendorProfileDraft): string | null {
+  const slugs: Array<{ categorySlug: string; serviceSlug: string }> = [];
+  for (const categorySlug of draft.categorySlugs) {
+    for (const serviceSlug of draft.serviceSlugsByCategory[categorySlug] ?? []) {
+      slugs.push({ categorySlug, serviceSlug });
+    }
+  }
+  if (slugs.length === 0) {
+    return 'Pick services before setting rate cards.';
+  }
+
+  for (const { categorySlug, serviceSlug } of slugs) {
+    const card = draft.serviceRateCards.find(
+      (item) => item.categorySlug === categorySlug && item.serviceSlug === serviceSlug,
+    );
+    if (!card) {
+      return 'Set pricing for every selected service.';
+    }
+    const error = validateServiceRateCard(card);
+    if (error) {
+      return error;
+    }
+  }
+  return null;
+}
 
 export const areasStepSchema = z.object({
   areaSlugs: z.array(z.string().min(1)).min(1, 'Add at least one service location.'),
@@ -84,6 +282,7 @@ export function validateCoverageRows(
   return null;
 }
 
+/** Legacy v1 category rate card schema. */
 export const rateCardSchema = z
   .object({
     categorySlug: z.string().min(1),
@@ -146,6 +345,21 @@ export const documentsStepSchema = z.object({
     .min(1, 'Upload at least one ID or portfolio document.'),
 });
 
+export function validateDocumentsStep(
+  documents: VendorProfileDraft['documents'],
+  extraRegulatedDocs: number,
+): string | null {
+  const base = documentsStepSchema.safeParse({ documents });
+  if (!base.success) {
+    return base.error.issues[0]?.message ?? 'Upload documents.';
+  }
+  const minimum = 1 + extraRegulatedDocs;
+  if (documents.length < minimum) {
+    return `Upload at least ${minimum} documents (ID plus any regulated licences).`;
+  }
+  return null;
+}
+
 export const payoutStepSchema = z.object({
   bankName: z.string().trim().min(2, 'Enter your bank name.'),
   accountName: z.string().trim().min(2, 'Enter the account name.'),
@@ -169,4 +383,28 @@ export function nextStep(step: OnboardingStepId): OnboardingStepId | null {
 export function previousStep(step: OnboardingStepId): OnboardingStepId | null {
   const index = stepIndex(step);
   return index > 0 ? STEP_ORDER[index - 1]! : null;
+}
+
+/** Stable quote check used in tests — catering 120 guests. */
+export function stableCateringQuoteMinor(card: ServiceRateCard): number {
+  const catalog = findCatalogService(card.categorySlug, card.serviceSlug);
+  if (!catalog || catalog.pricing_model !== 'banded') {
+    return 0;
+  }
+  const result = computeQuote(
+    {
+      service: {
+        slug: catalog.slug,
+        pricing_model: catalog.pricing_model,
+        dimension: catalog.dimension,
+        min_value: catalog.min_value,
+        max_value: catalog.max_value,
+        packages: catalog.packages,
+      },
+      rates: card.bands,
+      minChargeMinor: card.minChargeMinor,
+    },
+    { serviceSlug: catalog.slug, quantity: 120 },
+  );
+  return result.amountMinor;
 }

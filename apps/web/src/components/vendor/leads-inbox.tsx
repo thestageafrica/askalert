@@ -30,7 +30,7 @@ export function LeadsInbox() {
   const openLead = (lead: VendorLead) => {
     setSelectedId(lead.id);
     setMessage(null);
-    const card = draft.rateCards.find((item) => item.categorySlug === lead.categorySlug);
+    const card = (draft.rateCards ?? []).find((item) => item.categorySlug === lead.categorySlug);
     setQuoteMinor(card?.startingPriceMinor ?? lead.budgetMinor);
     if (lead.status === 'new') {
       const entitlement = consume('send_whatsapp');

@@ -56,7 +56,7 @@ export default function VendorProfilePreviewPage() {
               From
             </p>
             <ul className="mt-2 space-y-2">
-              {draft.rateCards.map((card) => (
+              {(draft.rateCards ?? []).map((card) => (
                 <li
                   key={card.categorySlug}
                   className="flex items-center justify-between gap-3 rounded-2xl bg-surface-subtle px-3 py-2 text-sm"
@@ -67,7 +67,7 @@ export default function VendorProfilePreviewPage() {
                   </span>
                 </li>
               ))}
-              {draft.rateCards.length === 0 ? (
+              {(draft.rateCards ?? []).length === 0 ? (
                 <li className="text-sm text-muted-foreground">No rate cards yet.</li>
               ) : null}
             </ul>

@@ -13,6 +13,7 @@ import {
   DEFAULT_WEEKLY_HOURS,
   type OnboardingStepId,
   type RateCard,
+  type ServiceRateCard,
   type VendorBooking,
   type VendorLead,
   type VendorLeadStatus,
@@ -21,8 +22,11 @@ import {
 } from './types';
 import { SEED_VENDOR_BOOKINGS, SEED_VENDOR_LEADS } from './mock-leads';
 import { submitForReview, transitionVendorStatus } from './status';
+import { normalizePersistedDraft } from './migrate-draft';
+import { serviceRateCardKey } from './vendor-catalog';
 
-const STORAGE_KEY = 'askalert.vendor.v1';
+const STORAGE_KEY = 'askalert.vendor.v2';
+const LEGACY_STORAGE_KEY = 'askalert.vendor.v1';
 
 type Persisted = {
   draft: VendorProfileDraft;
@@ -38,6 +42,12 @@ type VendorStore = {
   updateDraft: (patch: Partial<VendorProfileDraft>) => void;
   setStep: (step: OnboardingStepId) => void;
   upsertRateCard: (card: RateCard) => void;
+  upsertServiceRateCard: (card: ServiceRateCard) => void;
+  setServiceRateCardStatus: (
+    categorySlug: string,
+    serviceSlug: string,
+    status: ServiceRateCard['status'],
+  ) => void;
   setLeadStatus: (leadId: string, status: VendorLeadStatus, chatId?: string) => void;
   submitOnboarding: () => { ok: true } | { ok: false; error: string };
   setVendorStatus: (status: VendorStatus) => { ok: true } | { ok: false; error: string };
@@ -54,6 +64,9 @@ function emptyDraft(): VendorProfileDraft {
     displayName: '',
     businessName: '',
     categorySlugs: [],
+    typeSlugsByCategory: {},
+    serviceSlugsByCategory: {},
+    serviceRateCards: [],
     areaSlugs: [],
     rateCards: [],
     weeklyHours: DEFAULT_WEEKLY_HOURS,
@@ -73,11 +86,31 @@ function readPersisted(): Persisted | null {
     return null;
   }
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return null;
+    const rawV2 = window.localStorage.getItem(STORAGE_KEY);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2) as Persisted;
+      if (parsed?.draft) {
+        return {
+          ...parsed,
+          draft: normalizePersistedDraft(parsed.draft),
+        };
+      }
     }
-    return JSON.parse(raw) as Persisted;
+
+    const rawV1 = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (rawV1) {
+      const parsed = JSON.parse(rawV1) as Persisted;
+      if (parsed?.draft) {
+        const migrated: Persisted = {
+          leads: parsed.leads,
+          bookings: parsed.bookings,
+          draft: normalizePersistedDraft(parsed.draft),
+        };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -99,7 +132,7 @@ export function VendorStoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = readPersisted();
     if (saved?.draft) {
-      setDraft({ ...emptyDraft(), ...saved.draft });
+      setDraft(normalizePersistedDraft(saved.draft));
       setLeads(saved.leads?.length ? saved.leads : SEED_VENDOR_LEADS);
       setBookings(saved.bookings ?? SEED_VENDOR_BOOKINGS);
     }
@@ -131,7 +164,8 @@ export function VendorStoreProvider({ children }: { children: ReactNode }) {
 
   const upsertRateCard = useCallback((card: RateCard) => {
     setDraft((current) => {
-      const rest = current.rateCards.filter((item) => item.categorySlug !== card.categorySlug);
+      const legacy = current.rateCards ?? [];
+      const rest = legacy.filter((item) => item.categorySlug !== card.categorySlug);
       return {
         ...current,
         rateCards: [...rest, card],
@@ -139,6 +173,44 @@ export function VendorStoreProvider({ children }: { children: ReactNode }) {
       };
     });
   }, []);
+
+  const upsertServiceRateCard = useCallback((card: ServiceRateCard) => {
+    setDraft((current) => {
+      const key = serviceRateCardKey(card.categorySlug, card.serviceSlug);
+      const rest = current.serviceRateCards.filter(
+        (item) => serviceRateCardKey(item.categorySlug, item.serviceSlug) !== key,
+      );
+      return {
+        ...current,
+        serviceRateCards: [...rest, { ...card, updatedAt: new Date().toISOString() }],
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
+  const setServiceRateCardStatus = useCallback(
+    (categorySlug: string, serviceSlug: string, status: ServiceRateCard['status']) => {
+      setDraft((current) => {
+        const key = serviceRateCardKey(categorySlug, serviceSlug);
+        const found = current.serviceRateCards.find(
+          (item) => serviceRateCardKey(item.categorySlug, item.serviceSlug) === key,
+        );
+        if (!found) {
+          return current;
+        }
+        return {
+          ...current,
+          serviceRateCards: current.serviceRateCards.map((item) =>
+            serviceRateCardKey(item.categorySlug, item.serviceSlug) === key
+              ? { ...item, status, updatedAt: new Date().toISOString() }
+              : item,
+          ),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    },
+    [],
+  );
 
   const setLeadStatus = useCallback(
     (leadId: string, status: VendorLeadStatus, chatId?: string) => {
@@ -202,6 +274,8 @@ export function VendorStoreProvider({ children }: { children: ReactNode }) {
       updateDraft,
       setStep,
       upsertRateCard,
+      upsertServiceRateCard,
+      setServiceRateCardStatus,
       setLeadStatus,
       submitOnboarding,
       setVendorStatus,
@@ -216,6 +290,8 @@ export function VendorStoreProvider({ children }: { children: ReactNode }) {
       updateDraft,
       setStep,
       upsertRateCard,
+      upsertServiceRateCard,
+      setServiceRateCardStatus,
       setLeadStatus,
       submitOnboarding,
       setVendorStatus,

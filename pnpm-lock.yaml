@@ -111,6 +111,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@askalert/catalog':
+        specifier: workspace:*
+        version: link:../../packages/catalog
       '@askalert/category-engine':
         specifier: workspace:*
         version: link:../../packages/category-engine

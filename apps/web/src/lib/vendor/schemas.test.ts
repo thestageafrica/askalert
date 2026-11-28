@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createServiceRateCardFromSeed, findCatalogService } from './vendor-catalog';
 import {
   areasStepSchema,
   areasStepSchemaWithLimit,
@@ -7,6 +8,8 @@ import {
   payoutStepSchema,
   rateCardSchema,
   validateCoverageRows,
+  validateServiceRateCard,
+  validateTypesStep,
   whoYouAreSchema,
 } from './schemas';
 
@@ -86,6 +89,20 @@ describe('vendor onboarding validation', () => {
       notes: '',
     });
     expect(good.success).toBe(true);
+  });
+
+  it('requires at least one type per category', () => {
+    expect(
+      validateTypesStep(['events'], { events: [] }),
+    ).toMatch(/at least one type/i);
+    expect(validateTypesStep(['events'], { events: ['wedding'] })).toBeNull();
+  });
+
+  it('validates catalog-backed service rate cards', () => {
+    const catalog = findCatalogService('events', 'catering');
+    expect(catalog).toBeDefined();
+    const card = createServiceRateCardFromSeed('events', catalog!);
+    expect(validateServiceRateCard(card)).toBeNull();
   });
 
   it('requires 10-digit account number and at least one document', () => {

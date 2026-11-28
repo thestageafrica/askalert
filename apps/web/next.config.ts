@@ -40,6 +40,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     '@askalert/ui',
     '@askalert/payments',
+    '@askalert/catalog',
     '@askalert/category-engine',
     '@askalert/channels',
     '@askalert/geo',

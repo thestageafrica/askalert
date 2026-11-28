@@ -30,7 +30,7 @@ export default function VendorRateCardsPage() {
         draft.categorySlugs.map((slug) => {
           const category = categories.find((item) => item.slug === slug);
           const card =
-            draft.rateCards.find((item) => item.categorySlug === slug) ??
+            (draft.rateCards ?? []).find((item) => item.categorySlug === slug) ??
             ({
               categorySlug: slug,
               startingPriceMinor: 50_000_00,

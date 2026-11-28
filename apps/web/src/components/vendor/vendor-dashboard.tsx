@@ -58,9 +58,14 @@ export function VendorDashboard() {
         />
         <SummaryCard label="Bookings" value={String(bookings.length)} href="/vendor/bookings/" />
         <SummaryCard
-          label="Categories"
-          value={String(draft.categorySlugs.length)}
-          href="/vendor/rate-cards/"
+          label="Services"
+          value={String(
+            Object.values(draft.serviceSlugsByCategory).reduce(
+              (total, slugs) => total + slugs.length,
+              0,
+            ),
+          )}
+          href="/vendor/services/"
         />
       </div>
 
@@ -103,7 +108,10 @@ export function VendorDashboard() {
       </section>
 
       <div className="flex flex-wrap gap-3">
-        <Button href="/vendor/availability/" variant="secondary">
+        <Button href="/vendor/services/" className="min-h-11">
+          My services
+        </Button>
+        <Button href="/vendor/availability/" variant="secondary" className="min-h-11">
           Edit availability
         </Button>
         <Button href="/vendor/profile/" variant="ghost">

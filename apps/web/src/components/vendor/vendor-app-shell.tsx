@@ -86,15 +86,15 @@ export function VendorAppShell({ children }: { children: ReactNode }) {
               );
             })}
             <Link
-              href="/vendor/rate-cards/"
+              href="/vendor/services/"
               className={cn(
                 'min-h-10 shrink-0 rounded-full px-3.5 text-sm font-bold',
-                pathname.startsWith('/vendor/rate-cards')
+                pathname.startsWith('/vendor/services')
                   ? 'bg-navy-950 text-surface'
                   : 'text-muted-foreground hover:bg-navy-950/5',
               )}
             >
-              <span className="inline-flex min-h-10 items-center">Rates</span>
+              <span className="inline-flex min-h-10 items-center">Services</span>
             </Link>
             <Link
               href="/vendor/availability/"
